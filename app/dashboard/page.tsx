@@ -7,14 +7,13 @@ import {
   Layers,
   Map,
   GitBranch,
-  BarChart3,
   Target,
   Briefcase,
   ArrowLeft,
   Loader2,
-  User,
   Sparkles,
-  Download,
+  Globe,
+  Users,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -22,9 +21,10 @@ import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
 import { ThreadMap } from "@/components/dashboard/thread-map";
 import { PathwayCards } from "@/components/dashboard/pathway-cards";
-import { PathwayChart } from "@/components/dashboard/pathway-chart";
 import { SkillGaps } from "@/components/dashboard/skill-gaps";
 import { OpportunityMarketplace } from "@/components/dashboard/opportunity-marketplace";
+import { CareerAtlas } from "@/components/dashboard/career-atlas";
+import { MentorConnect } from "@/components/dashboard/mentor-connect";
 import { OnboardingGuide, OnboardingTrigger } from "@/components/onboarding-guide";
 import { generateCareerWeave } from "@/lib/career-engine";
 import { demoProfile } from "@/lib/demo-data";
@@ -32,11 +32,12 @@ import { UserProfile, CareerWeaveResult } from "@/lib/types";
 
 const sections = [
   { id: "summary", icon: Sparkles, label: "Summary" },
-  { id: "threads", icon: Map, label: "Thread Map" },
+  { id: "threads", icon: Map, label: "Profile" },
   { id: "pathways", icon: GitBranch, label: "Pathways" },
-  { id: "charts", icon: BarChart3, label: "Charts" },
   { id: "skills", icon: Target, label: "Skill Gaps" },
-  { id: "opportunities", icon: Briefcase, label: "Opportunities" },
+  { id: "opportunities", icon: Briefcase, label: "Jobs" },
+  { id: "atlas", icon: Globe, label: "Atlas" },
+  { id: "mentors", icon: Users, label: "Mentors" },
 ];
 
 function DashboardContent() {
@@ -67,7 +68,6 @@ function DashboardContent() {
 
     setProfile(p);
 
-    // Simulate processing
     const timer = setTimeout(() => {
       const weaveResult = generateCareerWeave(p);
       setResult(weaveResult);
@@ -104,8 +104,7 @@ function DashboardContent() {
             Weaving your career threads...
           </h2>
           <p className="text-navy-500 text-sm">
-            Analyzing your profile, generating pathways, and matching
-            opportunities
+            Analysing your profile, generating pathways, and matching opportunities
           </p>
         </motion.div>
       </div>
@@ -114,12 +113,7 @@ function DashboardContent() {
 
   if (!result || !profile) return null;
 
-  const avgScore = Math.round(
-    result.threads.reduce((s, t) => s + t.score, 0) / result.threads.length
-  );
-  const topPathway = result.pathways.find(
-    (p) => p.id === result.recommendedPathway
-  );
+  const topPathway = result.pathways.find(p => p.id === result.recommendedPathway);
 
   const scrollToSection = (id: string) => {
     setActiveSection(id);
@@ -156,7 +150,7 @@ function DashboardContent() {
             </div>
             <OnboardingTrigger
               onClick={() => {
-                setOnboardingKey((k) => k + 1);
+                setOnboardingKey(k => k + 1);
                 setShowOnboarding(true);
               }}
             />
@@ -191,72 +185,91 @@ function DashboardContent() {
             transition={{ duration: 0.5 }}
           >
             <Card className="bg-gradient-to-br from-navy-800 to-navy-950 text-white overflow-hidden relative">
-              <div className="absolute top-0 right-0 w-64 h-64 opacity-10">
+              {/* Background decoration */}
+              <div className="absolute top-0 right-0 w-80 h-80 opacity-5 pointer-events-none">
                 <svg viewBox="0 0 200 200" fill="none">
-                  {[0, 1, 2, 3, 4].map((i) => (
-                    <circle
-                      key={i}
-                      cx={100 + i * 15}
-                      cy={100 - i * 10}
-                      r={30 + i * 15}
-                      stroke="white"
-                      strokeWidth="1"
-                      opacity={0.3}
-                    />
+                  {[0,1,2,3,4].map(i => (
+                    <circle key={i} cx={180-i*20} cy={20+i*15} r={40+i*20} stroke="white" strokeWidth="1" />
                   ))}
                 </svg>
               </div>
+
               <CardContent className="p-6 sm:p-8 relative">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-                  <div className="text-center p-4 bg-white/10 rounded-xl">
-                    <div className="text-3xl font-bold text-gold-400">
-                      {avgScore}
-                    </div>
-                    <div className="text-xs text-navy-300 mt-1">
-                      Thread Strength
-                    </div>
+                {/* Archetype hero */}
+                <div className="flex items-center gap-4 mb-6">
+                  <div
+                    className="w-20 h-20 rounded-2xl flex items-center justify-center text-4xl shrink-0"
+                    style={{ backgroundColor: result.archetype.color + "30", border: `2px solid ${result.archetype.color}50` }}
+                  >
+                    {result.archetype.emoji}
                   </div>
-                  <div className="text-center p-4 bg-white/10 rounded-xl">
-                    <div className="text-3xl font-bold text-gold-400">
-                      {result.pathways.length}
-                    </div>
-                    <div className="text-xs text-navy-300 mt-1">
-                      Career Pathways
-                    </div>
-                  </div>
-                  <div className="text-center p-4 bg-white/10 rounded-xl">
-                    <div className="text-3xl font-bold text-gold-400">
-                      {result.opportunities.length}
-                    </div>
-                    <div className="text-xs text-navy-300 mt-1">
-                      Matched Opportunities
-                    </div>
+                  <div>
+                    <p className="text-xs text-navy-400 uppercase tracking-widest mb-1">Your Career Archetype</p>
+                    <h2 className="text-2xl sm:text-3xl font-bold" style={{ color: result.archetype.color === "#2d8a4e" ? "#4ade80" : result.archetype.color === "#4164b4" ? "#93c5fd" : "#fbbf24" }}>
+                      {result.archetype.title}
+                    </h2>
+                    <p className="text-sm text-navy-300 mt-0.5">{result.archetype.tagline}</p>
                   </div>
                 </div>
-                <p className="text-sm text-navy-200 leading-relaxed">
-                  {result.summary}
-                </p>
+
+                {/* Keywords */}
+                <div className="flex flex-wrap gap-2 mb-6">
+                  {result.archetype.keywords.map(kw => (
+                    <span key={kw} className="text-xs px-3 py-1 rounded-full bg-white/10 text-navy-200 font-medium border border-white/10">
+                      {kw}
+                    </span>
+                  ))}
+                </div>
+
+                {/* Famous figures */}
+                <div className="mb-6">
+                  <p className="text-xs text-navy-400 uppercase tracking-widest mb-3">You think like...</p>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {result.archetype.figures.map(fig => (
+                      <div key={fig.name} className="flex items-center gap-3 bg-white/8 rounded-xl p-3 border border-white/10">
+                        <div
+                          className="w-12 h-12 rounded-full flex items-center justify-center text-2xl shrink-0"
+                          style={{ backgroundColor: fig.color + "25", border: `1.5px solid ${fig.color}40` }}
+                        >
+                          {fig.emoji}
+                        </div>
+                        <div>
+                          <p className="font-semibold text-white text-sm">{fig.name}</p>
+                          <p className="text-xs text-navy-400 leading-snug">{fig.trait}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Stats row */}
+                <div className="grid grid-cols-3 gap-3">
+                  <div className="text-center p-3 bg-white/8 rounded-xl border border-white/10">
+                    <div className="text-2xl font-bold text-gold-400">{result.pathways.length}</div>
+                    <div className="text-[10px] text-navy-400 mt-0.5">Pathways</div>
+                  </div>
+                  <div className="text-center p-3 bg-white/8 rounded-xl border border-white/10">
+                    <div className="text-2xl font-bold text-gold-400">{result.skillGaps.length}</div>
+                    <div className="text-[10px] text-navy-400 mt-0.5">Skill Gaps</div>
+                  </div>
+                  <div className="text-center p-3 bg-white/8 rounded-xl border border-white/10">
+                    <div className="text-2xl font-bold text-gold-400">{result.opportunities.length}</div>
+                    <div className="text-[10px] text-navy-400 mt-0.5">Opportunities</div>
+                  </div>
+                </div>
               </CardContent>
             </Card>
           </motion.div>
         </section>
 
-        {/* Thread Map */}
+        {/* Thread Map + Archetype */}
         <section id="threads">
-          <ThreadMap threads={result.threads} />
-        </section>
-
-        {/* Charts */}
-        <section id="charts">
-          <PathwayChart threads={result.threads} pathways={result.pathways} />
+          <ThreadMap threads={result.threads} archetype={result.archetype} />
         </section>
 
         {/* Pathways */}
         <section id="pathways">
-          <PathwayCards
-            pathways={result.pathways}
-            recommendedId={result.recommendedPathway}
-          />
+          <PathwayCards pathways={result.pathways} recommendedId={result.recommendedPathway} />
         </section>
 
         {/* Skill Gaps */}
@@ -268,15 +281,21 @@ function DashboardContent() {
         <section id="opportunities">
           <OpportunityMarketplace opportunities={result.opportunities} />
         </section>
+
+        {/* Career Atlas */}
+        <section id="atlas">
+          <CareerAtlas profile={profile} />
+        </section>
+
+        {/* Mentor Connect */}
+        <section id="mentors">
+          <MentorConnect profile={profile} archetype={result.archetype} />
+        </section>
       </div>
 
       <Footer />
 
-      {/* Onboarding guide — shows automatically on first visit */}
-      <OnboardingGuide
-        key={onboardingKey}
-        forceShow={showOnboarding}
-      />
+      <OnboardingGuide key={onboardingKey} forceShow={showOnboarding} />
     </div>
   );
 }

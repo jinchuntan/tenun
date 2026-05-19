@@ -5,8 +5,10 @@ import {
   CareerWeaveResult,
   SkillGap,
   Opportunity,
+  CareerArchetype,
 } from "./types";
 import { mockOpportunities } from "./mock-opportunities";
+import { getCoursesForSkill } from "./course-data";
 
 // ---------- helpers ----------
 
@@ -16,6 +18,28 @@ function clamp(v: number, min = 0, max = 100) {
 
 function score(base: number, noise = 5) {
   return clamp(base + Math.floor(Math.random() * noise * 2 - noise));
+}
+
+function detectDegree(education: string): string {
+  const t = education.toLowerCase();
+  if (t.includes("phd") || t.includes("doctorate")) return "PhD level";
+  if (t.includes("master") || t.includes("msc") || t.includes("mba")) return "Master's";
+  if (t.includes("bachelor") || t.includes("bsc") || t.includes("beng") || t.includes(" ba ") || t.includes("b.a") || t.includes("b.sc")) return "Bachelor's";
+  if (t.includes("diploma")) return "Diploma";
+  if (education.length > 30) return "Tertiary";
+  return "Academic";
+}
+
+function detectExperienceLabel(experience: string): string {
+  const t = experience.toLowerCase();
+  if (t.includes("5 year") || t.includes("6 year") || t.includes("7 year") || t.includes("8 year")) return "5+ yrs exp";
+  if (t.includes("3 year") || t.includes("4 year")) return "3–4 yrs exp";
+  if (t.includes("2 year")) return "2 yrs exp";
+  if (t.includes("1 year")) return "~1 yr exp";
+  if (t.includes("intern")) return "Internship exp";
+  if (experience.length > 300) return "Rich background";
+  if (experience.length > 80) return "Some experience";
+  return "Early stage";
 }
 
 // ---------- Thread extraction ----------
@@ -50,6 +74,7 @@ function extractThreads(profile: UserProfile): CareerThread[] {
       id: "skill",
       name: "Skill Thread",
       icon: "Cpu",
+      contextLabel: `${skillCount} skills`,
       score: score(
         skillCount >= 8 ? 82 : skillCount >= 5 ? 68 : 50,
         6
@@ -63,13 +88,14 @@ function extractThreads(profile: UserProfile): CareerThread[] {
           ? "Consider adding UX/UI design skills to complement your technical profile and unlock product-oriented roles."
           : !hasStrongTech
           ? "Deepening technical skills (e.g., Python, SQL, or a modern framework) would open more career pathways."
-          : "Continue building depth — consider advanced certifications or specialized tools in your strongest areas.",
+          : "Continue building depth — consider advanced certifications or specialised tools in your strongest areas.",
       color: "#4164b4",
     },
     {
       id: "experience",
       name: "Experience Thread",
       icon: "Briefcase",
+      contextLabel: detectExperienceLabel(profile.experience),
       score: score(
         hasInternship && hasLeadership
           ? 78
@@ -92,6 +118,7 @@ function extractThreads(profile: UserProfile): CareerThread[] {
       id: "education",
       name: "Education Thread",
       icon: "GraduationCap",
+      contextLabel: detectDegree(profile.education),
       score: score(educationLength > 80 ? 75 : 60, 5),
       explanation:
         "Your educational background provides a solid academic foundation. " +
@@ -107,6 +134,7 @@ function extractThreads(profile: UserProfile): CareerThread[] {
       id: "interest",
       name: "Interest Thread",
       icon: "Heart",
+      contextLabel: `${interestCount} interests`,
       score: score(
         interestCount >= 4 ? 80 : interestCount >= 2 ? 65 : 50,
         5
@@ -120,6 +148,7 @@ function extractThreads(profile: UserProfile): CareerThread[] {
       id: "market",
       name: "Market Demand Thread",
       icon: "TrendingUp",
+      contextLabel: hasStrongTech ? "High demand" : "Growing field",
       score: score(
         hasStrongTech ? 85 : hasDesign ? 72 : 58,
         5
@@ -135,8 +164,9 @@ function extractThreads(profile: UserProfile): CareerThread[] {
       id: "salary",
       name: "Salary Thread",
       icon: "DollarSign",
+      contextLabel: profile.salaryExpectation ? profile.salaryExpectation.split(" ")[0] + " target" : "Market rate",
       score: score(70, 8),
-      explanation: `Your salary expectations of ${profile.salaryExpectation} appear ${profile.riskAppetite === "high" ? "conservative relative to your risk tolerance — you may have room to target higher-paying opportunities" : "well-calibrated for entry to mid-level roles in your target industries"}. Market research and negotiation skills can help optimize your compensation.`,
+      explanation: `Your salary expectations of ${profile.salaryExpectation} appear ${profile.riskAppetite === "high" ? "conservative relative to your risk tolerance — you may have room to target higher-paying opportunities" : "well-calibrated for entry to mid-level roles in your target industries"}. Market research and negotiation skills can help optimise your compensation.`,
       improvement:
         "Research specific salary bands for your target roles on Glassdoor and Levels.fyi. Develop negotiation skills — even a 10% improvement in initial offers compounds significantly over a career.",
       color: "#00b894",
@@ -145,11 +175,12 @@ function extractThreads(profile: UserProfile): CareerThread[] {
       id: "lifestyle",
       name: "Lifestyle Thread",
       icon: "Sun",
+      contextLabel: profile.lifestylePreference.replace("-", " "),
       score: score(
         profile.lifestylePreference === "flexibility" ? 76 : 70,
         5
       ),
-      explanation: `Your preference for ${profile.lifestylePreference.replace("-", " ")} shapes which pathways and organizations will be the best fit. ${profile.lifestylePreference === "flexibility" ? "Many tech and consulting roles now offer strong flexibility, especially in remote-friendly companies." : profile.lifestylePreference === "stability" ? "Look for established companies with clear career tracks and strong benefits." : profile.lifestylePreference === "fast-growth" ? "High-growth startups and scale-ups typically offer accelerated learning and responsibility." : "Mission-driven organizations and social enterprises align well with purpose-driven preferences."}`,
+      explanation: `Your preference for ${profile.lifestylePreference.replace("-", " ")} shapes which pathways and organisations will be the best fit. ${profile.lifestylePreference === "flexibility" ? "Many tech and consulting roles now offer strong flexibility, especially in remote-friendly companies." : profile.lifestylePreference === "stability" ? "Look for established companies with clear career tracks and strong benefits." : profile.lifestylePreference === "fast-growth" ? "High-growth startups and scale-ups typically offer accelerated learning and responsibility." : "Mission-driven organisations and social enterprises align well with purpose-driven preferences."}`,
       improvement:
         "Be explicit about lifestyle requirements in your job search. Companies increasingly compete on work-life balance, remote policies, and culture — use this to your advantage.",
       color: "#fdcb6e",
@@ -158,6 +189,7 @@ function extractThreads(profile: UserProfile): CareerThread[] {
       id: "employer",
       name: "Employer Fit Thread",
       icon: "Building2",
+      contextLabel: `${profile.preferredIndustries.length} industries`,
       score: score(
         profile.preferredIndustries.length >= 3 ? 74 : 60,
         5
@@ -168,6 +200,141 @@ function extractThreads(profile: UserProfile): CareerThread[] {
       color: "#e17055",
     },
   ];
+}
+
+// ---------- Archetype computation ----------
+
+function computeArchetype(threads: CareerThread[], profile: UserProfile): CareerArchetype {
+  const byId = Object.fromEntries(threads.map(t => [t.id, t.score]));
+  const skillScore = byId["skill"] || 50;
+  const expScore = byId["experience"] || 50;
+  const interestScore = byId["interest"] || 50;
+  const marketScore = byId["market"] || 50;
+
+  const hasClimate = profile.interests.some(i => i.toLowerCase().includes("climate") || i.toLowerCase().includes("sustainability"));
+  const hasLeadership = profile.experience.toLowerCase().includes("led") || profile.experience.toLowerCase().includes("managed");
+  const hasTech = profile.skills.some(s => ["Python", "SQL", "JavaScript", "TypeScript", "React"].includes(s));
+  const hasPM = profile.interests.some(i => i.toLowerCase().includes("product"));
+  const isHighRisk = profile.riskAppetite === "high";
+  const isPurpose = profile.lifestylePreference === "purpose-driven";
+  const isFastGrowth = profile.lifestylePreference === "fast-growth";
+
+  if (hasClimate && (isPurpose || interestScore > 70)) {
+    return {
+      title: "The Change Maker",
+      emoji: "🌱",
+      tagline: "Purpose-driven and impact-oriented",
+      description: "You're not just building a career — you're building a better world. Your profile shows a rare combination of technical capability and genuine drive to create meaningful impact. You are most energised when your work aligns with a bigger mission beyond personal gain.",
+      strengths: ["Mission alignment", "Intrinsic motivation", "Cross-sector thinking", "Long-term vision"],
+      growthAreas: ["Commercial awareness", "Network building in impact spaces", "Translating impact into business metrics"],
+      keywords: ["purpose-driven", "impact-oriented", "collaborative", "systemic thinker"],
+      color: "#2d8a4e",
+      figures: [
+        { name: "Nelson Mandela", trait: "Turned adversity into lasting change", emoji: "✊", color: "#2d8a4e" },
+        { name: "Malala Yousafzai", trait: "Used voice to shift global narrative", emoji: "📚", color: "#00b894" },
+      ],
+    };
+  }
+
+  if (hasLeadership && expScore > 68) {
+    return {
+      title: "The Orchestrator",
+      emoji: "🎯",
+      tagline: "Natural leader with strategic clarity",
+      description: "You have a gift for bringing people together and moving teams toward shared goals. Your experience leading others signals readiness for roles with increasing organisational responsibility. You thrive in complexity and see the 'why' behind the 'what'.",
+      strengths: ["Team motivation", "Strategic thinking", "Organisational clarity", "Accountability"],
+      growthAreas: ["Technical upskilling", "Data-driven decision making", "Executive presence in senior settings"],
+      keywords: ["leadership-oriented", "team player", "decisive", "strategically minded"],
+      color: "#e17055",
+      figures: [
+        { name: "Steve Jobs", trait: "Turned vision into products people love", emoji: "💡", color: "#e17055" },
+        { name: "Barack Obama", trait: "Built coalitions through clarity of purpose", emoji: "🗣️", color: "#d4a017" },
+      ],
+    };
+  }
+
+  if (hasTech && skillScore > 73 && marketScore > 73) {
+    return {
+      title: "The Technologist",
+      emoji: "⚡",
+      tagline: "Deep technical expertise meets market relevance",
+      description: "Your technical profile is genuinely strong and well-aligned with what the market values most right now. You bring depth that many generalists lack. The key opportunity is to pair this technical foundation with stronger business storytelling and stakeholder influence.",
+      strengths: ["Technical depth", "Problem solving", "Analytical rigour", "Market relevance"],
+      growthAreas: ["Business communication", "Stakeholder influence", "Cross-functional collaboration"],
+      keywords: ["technical", "analytical", "detail-oriented", "systematic"],
+      color: "#4164b4",
+      figures: [
+        { name: "Nikola Tesla", trait: "Reimagined what electricity could do", emoji: "⚡", color: "#4164b4" },
+        { name: "Alan Turing", trait: "Built the foundation of modern computing", emoji: "🧮", color: "#6c5ce7" },
+      ],
+    };
+  }
+
+  if (hasPM && interestScore > 68) {
+    return {
+      title: "The Connector",
+      emoji: "🔗",
+      tagline: "Bridges users, teams, and business outcomes",
+      description: "You have a natural interest in understanding people and connecting dots across disciplines. Product-oriented roles suit you well because you're curious about the 'why' behind user behaviour and motivated by outcomes, not just outputs.",
+      strengths: ["Empathy for users", "Cross-functional curiosity", "Big-picture thinking", "Communication"],
+      growthAreas: ["Data fluency", "Technical vocabulary", "Prioritisation frameworks"],
+      keywords: ["collaborative", "user-focused", "outcome-driven", "curious"],
+      color: "#6c5ce7",
+      figures: [
+        { name: "Oprah Winfrey", trait: "Made millions feel understood and seen", emoji: "🤝", color: "#6c5ce7" },
+        { name: "Richard Branson", trait: "Connected bold ideas to real people", emoji: "🚀", color: "#c44569" },
+      ],
+    };
+  }
+
+  if (isHighRisk || isFastGrowth) {
+    return {
+      title: "The Builder",
+      emoji: "🔨",
+      tagline: "Energised by creation and fast iteration",
+      description: "You're wired for speed and ownership. The idea of building something from scratch — whether a product, a team, or a business — genuinely excites you. You do your best work when given autonomy and a problem worth solving.",
+      strengths: ["Bias for action", "Entrepreneurial mindset", "Adaptability", "Ownership mentality"],
+      growthAreas: ["Strategic patience", "Deep expertise in one domain", "Sustainable work patterns"],
+      keywords: ["entrepreneurial", "action-oriented", "adaptable", "self-driven"],
+      color: "#d4a017",
+      figures: [
+        { name: "Thomas Edison", trait: "Failed 1,000 times to get to the light", emoji: "💡", color: "#d4a017" },
+        { name: "Henry Ford", trait: "Built systems that changed how the world moves", emoji: "⚙️", color: "#e17055" },
+      ],
+    };
+  }
+
+  if (profile.lifestylePreference === "stability" && skillScore > 65) {
+    return {
+      title: "The Specialist",
+      emoji: "🔬",
+      tagline: "Deep expertise in a focused domain",
+      description: "You value mastery over breadth. Your profile suggests a preference for becoming truly excellent in your chosen area rather than spreading thin across many disciplines. This depth often leads to outsized impact and a strong professional reputation over time.",
+      strengths: ["Domain depth", "Reliability", "Quality-focused", "Long-term perspective"],
+      growthAreas: ["Adaptability to change", "Broadening adjacent skills", "Visibility and self-promotion"],
+      keywords: ["expert", "reliable", "focused", "quality-driven"],
+      color: "#00b894",
+      figures: [
+        { name: "Albert Einstein", trait: "Went deeper than anyone thought possible", emoji: "🧠", color: "#00b894" },
+        { name: "Marie Curie", trait: "Mastered her field and changed science forever", emoji: "⚗️", color: "#2d8a4e" },
+      ],
+    };
+  }
+
+  return {
+    title: "The Generalist",
+    emoji: "🌐",
+    tagline: "Versatile and adaptable across contexts",
+    description: "Your profile reflects a wide range of capabilities and interests — a genuine strength in a world that increasingly values people who can operate across disciplines. Your challenge is choosing focus points that let you demonstrate depth alongside your natural breadth.",
+    strengths: ["Adaptability", "Cross-functional thinking", "Broad context awareness", "Versatility"],
+    growthAreas: ["Developing a signature specialisation", "Depth in one technical area", "Clear professional narrative"],
+    keywords: ["adaptable", "versatile", "curious", "broad-thinker"],
+    color: "#d4a017",
+    figures: [
+      { name: "Leonardo da Vinci", trait: "Artist, scientist, engineer — all at once", emoji: "🎨", color: "#d4a017" },
+      { name: "Benjamin Franklin", trait: "Writer, inventor, diplomat, philosopher", emoji: "📜", color: "#6c5ce7" },
+    ],
+  };
 }
 
 // ---------- Pathway generation ----------
@@ -196,7 +363,7 @@ function generatePathways(
       score: score(hasAnalytics ? 82 : 70, 5),
       timeline: "3-5 years to mid-level",
       description:
-        "A steady progression through established organizations with clear promotion tracks. This pathway prioritizes job security, consistent skill development, and predictable salary growth.",
+        "A steady progression through established organisations with clear promotion tracks. This pathway prioritises job security, consistent skill development, and predictable salary growth.",
       roles: [
         "Junior Data Analyst → Data Analyst → Senior Data Analyst",
         "Business Analyst → Senior BA → Analytics Manager",
@@ -212,7 +379,7 @@ function generatePathways(
       tradeoffs: [
         "Slower salary growth compared to startup paths",
         "Less variety in day-to-day work",
-        "May feel constrained by organizational pace",
+        "May feel constrained by organisational pace",
         "Strong work-life balance and benefits",
       ],
       risks: [
@@ -298,7 +465,7 @@ function generatePathways(
       risks: [
         "Transition period may involve salary plateau",
         "Imposter syndrome in new domain is common",
-        "Success depends on transferable skills being recognized",
+        "Success depends on transferable skills being recognised",
       ],
       nextActions: [
         "Identify 2-3 people who've made a similar pivot and request informational interviews",
@@ -349,7 +516,7 @@ function generatePathways(
       ],
       nextActions: [
         "Join EnergyLab or a climate-tech accelerator to immerse yourself in the startup ecosystem",
-        "Build and ship a small product (weekend project) to practice the full build-launch-iterate cycle",
+        "Build and ship a small product (weekend project) to practise the full build-launch-iterate cycle",
         "Find a potential co-founder through hackathons, startup communities, or your university network",
       ],
       matchingOpportunities: ["opp-4", "opp-7", "opp-11"],
@@ -363,7 +530,7 @@ function generatePathways(
       score: score(hasLeadership ? 74 : 60, 5),
       timeline: "5-8 years to management",
       description:
-        "Focused on developing people management, strategic thinking, and organizational leadership skills. This pathway builds toward director and VP-level roles.",
+        "Focused on developing people management, strategic thinking, and organisational leadership skills. This pathway builds toward director and VP-level roles.",
       roles: [
         "Team Lead → Manager → Director of Analytics",
         "Senior PM → Group PM → VP Product",
@@ -373,13 +540,13 @@ function generatePathways(
         "People Management",
         "Strategic Planning",
         "Budget Management",
-        "Organizational Design",
-        "Executive Presence",
+        "Organisational Design",
+        "Executive Communication",
       ],
       tradeoffs: [
         "Longer timeline to reach senior positions",
         "Less hands-on technical work over time",
-        "High impact on team and organizational outcomes",
+        "High impact on team and organisational outcomes",
         "Strong compensation at senior levels",
       ],
       risks: [
@@ -388,7 +555,7 @@ function generatePathways(
         "Risk of becoming disconnected from technical foundations",
       ],
       nextActions: [
-        "Volunteer to lead a team project or initiative in your current organization",
+        "Volunteer to lead a team project or initiative in your current organisation",
         "Find a leadership mentor through ADPList or your alumni network",
         "Read 'The Manager's Path' by Camille Fournier to understand the leadership track in tech",
       ],
@@ -418,12 +585,14 @@ function identifySkillGaps(
   for (const [skill, count] of allRequired) {
     const has = userSkills.has(skill.toLowerCase());
     if (!has) {
+      const courses = getCoursesForSkill(skill);
       gaps.push({
         skill,
         currentLevel: Math.floor(Math.random() * 25) + 10,
         requiredLevel: 60 + Math.floor(Math.random() * 25),
         priority: count >= 3 ? "high" : count >= 2 ? "medium" : "low",
-        resources: getResources(skill),
+        resources: courses.map(c => `${c.name} by ${c.provider} on ${c.platform} — ${c.duration}`),
+        courses,
       });
     }
   }
@@ -434,44 +603,6 @@ function identifySkillGaps(
       return pri[b.priority] - pri[a.priority];
     })
     .slice(0, 10);
-}
-
-function getResources(skill: string): string[] {
-  const resourceMap: Record<string, string[]> = {
-    "Machine Learning Fundamentals": [
-      "fast.ai — Practical Deep Learning",
-      "Andrew Ng's ML Specialization on Coursera",
-      "Kaggle Learn tutorials",
-    ],
-    "Product Thinking": [
-      "Reforge — Product Management Fundamentals",
-      "Lenny's Newsletter & Podcast",
-      "Inspired by Marty Cagan (book)",
-    ],
-    "Full-Stack Development": [
-      "The Odin Project (free)",
-      "Next.js official tutorial",
-      "freeCodeCamp Full Stack Certification",
-    ],
-    "People Management": [
-      "The Manager's Path by Camille Fournier",
-      "High Output Management by Andy Grove",
-      "ADPList leadership mentors",
-    ],
-    "A/B Testing": [
-      "Udacity A/B Testing Course (free)",
-      "Trustworthy Online Controlled Experiments (book)",
-      "Optimizely Academy",
-    ],
-  };
-
-  return (
-    resourceMap[skill] || [
-      `Search "${skill} course" on Coursera`,
-      `YouTube tutorials for ${skill}`,
-      `Practice ${skill} through hands-on projects`,
-    ]
-  );
 }
 
 // ---------- Opportunity matching ----------
@@ -501,6 +632,7 @@ export function generateCareerWeave(profile: UserProfile): CareerWeaveResult {
   const pathways = generatePathways(profile, threads);
   const skillGaps = identifySkillGaps(profile, pathways);
   const opportunities = matchOpportunities(profile, pathways);
+  const archetype = computeArchetype(threads, profile);
 
   const recommended = pathways.reduce((best, p) =>
     p.score > best.score ? p : best
@@ -518,5 +650,6 @@ export function generateCareerWeave(profile: UserProfile): CareerWeaveResult {
     recommendedPathway: recommended.id,
     summary,
     skillGaps,
+    archetype,
   };
 }
