@@ -14,6 +14,10 @@ import {
   Briefcase,
   Layers,
   PartyPopper,
+  Globe,
+  Send,
+  Users,
+  BookOpen,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -51,12 +55,12 @@ const dashboardSteps: OnboardingStep[] = [
       "Your profile is broken into 8 career threads — Skills, Experience, Education, Interests, Market Demand, Salary, Lifestyle, and Employer Fit. Each thread is scored 1-100 with explanations and improvement tips.",
   },
   {
-    id: "charts",
-    targetId: "charts",
-    icon: BarChart3,
-    title: "Visual Comparisons",
+    id: "atlas",
+    targetId: "atlas",
+    icon: Globe,
+    title: "Global Career Atlas",
     description:
-      "Switch between three chart views: the Thread Radar shows your strengths at a glance, Pathway Scores compares how well each career path fits you, and Dimension Compare breaks down pathways across salary, growth, stability, flexibility, and impact.",
+      "An interactive world map showing career hubs matched to your profile. Click any city to see industries, roles, salary ranges, and skill gaps. Compare up to 3 cities side by side and save your favorites.",
   },
   {
     id: "pathways",
@@ -65,6 +69,38 @@ const dashboardSteps: OnboardingStep[] = [
     title: "Pathway Simulator",
     description:
       "Five distinct career directions tailored to you. Click any pathway to expand it and see suitable roles, required skills, trade-offs, risks, and your next 3 concrete actions. The one marked 'Best Match' has the highest alignment with your profile.",
+  },
+  {
+    id: "charts",
+    targetId: "charts",
+    icon: BarChart3,
+    title: "Visual Comparisons",
+    description:
+      "Switch between three chart views: the Thread Radar shows your strengths at a glance, Pathway Scores compares how well each career path fits you, and Dimension Compare breaks down pathways across salary, growth, stability, flexibility, and impact.",
+  },
+  {
+    id: "outreach",
+    targetId: "outreach",
+    icon: Send,
+    title: "Outreach Studio",
+    description:
+      "Generate personalized message drafts for recruiters, alumni, and mentors. Choose a message type, select your target context, then edit and copy the generated draft. No messages are sent automatically — you're always in control.",
+  },
+  {
+    id: "mentors",
+    targetId: "mentors",
+    icon: Users,
+    title: "Mentor Bridge",
+    description:
+      "Browse mentors matched to your profile and career interests. Each mentor card shows their background, match reason, and suggested questions. Click 'Draft Mentorship Request' to jump to the Outreach Studio.",
+  },
+  {
+    id: "courses",
+    targetId: "courses",
+    icon: BookOpen,
+    title: "Learning & Portfolio Plan",
+    description:
+      "Courses, certifications, portfolio projects, and communities recommended based on your skill gaps and chosen pathways. Each recommendation explains what gap it closes and how it improves your pathway score.",
   },
   {
     id: "skills",

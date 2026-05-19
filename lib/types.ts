@@ -116,3 +116,71 @@ export interface PersonalizedHub extends CareerHub {
   skillGaps: string[];
   matchReasons: string[];
 }
+
+// ── Mentor Bridge ──
+
+export interface Mentor {
+  id: string;
+  name: string;
+  role: string;
+  company: string;
+  industry: string;
+  location: string;
+  expertise: string[];
+  bio: string;
+  imageInitials: string;
+  suggestedQuestions: string[];
+  pathwayTags: string[];
+}
+
+export interface PersonalizedMentor extends Mentor {
+  matchScore: number;
+  matchReasons: string[];
+}
+
+// ── Outreach Studio ──
+
+export type OutreachMessageType =
+  | "cold-email"
+  | "linkedin-message"
+  | "mentorship-request"
+  | "follow-up"
+  | "self-intro"
+  | "why-good-fit";
+
+export interface OutreachDraft {
+  id: string;
+  type: OutreachMessageType;
+  subject?: string;
+  body: string;
+  recipientContext: string;
+}
+
+// ── Course & Portfolio Recommendations ──
+
+export type RecommendationType =
+  | "course"
+  | "certification"
+  | "portfolio-project"
+  | "community"
+  | "hackathon"
+  | "internship";
+
+export interface CourseRecommendation {
+  id: string;
+  title: string;
+  type: RecommendationType;
+  provider: string;
+  duration?: string;
+  cost?: string;
+  skillGapsClosed: string[];
+  whyItMatters: string;
+  pathwayImprovement: string;
+  relevantPathways: string[];
+  difficulty: "beginner" | "intermediate" | "advanced";
+}
+
+export interface PersonalizedCourseRecommendation extends CourseRecommendation {
+  relevanceScore: number;
+  matchingGaps: string[];
+}

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState, Suspense } from "react";
+import React, { useEffect, useState, useCallback, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -16,6 +16,9 @@ import {
   Sparkles,
   Download,
   Globe,
+  Send,
+  Users,
+  BookOpen,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -28,18 +31,32 @@ import { SkillGaps } from "@/components/dashboard/skill-gaps";
 import { OpportunityMarketplace } from "@/components/dashboard/opportunity-marketplace";
 import { OnboardingGuide, OnboardingTrigger } from "@/components/onboarding-guide";
 import { GlobalCareerAtlas } from "@/components/dashboard/global-career-atlas";
+import { OutreachStudio } from "@/components/dashboard/outreach-studio";
+import { MentorBridge } from "@/components/dashboard/mentor-bridge";
+import { CourseRecommendations } from "@/components/dashboard/course-recommendations";
 import { generateCareerWeave } from "@/lib/career-engine";
 import { personalizeAtlas } from "@/lib/atlas-engine";
+import { personalizeMentors } from "@/lib/mentor-engine";
+import { personalizeCourses } from "@/lib/course-engine";
 import { careerHubs } from "@/lib/atlas-data";
 import { demoProfile } from "@/lib/demo-data";
-import { UserProfile, CareerWeaveResult, PersonalizedHub } from "@/lib/types";
+import {
+  UserProfile,
+  CareerWeaveResult,
+  PersonalizedHub,
+  PersonalizedMentor,
+  PersonalizedCourseRecommendation,
+} from "@/lib/types";
 
 const sections = [
   { id: "summary", icon: Sparkles, label: "Summary" },
   { id: "threads", icon: Map, label: "Thread Map" },
+  { id: "atlas", icon: Globe, label: "Career Atlas" },
   { id: "pathways", icon: GitBranch, label: "Pathways" },
   { id: "charts", icon: BarChart3, label: "Charts" },
-  { id: "atlas", icon: Globe, label: "Career Atlas" },
+  { id: "outreach", icon: Send, label: "Outreach" },
+  { id: "mentors", icon: Users, label: "Mentors" },
+  { id: "courses", icon: BookOpen, label: "Learning" },
   { id: "skills", icon: Target, label: "Skill Gaps" },
   { id: "opportunities", icon: Briefcase, label: "Opportunities" },
 ];
@@ -53,9 +70,13 @@ function DashboardContent() {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [result, setResult] = useState<CareerWeaveResult | null>(null);
   const [atlasHubs, setAtlasHubs] = useState<PersonalizedHub[]>([]);
+  const [mentors, setMentors] = useState<PersonalizedMentor[]>([]);
+  const [courses, setCourses] = useState<PersonalizedCourseRecommendation[]>([]);
   const [activeSection, setActiveSection] = useState("summary");
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [onboardingKey, setOnboardingKey] = useState(0);
+  const [outreachMentorTarget, setOutreachMentorTarget] =
+    useState<PersonalizedMentor | null>(null);
 
   useEffect(() => {
     let p: UserProfile;
@@ -78,11 +99,29 @@ function DashboardContent() {
       const weaveResult = generateCareerWeave(p);
       setResult(weaveResult);
       setAtlasHubs(personalizeAtlas(p, careerHubs));
+      setMentors(personalizeMentors(p, weaveResult.pathways));
+      setCourses(
+        personalizeCourses(
+          p,
+          weaveResult.skillGaps,
+          weaveResult.pathways,
+          weaveResult.recommendedPathway
+        )
+      );
       setLoading(false);
     }, 2000);
 
     return () => clearTimeout(timer);
   }, [isDemo, router]);
+
+  const handleDraftMentorRequest = useCallback(
+    (mentor: PersonalizedMentor) => {
+      setOutreachMentorTarget(mentor);
+      setActiveSection("outreach");
+      document.getElementById("outreach")?.scrollIntoView({ behavior: "smooth" });
+    },
+    []
+  );
 
   if (loading) {
     return (
@@ -253,9 +292,15 @@ function DashboardContent() {
           <ThreadMap threads={result.threads} />
         </section>
 
-        {/* Charts */}
-        <section id="charts">
-          <PathwayChart threads={result.threads} pathways={result.pathways} />
+        {/* Global Career Atlas */}
+        <section id="atlas">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.1 }}
+          >
+            <GlobalCareerAtlas hubs={atlasHubs} />
+          </motion.div>
         </section>
 
         {/* Pathways */}
@@ -266,14 +311,55 @@ function DashboardContent() {
           />
         </section>
 
-        {/* Global Career Atlas */}
-        <section id="atlas">
+        {/* Charts */}
+        <section id="charts">
+          <PathwayChart threads={result.threads} pathways={result.pathways} />
+        </section>
+
+        {/* Outreach Studio */}
+        <section id="outreach">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.1 }}
+          >
+            <OutreachStudio
+              profile={profile}
+              pathways={result.pathways}
+              mentors={mentors}
+              hubs={atlasHubs}
+              skillGaps={result.skillGaps}
+              preselectedMentor={outreachMentorTarget}
+              onMentorHandled={() => setOutreachMentorTarget(null)}
+            />
+          </motion.div>
+        </section>
+
+        {/* Mentor Bridge */}
+        <section id="mentors">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.15 }}
+          >
+            <MentorBridge
+              mentors={mentors}
+              onDraftRequest={handleDraftMentorRequest}
+            />
+          </motion.div>
+        </section>
+
+        {/* Course & Portfolio Recommendations */}
+        <section id="courses">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.2 }}
           >
-            <GlobalCareerAtlas hubs={atlasHubs} />
+            <CourseRecommendations
+              recommendations={courses}
+              skillGaps={result.skillGaps}
+            />
           </motion.div>
         </section>
 
