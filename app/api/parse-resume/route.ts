@@ -12,29 +12,20 @@ const SYSTEM_PROMPT = `You are a resume/CV parser. Extract structured informatio
 {
   "name": "string or empty string",
   "currentRole": "string or empty string — their current or most recent job title / student status",
-  "education": "string or empty string — degrees, institutions, years",
-  "experience": "string or empty string — work experience and projects summarized concisely",
+  "education": "string or empty string — degrees, institutions, years. Keep to 1-2 lines max.",
+  "experience": "string or empty string — summarize in 2-3 SHORT sentences only. Do not list every role.",
   "skills": ["array of matched skill tags"],
   "interests": ["array of matched interest tags"],
   "preferredIndustries": ["array of matched industry tags"],
-  "locationPreference": "string or empty string — city/country/remote preference if mentioned"
+  "locationPreference": "string or empty string — city/country if mentioned"
 }
 
 IMPORTANT RULES:
-1. For "skills", match ONLY from this predefined list: ${JSON.stringify(skillSuggestions)}
-   Include a skill only if the resume clearly demonstrates or mentions it.
-
-2. For "interests", match ONLY from this predefined list: ${JSON.stringify(interestSuggestions)}
-   Infer interests from the resume content (e.g., ML projects → "AI/ML", hackathons → "Entrepreneurship").
-
-3. For "preferredIndustries", match ONLY from this predefined list: ${JSON.stringify(industrySuggestions)}
-   Infer from work experience, education, and interests.
-
-4. For "education", include degree, institution, and year if available. Keep it concise.
-
-5. For "experience", summarize key roles and responsibilities in 2-4 sentences.
-
-6. Return ONLY valid JSON — no markdown, no code fences, no explanation.`;
+1. For "skills", match ONLY from this list: ${JSON.stringify(skillSuggestions)}
+2. For "interests", match ONLY from this list: ${JSON.stringify(interestSuggestions)}
+3. For "preferredIndustries", match ONLY from this list: ${JSON.stringify(industrySuggestions)}
+4. Keep "education" and "experience" very concise — no long paragraphs.
+5. Return ONLY valid JSON — no markdown, no code fences, no explanation.`;
 
 // ── Gemini (primary) ──
 
@@ -44,14 +35,14 @@ async function parseWithGemini(resumeText: string): Promise<string> {
     model: "gemini-2.5-flash",
     generationConfig: {
       temperature: 0.1,
-      maxOutputTokens: 1024,
+      maxOutputTokens: 4096,
       responseMimeType: "application/json",
     },
   });
 
   const result = await model.generateContent([
     { text: SYSTEM_PROMPT },
-    { text: `Parse this resume and extract structured profile data:\n\n${resumeText.slice(0, 8000)}` },
+    { text: `Parse this resume and extract structured profile data:\n\n${resumeText.slice(0, 12000)}` },
   ]);
 
   return result.response.text();
@@ -68,15 +59,49 @@ async function parseWithGroq(resumeText: string): Promise<string> {
       { role: "system", content: SYSTEM_PROMPT },
       {
         role: "user",
-        content: `Parse this resume and extract structured profile data:\n\n${resumeText.slice(0, 8000)}`,
+        content: `Parse this resume and extract structured profile data:\n\n${resumeText.slice(0, 12000)}`,
       },
     ],
     temperature: 0.1,
-    max_tokens: 1024,
+    max_tokens: 4096,
     response_format: { type: "json_object" },
   });
 
   return completion.choices[0]?.message?.content || "";
+}
+
+// ── Safe JSON parse with truncation repair ──
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function safeParseJSON(text: string): Record<string, any> {
+  // Strip markdown fences if present
+  let cleaned = text.trim();
+  if (cleaned.startsWith("```")) {
+    cleaned = cleaned.replace(/^```(?:json)?\s*/, "").replace(/```\s*$/, "");
+  }
+
+  try {
+    return JSON.parse(cleaned);
+  } catch {
+    // Try to repair truncated JSON by closing open strings/arrays/objects
+    let repaired = cleaned;
+
+    // Remove trailing incomplete string value (e.g., `"experience": "some text that got cut`)
+    repaired = repaired.replace(/,\s*"[^"]*":\s*"[^"]*$/, "");
+    // Remove trailing incomplete array item
+    repaired = repaired.replace(/,\s*"[^"]*":\s*\[[^\]]*$/, "");
+
+    // Count and close unclosed brackets
+    const openBraces = (repaired.match(/{/g) || []).length;
+    const closeBraces = (repaired.match(/}/g) || []).length;
+    const openBrackets = (repaired.match(/\[/g) || []).length;
+    const closeBrackets = (repaired.match(/]/g) || []).length;
+
+    for (let i = 0; i < openBrackets - closeBrackets; i++) repaired += "]";
+    for (let i = 0; i < openBraces - closeBraces; i++) repaired += "}";
+
+    return JSON.parse(repaired);
+  }
 }
 
 // ── Route handler ──
@@ -118,7 +143,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const parsed = JSON.parse(responseText);
+    const parsed = safeParseJSON(responseText);
 
     // Build confidence map
     const confidence = {
@@ -140,19 +165,19 @@ export async function POST(request: Request) {
       ...(parsed.currentRole && { currentRole: parsed.currentRole }),
       ...(parsed.education && { education: parsed.education }),
       ...(parsed.experience && { experience: parsed.experience }),
-      ...(parsed.skills?.length > 0 && {
-        skills: parsed.skills.filter((s: string) =>
+      ...((parsed.skills as string[])?.length > 0 && {
+        skills: (parsed.skills as string[]).filter((s) =>
           skillSuggestions.includes(s)
         ),
       }),
-      ...(parsed.interests?.length > 0 && {
-        interests: parsed.interests.filter((s: string) =>
+      ...((parsed.interests as string[])?.length > 0 && {
+        interests: (parsed.interests as string[]).filter((s) =>
           interestSuggestions.includes(s)
         ),
       }),
-      ...(parsed.preferredIndustries?.length > 0 && {
-        preferredIndustries: parsed.preferredIndustries.filter((s: string) =>
-          industrySuggestions.includes(s)
+      ...((parsed.preferredIndustries as string[])?.length > 0 && {
+        preferredIndustries: (parsed.preferredIndustries as string[]).filter(
+          (s) => industrySuggestions.includes(s)
         ),
       }),
       ...(parsed.locationPreference && {
