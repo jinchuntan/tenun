@@ -6,14 +6,8 @@ import { motion } from "framer-motion";
 import {
   User,
   GraduationCap,
-  Briefcase,
   Cpu,
-  Heart,
-  Building2,
-  DollarSign,
-  Zap,
   Sun,
-  MapPin,
   FileText,
   ArrowRight,
   Loader2,
@@ -24,28 +18,15 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
+import { CVUpload } from "@/components/cv-upload";
 import { UserProfile } from "@/lib/types";
 import { demoProfile } from "@/lib/demo-data";
+import {
+  skillSuggestions,
+  interestSuggestions,
+  industrySuggestions,
+} from "@/lib/resume-parser";
 
-const skillSuggestions = [
-  "Python", "JavaScript", "TypeScript", "React", "SQL", "Java", "C++",
-  "Figma", "Tableau", "Excel", "Git", "Docker", "AWS", "Machine Learning",
-  "Data Visualization", "Public Speaking", "Project Management",
-  "Research", "Writing", "Leadership", "Communication", "Agile",
-];
-
-const interestSuggestions = [
-  "Product Management", "Data Science", "Software Engineering",
-  "UX Design", "Consulting", "Finance", "Climate Technology",
-  "Healthcare", "Education", "AI/ML", "Cybersecurity", "Marketing",
-  "Entrepreneurship", "Social Impact", "Gaming",
-];
-
-const industrySuggestions = [
-  "Technology", "Finance", "Healthcare", "Education", "Consulting",
-  "Climate Tech", "E-commerce", "Media", "Government", "Nonprofit",
-  "Manufacturing", "Energy", "Retail", "Social Enterprise",
-];
 
 function TagInput({
   values,
@@ -157,6 +138,37 @@ export default function ProfilePage() {
     setProfile(demoProfile);
   };
 
+  const applyParsedProfile = (parsed: Partial<UserProfile>) => {
+    setProfile((prev) => {
+      const merged = { ...prev };
+      if (parsed.name && !prev.name) merged.name = parsed.name;
+      if (parsed.currentRole && !prev.currentRole)
+        merged.currentRole = parsed.currentRole;
+      if (parsed.education && !prev.education)
+        merged.education = parsed.education;
+      if (parsed.experience && !prev.experience)
+        merged.experience = parsed.experience;
+      if (parsed.locationPreference && !prev.locationPreference)
+        merged.locationPreference = parsed.locationPreference;
+      // Merge arrays (union with existing)
+      if (parsed.skills)
+        merged.skills = [...new Set([...prev.skills, ...parsed.skills])];
+      if (parsed.interests)
+        merged.interests = [
+          ...new Set([...prev.interests, ...parsed.interests]),
+        ];
+      if (parsed.preferredIndustries)
+        merged.preferredIndustries = [
+          ...new Set([
+            ...prev.preferredIndustries,
+            ...parsed.preferredIndustries,
+          ]),
+        ];
+      if (parsed.resumeText) merged.resumeText = parsed.resumeText;
+      return merged;
+    });
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -206,6 +218,9 @@ export default function ProfilePage() {
           onSubmit={handleSubmit}
           className="space-y-6"
         >
+          {/* CV Upload */}
+          <CVUpload onProfileExtracted={applyParsedProfile} />
+
           {/* Basic info */}
           <Card>
             <CardHeader>
