@@ -15,6 +15,7 @@ import {
   User,
   Sparkles,
   Download,
+  Globe,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -26,15 +27,19 @@ import { PathwayChart } from "@/components/dashboard/pathway-chart";
 import { SkillGaps } from "@/components/dashboard/skill-gaps";
 import { OpportunityMarketplace } from "@/components/dashboard/opportunity-marketplace";
 import { OnboardingGuide, OnboardingTrigger } from "@/components/onboarding-guide";
+import { GlobalCareerAtlas } from "@/components/dashboard/global-career-atlas";
 import { generateCareerWeave } from "@/lib/career-engine";
+import { personalizeAtlas } from "@/lib/atlas-engine";
+import { careerHubs } from "@/lib/atlas-data";
 import { demoProfile } from "@/lib/demo-data";
-import { UserProfile, CareerWeaveResult } from "@/lib/types";
+import { UserProfile, CareerWeaveResult, PersonalizedHub } from "@/lib/types";
 
 const sections = [
   { id: "summary", icon: Sparkles, label: "Summary" },
   { id: "threads", icon: Map, label: "Thread Map" },
   { id: "pathways", icon: GitBranch, label: "Pathways" },
   { id: "charts", icon: BarChart3, label: "Charts" },
+  { id: "atlas", icon: Globe, label: "Career Atlas" },
   { id: "skills", icon: Target, label: "Skill Gaps" },
   { id: "opportunities", icon: Briefcase, label: "Opportunities" },
 ];
@@ -47,6 +52,7 @@ function DashboardContent() {
   const [loading, setLoading] = useState(true);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [result, setResult] = useState<CareerWeaveResult | null>(null);
+  const [atlasHubs, setAtlasHubs] = useState<PersonalizedHub[]>([]);
   const [activeSection, setActiveSection] = useState("summary");
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [onboardingKey, setOnboardingKey] = useState(0);
@@ -71,6 +77,7 @@ function DashboardContent() {
     const timer = setTimeout(() => {
       const weaveResult = generateCareerWeave(p);
       setResult(weaveResult);
+      setAtlasHubs(personalizeAtlas(p, careerHubs));
       setLoading(false);
     }, 2000);
 
@@ -257,6 +264,17 @@ function DashboardContent() {
             pathways={result.pathways}
             recommendedId={result.recommendedPathway}
           />
+        </section>
+
+        {/* Global Career Atlas */}
+        <section id="atlas">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.2 }}
+          >
+            <GlobalCareerAtlas hubs={atlasHubs} />
+          </motion.div>
         </section>
 
         {/* Skill Gaps */}

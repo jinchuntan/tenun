@@ -75,3 +75,44 @@ export interface RadarDataPoint {
   score: number;
   fullMark: 100;
 }
+
+// ── Global Career Atlas ──
+
+export type AtlasRegion =
+  | "Southeast Asia"
+  | "East Asia"
+  | "Middle East"
+  | "Europe"
+  | "North America"
+  | "Oceania";
+
+export type MobilityDifficulty = "Low" | "Medium" | "High";
+export type CostOfLiving = "Low" | "Medium" | "High" | "Very High";
+export type WorkMode = "Remote" | "Hybrid" | "On-site";
+
+export interface CareerHub {
+  id: string;
+  city: string;
+  country: string;
+  region: AtlasRegion;
+  coordinates: [number, number]; // [longitude, latitude]
+  hubType: string;
+  tagline: string;
+  industries: string[];
+  demandSkills: string[];
+  suitableRoles: string[];
+  salaryRange: { min: number; max: number; currency: string };
+  workModes: WorkMode[];
+  mobilityDifficulty: MobilityDifficulty;
+  costOfLiving: CostOfLiving;
+  opportunities: { title: string; type: string; organization: string }[];
+  recommendedActions: string[];
+  pathwayTags: string[];
+}
+
+export interface PersonalizedHub extends CareerHub {
+  matchScore: number;
+  matchingSkills: string[];
+  skillGaps: string[];
+  matchReasons: string[];
+}
