@@ -30,23 +30,27 @@ async function extractFromDocx(file: File): Promise<string> {
 }
 
 async function extractFromPdf(file: File): Promise<string> {
-  const formData = new FormData();
-  formData.append("file", file);
+  const pdfjsLib = await import("pdfjs-dist/legacy/build/pdf.mjs");
 
-  const response = await fetch("/api/parse-pdf", {
-    method: "POST",
-    body: formData,
-  });
+  // Set worker to use the bundled worker via CDN to avoid Next.js webpack issues
+  pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.mjs`;
 
-  if (!response.ok) {
-    const error = await response
-      .json()
-      .catch(() => ({ error: "Unknown error" }));
-    throw new Error(error.error || "Failed to parse PDF");
+  const arrayBuffer = await file.arrayBuffer();
+  const pdf = await pdfjsLib.getDocument({ data: new Uint8Array(arrayBuffer) })
+    .promise;
+
+  const pages: string[] = [];
+  for (let i = 1; i <= pdf.numPages; i++) {
+    const page = await pdf.getPage(i);
+    const content = await page.getTextContent();
+    const text = content.items
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      .map((item: any) => (item.str as string) || "")
+      .join(" ");
+    pages.push(text);
   }
 
-  const data = await response.json();
-  return data.text;
+  return pages.join("\n\n");
 }
 
 export async function extractTextFromFile(file: File): Promise<string> {
