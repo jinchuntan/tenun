@@ -25,6 +25,7 @@ import { PathwayCards } from "@/components/dashboard/pathway-cards";
 import { PathwayChart } from "@/components/dashboard/pathway-chart";
 import { SkillGaps } from "@/components/dashboard/skill-gaps";
 import { OpportunityMarketplace } from "@/components/dashboard/opportunity-marketplace";
+import { OnboardingGuide, OnboardingTrigger } from "@/components/onboarding-guide";
 import { generateCareerWeave } from "@/lib/career-engine";
 import { demoProfile } from "@/lib/demo-data";
 import { UserProfile, CareerWeaveResult } from "@/lib/types";
@@ -47,6 +48,8 @@ function DashboardContent() {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [result, setResult] = useState<CareerWeaveResult | null>(null);
   const [activeSection, setActiveSection] = useState("summary");
+  const [showOnboarding, setShowOnboarding] = useState(false);
+  const [onboardingKey, setOnboardingKey] = useState(0);
 
   useEffect(() => {
     let p: UserProfile;
@@ -151,6 +154,12 @@ function DashboardContent() {
                 </span>
               )}
             </div>
+            <OnboardingTrigger
+              onClick={() => {
+                setOnboardingKey((k) => k + 1);
+                setShowOnboarding(true);
+              }}
+            />
           </div>
 
           {/* Section nav */}
@@ -262,6 +271,12 @@ function DashboardContent() {
       </div>
 
       <Footer />
+
+      {/* Onboarding guide — shows automatically on first visit */}
+      <OnboardingGuide
+        key={onboardingKey}
+        forceShow={showOnboarding}
+      />
     </div>
   );
 }

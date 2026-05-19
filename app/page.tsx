@@ -26,6 +26,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
 import { ThreadVisual } from "@/components/thread-visual";
+import { WelcomeModal } from "@/components/welcome-modal";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 30 },
@@ -45,6 +46,7 @@ export default function LandingPage() {
   return (
     <div className="min-h-screen bg-white">
       <Navbar />
+      <WelcomeModal />
 
       {/* Hero */}
       <section className="relative pt-24 pb-16 md:pt-32 md:pb-24 overflow-hidden">
