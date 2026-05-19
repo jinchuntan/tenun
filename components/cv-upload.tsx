@@ -12,7 +12,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { extractTextFromFile, getFileType } from "@/lib/file-extractors";
-import { parseResumeText, ParseResult } from "@/lib/resume-parser";
+import { ParseResult } from "@/lib/resume-parser";
 import { UserProfile } from "@/lib/types";
 
 type UploadState = "idle" | "dragging" | "parsing" | "success" | "error";
@@ -73,7 +73,22 @@ export function CVUpload({ onProfileExtracted }: CVUploadProps) {
           return;
         }
 
-        const result = parseResumeText(rawText);
+        const response = await fetch("/api/parse-resume", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ text: rawText }),
+        });
+
+        if (!response.ok) {
+          const errData = await response.json().catch(() => ({}));
+          throw new Error(errData.error || "Failed to parse resume.");
+        }
+
+        const result: ParseResult = await response.json();
+
+        // Attach raw text to the profile so the dashboard can use it
+        result.profile.resumeText = rawText;
+
         setParseResult(result);
         onProfileExtracted(result.profile);
         setState("success");
