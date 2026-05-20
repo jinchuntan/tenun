@@ -1,22 +1,19 @@
 "use client";
 
-import React, { useEffect, useState, useCallback, Suspense } from "react";
+import React, { useEffect, useState, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import {
   Layers,
   Map,
   GitBranch,
   Target,
-  Briefcase,
   ArrowLeft,
   Loader2,
   Sparkles,
-  Download,
   Globe,
   Send,
   Users,
-  BookOpen,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -25,14 +22,10 @@ import { Footer } from "@/components/footer";
 import { ThreadMap } from "@/components/dashboard/thread-map";
 import { PathwayCards } from "@/components/dashboard/pathway-cards";
 import { SkillGaps } from "@/components/dashboard/skill-gaps";
-import { OpportunityMarketplace } from "@/components/dashboard/opportunity-marketplace";
-import { CareerAtlas } from "@/components/dashboard/career-atlas";
 import { MentorConnect } from "@/components/dashboard/mentor-connect";
 import { OnboardingGuide, OnboardingTrigger } from "@/components/onboarding-guide";
 import { GlobalCareerAtlas } from "@/components/dashboard/global-career-atlas";
 import { OutreachStudio } from "@/components/dashboard/outreach-studio";
-import { MentorBridge } from "@/components/dashboard/mentor-bridge";
-import { CourseRecommendations } from "@/components/dashboard/course-recommendations";
 import { generateCareerWeave } from "@/lib/career-engine";
 import { personalizeAtlas } from "@/lib/atlas-engine";
 import { personalizeMentors } from "@/lib/mentor-engine";
@@ -52,14 +45,9 @@ const sections = [
   { id: "threads", icon: Map, label: "Profile" },
   { id: "atlas", icon: Globe, label: "Career Atlas" },
   { id: "pathways", icon: GitBranch, label: "Pathways" },
-  { id: "charts", icon: BarChart3, label: "Charts" },
   { id: "outreach", icon: Send, label: "Outreach" },
   { id: "mentors", icon: Users, label: "Mentors" },
-  { id: "courses", icon: BookOpen, label: "Learning" },
   { id: "skills", icon: Target, label: "Skill Gaps" },
-  { id: "opportunities", icon: Briefcase, label: "Jobs" },
-  { id: "atlas", icon: Globe, label: "Atlas" },
-  { id: "mentors", icon: Users, label: "Mentors" },
 ];
 
 function DashboardContent() {
@@ -76,8 +64,6 @@ function DashboardContent() {
   const [activeSection, setActiveSection] = useState("summary");
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [onboardingKey, setOnboardingKey] = useState(0);
-  const [outreachMentorTarget, setOutreachMentorTarget] =
-    useState<PersonalizedMentor | null>(null);
 
   useEffect(() => {
     let p: UserProfile;
@@ -113,15 +99,6 @@ function DashboardContent() {
 
     return () => clearTimeout(timer);
   }, [isDemo, router]);
-
-  const handleDraftMentorRequest = useCallback(
-    (mentor: PersonalizedMentor) => {
-      setOutreachMentorTarget(mentor);
-      setActiveSection("outreach");
-      document.getElementById("outreach")?.scrollIntoView({ behavior: "smooth" });
-    },
-    []
-  );
 
   if (loading) {
     return (
@@ -326,12 +303,7 @@ function DashboardContent() {
 
         {/* Pathways */}
         <section id="pathways">
-          <PathwayCards pathways={result.pathways} recommendedId={result.recommendedPathway} />
-        </section>
-
-        {/* Charts */}
-        <section id="charts">
-          <PathwayChart threads={result.threads} pathways={result.pathways} />
+          <PathwayCards pathways={result.pathways} recommendedId={result.recommendedPathway} courses={courses} />
         </section>
 
         {/* Outreach Studio */}
@@ -347,58 +319,18 @@ function DashboardContent() {
               mentors={mentors}
               hubs={atlasHubs}
               skillGaps={result.skillGaps}
-              preselectedMentor={outreachMentorTarget}
-              onMentorHandled={() => setOutreachMentorTarget(null)}
             />
           </motion.div>
         </section>
 
-        {/* Mentor Bridge */}
+        {/* Mentor Connect (tinder swipe) */}
         <section id="mentors">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.15 }}
-          >
-            <MentorBridge
-              mentors={mentors}
-              onDraftRequest={handleDraftMentorRequest}
-            />
-          </motion.div>
-        </section>
-
-        {/* Course & Portfolio Recommendations */}
-        <section id="courses">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.2 }}
-          >
-            <CourseRecommendations
-              recommendations={courses}
-              skillGaps={result.skillGaps}
-            />
-          </motion.div>
+          <MentorConnect profile={profile} archetype={result.archetype} />
         </section>
 
         {/* Skill Gaps */}
         <section id="skills">
           <SkillGaps gaps={result.skillGaps} />
-        </section>
-
-        {/* Opportunities */}
-        <section id="opportunities">
-          <OpportunityMarketplace opportunities={result.opportunities} />
-        </section>
-
-        {/* Career Atlas */}
-        <section id="atlas">
-          <CareerAtlas profile={profile} />
-        </section>
-
-        {/* Mentor Connect */}
-        <section id="mentors">
-          <MentorConnect profile={profile} archetype={result.archetype} />
         </section>
       </div>
 

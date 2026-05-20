@@ -5,9 +5,9 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   TrendingUp, DollarSign, Shuffle, Rocket, Crown,
   X, Zap, Star, ArrowRight, Clock, ZoomIn, ZoomOut,
-  Maximize2, ChevronRight, AlertTriangle,
+  Maximize2, ChevronRight, AlertTriangle, BookOpen, ExternalLink,
 } from "lucide-react";
-import { PathwayCard } from "@/lib/types";
+import { PathwayCard, PersonalizedCourseRecommendation } from "@/lib/types";
 
 const iconMap: Record<string, React.ElementType> = {
   TrendingUp, DollarSign, Shuffle, Rocket, Crown,
@@ -84,7 +84,7 @@ function getLabelPlacement(x: number, y: number, r: number): { lx: number; ly: n
 interface View { x: number; y: number; scale: number }
 
 // ── Component ──────────────────────────────────────────────────────────────
-export function PathwayCards({ pathways, recommendedId }: { pathways: PathwayCard[]; recommendedId: string }) {
+export function PathwayCards({ pathways, recommendedId, courses }: { pathways: PathwayCard[]; recommendedId: string; courses?: PersonalizedCourseRecommendation[] }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [view, setView] = useState<View>({ x: 0, y: 0, scale: 0.6 });
   const [isPanning, setIsPanning] = useState(false);
@@ -530,6 +530,48 @@ export function PathwayCards({ pathways, recommendedId }: { pathways: PathwayCar
                           </li>
                         ))}
                       </ul>
+                    </div>
+                  )}
+
+                  {/* Courses */}
+                  {courses && courses.filter(c => c.relevantPathways.includes(selectedNode.pathwayId)).length > 0 && (
+                    <div>
+                      <p className="text-[10px] font-bold uppercase tracking-wider mb-2 flex items-center gap-1.5"
+                        style={{ color: selectedNode.pathwayColor }}>
+                        <BookOpen className="w-3 h-3" /> Courses to get here
+                      </p>
+                      <div className="space-y-1.5">
+                        {courses
+                          .filter(c => c.relevantPathways.includes(selectedNode.pathwayId))
+                          .slice(0, 3)
+                          .map(course => (
+                            course.url ? (
+                              <a
+                                key={course.id}
+                                href={course.url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="flex items-start justify-between gap-2 rounded-lg p-2 group"
+                                style={{ backgroundColor: selectedNode.pathwayColor + "12", border: `1px solid ${selectedNode.pathwayColor}22` }}
+                              >
+                                <div className="min-w-0">
+                                  <p className="text-[11px] font-semibold text-white/80 leading-snug group-hover:text-white transition-colors">{course.title}</p>
+                                  <p className="text-[9px] text-white/35 mt-0.5">{course.provider}{course.cost ? ` · ${course.cost}` : ""}</p>
+                                </div>
+                                <ExternalLink className="w-3 h-3 shrink-0 mt-0.5 text-white/20 group-hover:text-white/50 transition-colors" />
+                              </a>
+                            ) : (
+                              <div
+                                key={course.id}
+                                className="rounded-lg p-2"
+                                style={{ backgroundColor: selectedNode.pathwayColor + "12", border: `1px solid ${selectedNode.pathwayColor}22` }}
+                              >
+                                <p className="text-[11px] font-semibold text-white/80 leading-snug">{course.title}</p>
+                                <p className="text-[9px] text-white/35 mt-0.5">{course.provider}{course.cost ? ` · ${course.cost}` : ""}</p>
+                              </div>
+                            )
+                          ))}
+                      </div>
                     </div>
                   )}
 

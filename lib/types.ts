@@ -232,6 +232,7 @@ export interface CourseRecommendation {
   provider: string;
   duration?: string;
   cost?: string;
+  url?: string;
   skillGapsClosed: string[];
   whyItMatters: string;
   pathwayImprovement: string;
