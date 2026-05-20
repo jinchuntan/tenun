@@ -4,7 +4,7 @@ import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Cpu, Briefcase, GraduationCap, Heart, TrendingUp,
-  DollarSign, Sun, Building2, Lightbulb, Share2, X, Send, ChevronDown, ChevronUp,
+  DollarSign, Sun, Building2, Lightbulb, Share2, X, Send,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { CareerThread, CareerArchetype } from "@/lib/types";
@@ -13,32 +13,6 @@ import { mentors } from "@/lib/mentor-data";
 const iconMap: Record<string, React.ElementType> = {
   Cpu, Briefcase, GraduationCap, Heart, TrendingUp, DollarSign, Sun, Building2,
 };
-
-// ---------- Score Ring ----------
-
-function ScoreRing({ score, color, size = 72 }: { score: number; color: string; size?: number }) {
-  const r = (size - 10) / 2;
-  const circ = 2 * Math.PI * r;
-  const filled = (score / 100) * circ;
-  const cx = size / 2;
-  const cy = size / 2;
-  return (
-    <svg width={size} height={size} className="shrink-0">
-      <circle cx={cx} cy={cy} r={r} fill="none" stroke="#e9eef7" strokeWidth={6} />
-      <circle
-        cx={cx} cy={cy} r={r} fill="none"
-        stroke={color} strokeWidth={6}
-        strokeDasharray={`${filled} ${circ}`}
-        strokeLinecap="round"
-        transform={`rotate(-90 ${cx} ${cy})`}
-      />
-      <text x={cx} y={cy + 1} textAnchor="middle" dominantBaseline="middle"
-        fill={color} fontSize={size < 64 ? 11 : 13} fontWeight="700">
-        {score}
-      </text>
-    </svg>
-  );
-}
 
 // ---------- Custom SVG Radar ----------
 
@@ -286,92 +260,79 @@ export function ThreadMap({ threads, archetype }: { threads: CareerThread[]; arc
       <div>
         <div className="mb-4">
           <h3 className="text-lg font-bold text-navy-900">Career Thread Strength</h3>
-          <p className="text-xs text-navy-500 mt-0.5">Click any spoke label or ring to see what it means for you</p>
+          <p className="text-xs text-navy-500 mt-0.5">Click any spoke label to see what it means for you</p>
         </div>
 
-        {/* Custom SVG radar — detail overlays inside the card */}
-        <Card className="mb-4">
-          <CardContent className="p-4 sm:p-6 relative">
-            <RadarChart threads={threads} onSelect={t => setSelectedThread(prev => prev?.id === t.id ? null : t)} />
-            <AnimatePresence>
-              {selectedThread && (() => {
-                const Icon = iconMap[selectedThread.icon] || Cpu;
-                return (
-                  <motion.div
-                    key={selectedThread.id}
-                    initial={{ opacity: 0, scale: 0.96 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.96 }}
-                    transition={{ duration: 0.18 }}
-                    className="absolute inset-3 sm:inset-6 flex items-center justify-center pointer-events-none"
-                  >
-                    <div
-                      className="bg-white/96 backdrop-blur-sm rounded-2xl border shadow-xl p-4 w-full max-w-xs pointer-events-auto"
-                      style={{ borderColor: selectedThread.color + "50" }}
-                    >
-                      <div className="flex items-center justify-between mb-3">
-                        <div className="flex items-center gap-2">
-                          <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0" style={{ backgroundColor: selectedThread.color + "20" }}>
-                            <Icon className="w-4 h-4" style={{ color: selectedThread.color }} />
+        <Card>
+          <CardContent className="p-4 sm:p-6">
+            <div className="flex flex-col md:flex-row gap-4 md:gap-6">
+              {/* Left: Radar chart */}
+              <div className="flex-1 min-w-0">
+                <RadarChart threads={threads} onSelect={t => setSelectedThread(prev => prev?.id === t.id ? null : t)} />
+              </div>
+
+              {/* Right: Detail panel */}
+              <div className="md:w-72 flex-shrink-0 flex items-center">
+                <div className="w-full">
+                  <AnimatePresence mode="wait">
+                    {selectedThread ? (() => {
+                      const Icon = iconMap[selectedThread.icon] || Cpu;
+                      return (
+                        <motion.div
+                          key={selectedThread.id}
+                          initial={{ opacity: 0, x: 10 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          exit={{ opacity: 0, x: 10 }}
+                          transition={{ duration: 0.18 }}
+                        >
+                          <div
+                            className="rounded-2xl border shadow-sm p-4"
+                            style={{ borderColor: selectedThread.color + "50" }}
+                          >
+                            <div className="flex items-center justify-between mb-3">
+                              <div className="flex items-center gap-2">
+                                <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0" style={{ backgroundColor: selectedThread.color + "20" }}>
+                                  <Icon className="w-4 h-4" style={{ color: selectedThread.color }} />
+                                </div>
+                                <div>
+                                  <p className="font-bold text-navy-900 text-sm leading-tight">{selectedThread.name.replace(" Thread", "")}</p>
+                                  <p className="text-[10px] text-navy-400">{selectedThread.contextLabel}</p>
+                                </div>
+                              </div>
+                              <button onClick={() => setSelectedThread(null)} className="text-navy-300 hover:text-navy-600 shrink-0 ml-2">
+                                <X className="w-4 h-4" />
+                              </button>
+                            </div>
+                            <p className="text-xs text-navy-600 leading-relaxed mb-3">{selectedThread.explanation}</p>
+                            <div className="flex items-start gap-1.5 bg-amber-50 rounded-xl p-2.5 border border-amber-100">
+                              <Lightbulb className="w-3.5 h-3.5 text-amber-600 mt-0.5 shrink-0" />
+                              <p className="text-[11px] text-navy-700 leading-snug">{selectedThread.improvement}</p>
+                            </div>
                           </div>
-                          <div>
-                            <p className="font-bold text-navy-900 text-sm leading-tight">{selectedThread.name.replace(" Thread","")}</p>
-                            <p className="text-[10px] text-navy-400">{selectedThread.contextLabel}</p>
-                          </div>
+                        </motion.div>
+                      );
+                    })() : (
+                      <motion.div
+                        key="empty"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        transition={{ duration: 0.15 }}
+                        className="flex flex-col items-center justify-center min-h-[200px] text-center"
+                      >
+                        <div className="w-12 h-12 rounded-2xl bg-navy-50 flex items-center justify-center mb-3">
+                          <Cpu className="w-5 h-5 text-navy-400" />
                         </div>
-                        <button onClick={() => setSelectedThread(null)} className="text-navy-300 hover:text-navy-600 shrink-0 ml-2">
-                          <X className="w-4 h-4" />
-                        </button>
-                      </div>
-                      <p className="text-xs text-navy-600 leading-relaxed mb-2">{selectedThread.explanation}</p>
-                      <div className="flex items-start gap-1.5 bg-amber-50 rounded-xl p-2.5 border border-amber-100">
-                        <Lightbulb className="w-3.5 h-3.5 text-amber-600 mt-0.5 shrink-0" />
-                        <p className="text-[11px] text-navy-700 leading-snug">{selectedThread.improvement}</p>
-                      </div>
-                    </div>
-                  </motion.div>
-                );
-              })()}
-            </AnimatePresence>
+                        <p className="text-sm font-medium text-navy-600 mb-1">Select a thread</p>
+                        <p className="text-xs text-navy-400 max-w-[180px]">Click any spoke label on the chart to explore that dimension</p>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+              </div>
+            </div>
           </CardContent>
         </Card>
-
-        {/* Score rings grid */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-4">
-          {threads.map((thread, i) => {
-            const Icon = iconMap[thread.icon] || Cpu;
-            const isSelected = selectedThread?.id === thread.id;
-            return (
-              <motion.button
-                key={thread.id}
-                initial={{ opacity: 0, y: 15 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.35, delay: i * 0.05 }}
-                onClick={() => setSelectedThread(prev => prev?.id === thread.id ? null : thread)}
-                className={`flex flex-col items-center gap-2 p-3 rounded-2xl border-2 transition-all ${
-                  isSelected ? "shadow-md" : "hover:shadow-sm border-transparent hover:border-navy-100"
-                }`}
-                style={isSelected ? { borderColor: thread.color + "40", backgroundColor: thread.color + "06" } : {}}
-              >
-                <ScoreRing score={thread.score} color={thread.color} size={64} />
-                <div className="text-center">
-                  <div className="flex items-center justify-center gap-1 mb-0.5">
-                    <Icon className="w-3 h-3" style={{ color: thread.color }} />
-                    <span className="text-[11px] font-semibold text-navy-800">
-                      {thread.name.replace(" Thread", "")}
-                    </span>
-                  </div>
-                  <span className="text-[10px] text-navy-400">{thread.contextLabel}</span>
-                </div>
-                {isSelected ? (
-                  <ChevronUp className="w-3 h-3 text-navy-400" />
-                ) : (
-                  <ChevronDown className="w-3 h-3 text-navy-300" />
-                )}
-              </motion.button>
-            );
-          })}
-        </div>
       </div>
 
       {showShareModal && (
