@@ -8,7 +8,6 @@ import {
   GraduationCap,
   Cpu,
   Sun,
-  FileText,
   ArrowRight,
   Loader2,
   Sparkles,
@@ -218,8 +217,15 @@ export default function ProfilePage() {
           onSubmit={handleSubmit}
           className="space-y-6"
         >
-          {/* CV Upload */}
+          {/* CV Upload — primary entry point */}
           <CVUpload onProfileExtracted={applyParsedProfile} />
+
+          {/* Divider */}
+          <div className="flex items-center gap-4">
+            <div className="flex-1 h-px bg-navy-100" />
+            <span className="text-xs text-navy-400 font-medium">or fill in manually below</span>
+            <div className="flex-1 h-px bg-navy-100" />
+          </div>
 
           {/* Basic info */}
           <Card>
@@ -401,29 +407,6 @@ export default function ProfilePage() {
                   </select>
                 </div>
               </div>
-            </CardContent>
-          </Card>
-
-          {/* Resume paste */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-lg">
-                <FileText className="w-5 h-5 text-navy-600" />
-                Resume Text (Optional)
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <textarea
-                value={profile.resumeText || ""}
-                onChange={(e) => update("resumeText", e.target.value)}
-                placeholder="Paste your resume text here for enhanced analysis..."
-                rows={8}
-                className={inputCls + " resize-none font-mono text-xs"}
-              />
-              <p className="text-xs text-navy-400 mt-2">
-                Pasting your resume helps Tenun extract richer career threads.
-                This data is processed locally and never stored.
-              </p>
             </CardContent>
           </Card>
 

@@ -21,6 +21,7 @@ export interface CareerThread {
   explanation: string;
   improvement: string;
   color: string;
+  contextLabel: string;
 }
 
 export interface PathwayCard {
@@ -51,6 +52,46 @@ export interface Opportunity {
   description: string;
   location?: string;
   duration?: string;
+  salary?: string;
+  level?: "entry" | "mid" | "senior" | "executive";
+  externalLink?: string;
+}
+
+export interface CourseResource {
+  name: string;
+  provider: string;
+  platform: "Coursera" | "Udemy" | "edX" | "LinkedIn Learning" | "YouTube" | "Other";
+  description: string;
+  duration: string;
+  url: string;
+}
+
+export interface SkillGap {
+  skill: string;
+  currentLevel: number;
+  requiredLevel: number;
+  priority: "high" | "medium" | "low";
+  resources: string[];
+  courses: CourseResource[];
+}
+
+export interface FamousFigure {
+  name: string;
+  trait: string;
+  emoji: string;
+  color: string;
+}
+
+export interface CareerArchetype {
+  title: string;
+  emoji: string;
+  tagline: string;
+  description: string;
+  strengths: string[];
+  growthAreas: string[];
+  keywords: string[];
+  color: string;
+  figures: FamousFigure[];
 }
 
 export interface CareerWeaveResult {
@@ -60,14 +101,32 @@ export interface CareerWeaveResult {
   recommendedPathway: string;
   summary: string;
   skillGaps: SkillGap[];
+  archetype: CareerArchetype;
 }
 
-export interface SkillGap {
-  skill: string;
-  currentLevel: number;
-  requiredLevel: number;
-  priority: "high" | "medium" | "low";
-  resources: string[];
+export interface Mentor {
+  id: string;
+  name: string;
+  title: string;
+  organization: string;
+  expertise: string[];
+  background: string;
+  matchReason: string;
+  location: string;
+  responseTime: string;
+  linkedinUrl?: string;
+  email?: string;
+}
+
+export interface MentorContact {
+  mentorId: string;
+  mentorName: string;
+  mentorEmail: string;
+  sentAt: string;
+  followUps: string[];
+  status: "sent" | "replied" | "no-response";
+  subject: string;
+  body: string;
 }
 
 export interface RadarDataPoint {
