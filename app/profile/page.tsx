@@ -111,6 +111,13 @@ function TagInput({
 export default function ProfilePage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
+  const [targetJob, setTargetJob] = React.useState<string | null>(null);
+
+  React.useEffect(() => {
+    const job = sessionStorage.getItem("tenun-target-job");
+    if (job) setTargetJob(job);
+  }, []);
+
   const [profile, setProfile] = useState<UserProfile>({
     name: "",
     currentRole: "",
@@ -173,7 +180,6 @@ export default function ProfilePage() {
     setLoading(true);
     // Store profile in sessionStorage for dashboard to pick up
     sessionStorage.setItem("tenun-profile", JSON.stringify(profile));
-    // Simulate processing delay for UX
     setTimeout(() => {
       router.push("/dashboard");
     }, 1500);
@@ -194,12 +200,20 @@ export default function ProfilePage() {
           transition={{ duration: 0.5 }}
           className="text-center mb-10"
         >
+          {targetJob && (
+            <div className="inline-flex items-center gap-2 bg-emerald-50 border border-emerald-200 rounded-full px-4 py-1.5 mb-4">
+              <Sparkles className="w-4 h-4 text-emerald-600" />
+              <span className="text-sm text-emerald-700 font-medium">
+                Exploring: <strong>{targetJob}</strong>
+              </span>
+            </div>
+          )}
           <h1 className="text-3xl sm:text-4xl font-bold text-navy-900 mb-2">
-            Build Your Career Profile
+            {targetJob ? "Now let's see how you fit" : "Build Your Career Profile"}
           </h1>
           <p className="text-navy-500 max-w-xl mx-auto">
-            Share your background and preferences. Tenun will extract your
-            career threads and generate personalized pathways.
+            Upload your resume and Tenun will extract your skills, map your experience,
+            and show you exactly how you match{targetJob ? ` a ${targetJob} role` : " your target roles"}.
           </p>
           <button
             onClick={loadDemo}

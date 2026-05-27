@@ -11,6 +11,22 @@ export interface UserProfile {
   lifestylePreference: "stability" | "flexibility" | "fast-growth" | "purpose-driven";
   locationPreference: string;
   resumeText?: string;
+  targetJob?: string;
+}
+
+export interface JobSuggestion {
+  title: string;
+  explanation: string;
+  resumeSkills: string[];
+  dayToDay: string;
+  salaryRange?: string;
+  industries?: string[];
+}
+
+export interface JobIntentResult {
+  overview: string;
+  didYouMean: string[];
+  suggestions: JobSuggestion[];
 }
 
 export interface CareerThread {
@@ -102,6 +118,7 @@ export interface CareerWeaveResult {
   summary: string;
   skillGaps: SkillGap[];
   archetype: CareerArchetype;
+  targetJob?: string;
 }
 
 export interface Mentor {

@@ -58,6 +58,7 @@ function DashboardContent() {
   const [loading, setLoading] = useState(true);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [result, setResult] = useState<CareerWeaveResult | null>(null);
+  const [targetJob, setTargetJob] = useState<string | null>(null);
   const [atlasHubs, setAtlasHubs] = useState<PersonalizedHub[]>([]);
   const [mentors, setMentors] = useState<PersonalizedMentor[]>([]);
   const [courses, setCourses] = useState<PersonalizedCourseRecommendation[]>([]);
@@ -81,8 +82,11 @@ function DashboardContent() {
 
     setProfile(p);
 
+    const storedTarget = sessionStorage.getItem("tenun-target-job") || undefined;
+    if (storedTarget) setTargetJob(storedTarget);
+
     const timer = setTimeout(() => {
-      const weaveResult = generateCareerWeave(p);
+      const weaveResult = generateCareerWeave(p, storedTarget);
       setResult(weaveResult);
       setAtlasHubs(personalizeAtlas(p, careerHubs));
       setMentors(personalizeMentors(p, weaveResult.pathways));
@@ -164,6 +168,12 @@ function DashboardContent() {
                 </h1>
                 <p className="text-xs text-navy-400">{profile.currentRole}</p>
               </div>
+              {targetJob && (
+                <span className="hidden sm:inline-flex items-center gap-1 bg-navy-50 text-navy-700 text-xs font-medium px-2.5 py-1 rounded-full border border-navy-200">
+                  <Target className="w-3 h-3" />
+                  {targetJob}
+                </span>
+              )}
               {isDemo && (
                 <span className="hidden sm:inline-flex items-center gap-1 bg-gold-50 text-gold-700 text-xs font-medium px-2.5 py-1 rounded-full border border-gold-200">
                   <Sparkles className="w-3 h-3" />

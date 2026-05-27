@@ -30,27 +30,21 @@ async function extractFromDocx(file: File): Promise<string> {
 }
 
 async function extractFromPdf(file: File): Promise<string> {
-  const pdfjsLib = await import("pdfjs-dist/legacy/build/pdf.mjs");
+  const formData = new FormData();
+  formData.append("file", file);
 
-  // Set worker to use the bundled worker via CDN to avoid Next.js webpack issues
-  pdfjsLib.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjsLib.version}/build/pdf.worker.min.mjs`;
+  const res = await fetch("/api/extract-text", { method: "POST", body: formData });
+  const text = await res.text();
 
-  const arrayBuffer = await file.arrayBuffer();
-  const pdf = await pdfjsLib.getDocument({ data: new Uint8Array(arrayBuffer) })
-    .promise;
-
-  const pages: string[] = [];
-  for (let i = 1; i <= pdf.numPages; i++) {
-    const page = await pdf.getPage(i);
-    const content = await page.getTextContent();
-    const text = content.items
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      .map((item: any) => (item.str as string) || "")
-      .join(" ");
-    pages.push(text);
+  let data: { text?: string; error?: string };
+  try {
+    data = JSON.parse(text);
+  } catch {
+    throw new Error("PDF extraction failed. Please try a DOCX or TXT file instead.");
   }
 
-  return pages.join("\n\n");
+  if (!res.ok) throw new Error(data.error || "Failed to extract PDF text.");
+  return data.text as string;
 }
 
 export async function extractTextFromFile(file: File): Promise<string> {

@@ -625,11 +625,26 @@ function matchOpportunities(
     .sort((a, b) => b.matchPercentage - a.matchPercentage);
 }
 
+// ---------- Target job pathway boost ----------
+
+function boostForTargetJob(pathways: PathwayCard[], targetJob: string): PathwayCard[] {
+  const words = targetJob.toLowerCase().split(/\W+/).filter((w) => w.length > 3);
+  if (words.length === 0) return pathways;
+
+  return pathways.map((p) => {
+    const haystack = [...p.roles, p.name, p.description].join(" ").toLowerCase();
+    const hits = words.filter((w) => haystack.includes(w)).length;
+    const boost = Math.round((hits / words.length) * 15);
+    return boost > 0 ? { ...p, score: clamp(p.score + boost) } : p;
+  });
+}
+
 // ---------- Main engine ----------
 
-export function generateCareerWeave(profile: UserProfile): CareerWeaveResult {
+export function generateCareerWeave(profile: UserProfile, targetJob?: string): CareerWeaveResult {
   const threads = extractThreads(profile);
-  const pathways = generatePathways(profile, threads);
+  let pathways = generatePathways(profile, threads);
+  if (targetJob) pathways = boostForTargetJob(pathways, targetJob);
   const skillGaps = identifySkillGaps(profile, pathways);
   const opportunities = matchOpportunities(profile, pathways);
   const archetype = computeArchetype(threads, profile);
@@ -641,7 +656,11 @@ export function generateCareerWeave(profile: UserProfile): CareerWeaveResult {
   const avgThread =
     Math.round(threads.reduce((s, t) => s + t.score, 0) / threads.length);
 
-  const summary = `Based on your profile, ${profile.name}, your career threads weave together a profile that appears well-suited for roles at the intersection of ${profile.interests.slice(0, 2).join(" and ")}. Your overall thread strength is ${avgThread}/100. The "${recommended.name}" currently shows the strongest alignment with your profile (score: ${recommended.score}/100), though ${pathways.length - 1} other pathways also present viable directions. Key areas for growth include ${skillGaps.slice(0, 3).map((g) => g.skill).join(", ")}. Remember — these pathways represent possibilities based on your current profile, not predictions. Your choices, effort, and circumstances will shape your actual journey.`;
+  const targetLine = targetJob
+    ? ` You've set your sights on becoming a ${targetJob}.`
+    : "";
+
+  const summary = `Based on your profile, ${profile.name}, your career threads weave together a profile that appears well-suited for roles at the intersection of ${profile.interests.slice(0, 2).join(" and ")}.${targetLine} Your overall thread strength is ${avgThread}/100. The "${recommended.name}" currently shows the strongest alignment with your profile (score: ${recommended.score}/100), though ${pathways.length - 1} other pathways also present viable directions. Key areas for growth include ${skillGaps.slice(0, 3).map((g) => g.skill).join(", ")}. Remember — these pathways represent possibilities based on your current profile, not predictions. Your choices, effort, and circumstances will shape your actual journey.`;
 
   return {
     threads,
@@ -651,5 +670,6 @@ export function generateCareerWeave(profile: UserProfile): CareerWeaveResult {
     summary,
     skillGaps,
     archetype,
+    targetJob,
   };
 }
