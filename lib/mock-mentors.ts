@@ -1,6 +1,6 @@
-import { Mentor } from "./types";
+import { MentorCard } from "./types";
 
-export const mockMentors: Mentor[] = [
+export const mockMentors: MentorCard[] = [
   {
     id: "mentor-1",
     name: "Sarah Chen",

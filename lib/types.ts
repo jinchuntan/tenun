@@ -195,7 +195,7 @@ export interface PersonalizedHub extends CareerHub {
 
 // ── Mentor Bridge ──
 
-export interface Mentor {
+export interface MentorCard {
   id: string;
   name: string;
   role: string;
@@ -209,7 +209,7 @@ export interface Mentor {
   pathwayTags: string[];
 }
 
-export interface PersonalizedMentor extends Mentor {
+export interface PersonalizedMentor extends MentorCard {
   matchScore: number;
   matchReasons: string[];
 }
