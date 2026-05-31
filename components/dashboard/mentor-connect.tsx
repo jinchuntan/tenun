@@ -426,18 +426,23 @@ export function MentorConnect({
       {/* Swipe stack */}
       <div className="flex flex-col items-center gap-6">
         <div className="relative w-full max-w-sm mx-auto" style={{ height: 520 }}>
-          <AnimatePresence>
+          <AnimatePresence mode="wait">
             {stack.length === 0 ? (
               <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
+                key="empty-state"
+                initial={{ opacity: 0, scale: 0.97 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.2 }}
                 className="absolute inset-0 flex flex-col items-center justify-center text-center bg-white rounded-3xl border border-dashed border-navy-200 p-8"
               >
                 <div className="w-16 h-16 bg-navy-50 rounded-2xl flex items-center justify-center mx-auto mb-4">
                   <Heart className="w-7 h-7 text-navy-400" />
                 </div>
-                <h4 className="font-bold text-navy-800 mb-1">You've seen all mentors</h4>
-                <p className="text-sm text-navy-400 mb-5">Passed on {passed.length} · Contacted {contacts.length}</p>
+                <h4 className="font-bold text-navy-800 mb-1">You have seen all mentors</h4>
+                <p className="text-sm text-navy-400 mb-5">
+                  Passed on {passed.length} · Contacted {contacts.length}
+                </p>
                 <Button size="sm" variant="outline" onClick={handleReset}>
                   <RotateCcw className="w-3.5 h-3.5 mr-1.5" />
                   Start over

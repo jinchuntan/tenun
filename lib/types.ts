@@ -91,23 +91,14 @@ export interface SkillGap {
   courses: CourseResource[];
 }
 
-export interface FamousFigure {
-  name: string;
-  trait: string;
-  emoji: string;
-  color: string;
-}
-
 export interface CareerArchetype {
   title: string;
-  emoji: string;
   tagline: string;
   description: string;
   strengths: string[];
   growthAreas: string[];
   keywords: string[];
   color: string;
-  figures: FamousFigure[];
 }
 
 export interface CareerWeaveResult {

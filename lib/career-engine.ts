@@ -217,118 +217,83 @@ function computeArchetype(threads: CareerThread[], profile: UserProfile): Career
   if (hasClimate && (isPurpose || interestScore > 70)) {
     return {
       title: "The Change Maker",
-      emoji: "🌱",
       tagline: "Purpose-driven and impact-oriented",
-      description: "You're not just building a career — you're building a better world. Your profile shows a rare combination of technical capability and genuine drive to create meaningful impact. You are most energised when your work aligns with a bigger mission beyond personal gain.",
+      description: "Your profile shows a rare combination of technical capability and genuine drive to create meaningful impact. You are most energised when your work aligns with a bigger mission beyond personal gain.",
       strengths: ["Mission alignment", "Intrinsic motivation", "Cross-sector thinking", "Long-term vision"],
       growthAreas: ["Commercial awareness", "Network building in impact spaces", "Translating impact into business metrics"],
       keywords: ["purpose-driven", "impact-oriented", "collaborative", "systemic thinker"],
       color: "#2d8a4e",
-      figures: [
-        { name: "Nelson Mandela", trait: "Turned adversity into lasting change", emoji: "✊", color: "#2d8a4e" },
-        { name: "Malala Yousafzai", trait: "Used voice to shift global narrative", emoji: "📚", color: "#00b894" },
-      ],
     };
   }
 
   if (hasLeadership && expScore > 68) {
     return {
       title: "The Orchestrator",
-      emoji: "🎯",
       tagline: "Natural leader with strategic clarity",
-      description: "You have a gift for bringing people together and moving teams toward shared goals. Your experience leading others signals readiness for roles with increasing organisational responsibility. You thrive in complexity and see the 'why' behind the 'what'.",
+      description: "You have a gift for bringing people together and moving teams toward shared goals. Your experience leading others signals readiness for roles with increasing organisational responsibility.",
       strengths: ["Team motivation", "Strategic thinking", "Organisational clarity", "Accountability"],
       growthAreas: ["Technical upskilling", "Data-driven decision making", "Executive presence in senior settings"],
       keywords: ["leadership-oriented", "team player", "decisive", "strategically minded"],
       color: "#e17055",
-      figures: [
-        { name: "Steve Jobs", trait: "Turned vision into products people love", emoji: "💡", color: "#e17055" },
-        { name: "Barack Obama", trait: "Built coalitions through clarity of purpose", emoji: "🗣️", color: "#d4a017" },
-      ],
     };
   }
 
   if (hasTech && skillScore > 73 && marketScore > 73) {
     return {
       title: "The Technologist",
-      emoji: "⚡",
       tagline: "Deep technical expertise meets market relevance",
-      description: "Your technical profile is genuinely strong and well-aligned with what the market values most right now. You bring depth that many generalists lack. The key opportunity is to pair this technical foundation with stronger business storytelling and stakeholder influence.",
+      description: "Your technical profile is genuinely strong and well-aligned with what the market values most right now. You bring depth that many generalists lack. The key opportunity is to pair this foundation with stronger business storytelling.",
       strengths: ["Technical depth", "Problem solving", "Analytical rigour", "Market relevance"],
       growthAreas: ["Business communication", "Stakeholder influence", "Cross-functional collaboration"],
       keywords: ["technical", "analytical", "detail-oriented", "systematic"],
       color: "#4164b4",
-      figures: [
-        { name: "Nikola Tesla", trait: "Reimagined what electricity could do", emoji: "⚡", color: "#4164b4" },
-        { name: "Alan Turing", trait: "Built the foundation of modern computing", emoji: "🧮", color: "#6c5ce7" },
-      ],
     };
   }
 
   if (hasPM && interestScore > 68) {
     return {
       title: "The Connector",
-      emoji: "🔗",
       tagline: "Bridges users, teams, and business outcomes",
-      description: "You have a natural interest in understanding people and connecting dots across disciplines. Product-oriented roles suit you well because you're curious about the 'why' behind user behaviour and motivated by outcomes, not just outputs.",
+      description: "You have a natural interest in understanding people and connecting dots across disciplines. Product-oriented roles suit you well because you are curious about the why behind user behaviour and motivated by outcomes.",
       strengths: ["Empathy for users", "Cross-functional curiosity", "Big-picture thinking", "Communication"],
       growthAreas: ["Data fluency", "Technical vocabulary", "Prioritisation frameworks"],
       keywords: ["collaborative", "user-focused", "outcome-driven", "curious"],
       color: "#6c5ce7",
-      figures: [
-        { name: "Oprah Winfrey", trait: "Made millions feel understood and seen", emoji: "🤝", color: "#6c5ce7" },
-        { name: "Richard Branson", trait: "Connected bold ideas to real people", emoji: "🚀", color: "#c44569" },
-      ],
     };
   }
 
   if (isHighRisk || isFastGrowth) {
     return {
       title: "The Builder",
-      emoji: "🔨",
       tagline: "Energised by creation and fast iteration",
-      description: "You're wired for speed and ownership. The idea of building something from scratch — whether a product, a team, or a business — genuinely excites you. You do your best work when given autonomy and a problem worth solving.",
+      description: "You are wired for speed and ownership. The idea of building something from scratch genuinely excites you. You do your best work when given autonomy and a problem worth solving.",
       strengths: ["Bias for action", "Entrepreneurial mindset", "Adaptability", "Ownership mentality"],
       growthAreas: ["Strategic patience", "Deep expertise in one domain", "Sustainable work patterns"],
       keywords: ["entrepreneurial", "action-oriented", "adaptable", "self-driven"],
       color: "#d4a017",
-      figures: [
-        { name: "Thomas Edison", trait: "Failed 1,000 times to get to the light", emoji: "💡", color: "#d4a017" },
-        { name: "Henry Ford", trait: "Built systems that changed how the world moves", emoji: "⚙️", color: "#e17055" },
-      ],
     };
   }
 
   if (profile.lifestylePreference === "stability" && skillScore > 65) {
     return {
       title: "The Specialist",
-      emoji: "🔬",
       tagline: "Deep expertise in a focused domain",
-      description: "You value mastery over breadth. Your profile suggests a preference for becoming truly excellent in your chosen area rather than spreading thin across many disciplines. This depth often leads to outsized impact and a strong professional reputation over time.",
+      description: "You value mastery over breadth. Your profile suggests a preference for becoming truly excellent in your chosen area. This depth often leads to outsized impact and a strong professional reputation over time.",
       strengths: ["Domain depth", "Reliability", "Quality-focused", "Long-term perspective"],
       growthAreas: ["Adaptability to change", "Broadening adjacent skills", "Visibility and self-promotion"],
       keywords: ["expert", "reliable", "focused", "quality-driven"],
       color: "#00b894",
-      figures: [
-        { name: "Albert Einstein", trait: "Went deeper than anyone thought possible", emoji: "🧠", color: "#00b894" },
-        { name: "Marie Curie", trait: "Mastered her field and changed science forever", emoji: "⚗️", color: "#2d8a4e" },
-      ],
     };
   }
 
   return {
     title: "The Generalist",
-    emoji: "🌐",
     tagline: "Versatile and adaptable across contexts",
-    description: "Your profile reflects a wide range of capabilities and interests — a genuine strength in a world that increasingly values people who can operate across disciplines. Your challenge is choosing focus points that let you demonstrate depth alongside your natural breadth.",
+    description: "Your profile reflects a wide range of capabilities and interests, a genuine strength in a world that increasingly values people who can operate across disciplines. Your challenge is choosing focus points that demonstrate depth alongside your breadth.",
     strengths: ["Adaptability", "Cross-functional thinking", "Broad context awareness", "Versatility"],
     growthAreas: ["Developing a signature specialisation", "Depth in one technical area", "Clear professional narrative"],
     keywords: ["adaptable", "versatile", "curious", "broad-thinker"],
     color: "#d4a017",
-    figures: [
-      { name: "Leonardo da Vinci", trait: "Artist, scientist, engineer — all at once", emoji: "🎨", color: "#d4a017" },
-      { name: "Benjamin Franklin", trait: "Writer, inventor, diplomat, philosopher", emoji: "📜", color: "#6c5ce7" },
-    ],
   };
 }
 
