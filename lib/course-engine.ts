@@ -5,10 +5,7 @@ import {
   PersonalizedCourseRecommendation,
 } from "./types";
 import { mockCourseRecommendations } from "./mock-courses";
-
-function clamp(v: number, min = 0, max = 100) {
-  return Math.max(min, Math.min(max, v));
-}
+import { clamp } from "./utils";
 
 export function personalizeCourses(
   profile: UserProfile,

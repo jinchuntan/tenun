@@ -5,54 +5,83 @@ import "./globals.css";
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 
 export const metadata: Metadata = {
-  title: "Tenun — Discover the Right Career for You",
+  title: "Tenun: Don't Know Your Job Title? We Got You.",
   description:
-    "Not sure what job to look for? Describe what you want to do in plain words. Tenun translates your ideas into real job titles, shows salary ranges, and builds a personalised career pathway from your resume.",
+    "Don't know what job to look for? Tell Tenun what you enjoy doing and we'll find 6 real career paths that match, with salary ranges, required skills, and a step-by-step plan.",
   keywords: [
-    "career discovery",
-    "job title finder",
-    "career for fresh graduates",
-    "internship search",
-    "career pathways",
-    "skill gap analysis",
+    "career discovery Malaysia",
     "what job should I get",
-    "career for students",
+    "job title finder",
+    "career for fresh graduates Malaysia",
+    "TalentBank careers",
+    "career pathways for students",
+    "skill gap analysis",
+    "find your career path",
+    "jobs in Malaysia for fresh graduates",
+    "career OS",
   ],
   openGraph: {
-    title: "Tenun — Discover the Right Career for You",
+    title: "Tenun: Don't Know Your Job Title? We Got You.",
     description:
-      "Describe what you want to do. Tenun finds the real job titles, explains each role, and builds your personalised career plan.",
+      "Tell us what you enjoy doing. Tenun finds the real career paths that match and connects you to jobs at Malaysia's top companies.",
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Tenun — Career Discovery for Students",
+    title: "Tenun: Career Discovery for Students and Fresh Grads",
     description:
-      "Not sure what job title to search for? Type what you enjoy and Tenun maps it to real roles, salary ranges, and career pathways.",
+      "Don't know your job title? Type what you enjoy and Tenun maps it to 6 real careers.",
   },
 };
 
-const jsonLd = {
+const appJsonLd = {
   "@context": "https://schema.org",
   "@type": "WebApplication",
   name: "Tenun",
   url: "https://tenun.career",
   description:
-    "Career discovery platform for students and fresh graduates. Describe what you want to do, discover matching job titles, and get a personalised career pathway.",
+    "Career discovery platform for students and fresh graduates in Malaysia. Describe what you enjoy doing, get 6 real job title matches, and connect to jobs at top Malaysian companies through TalentBank.",
   applicationCategory: "BusinessApplication",
   operatingSystem: "Web",
-  offers: {
-    "@type": "Offer",
-    price: "0",
-    priceCurrency: "USD",
-  },
-  featureList: [
-    "Job title discovery from natural language queries",
-    "AI career space overview and role explanations",
-    "Resume parsing and skill extraction",
-    "Personalised career pathway generation",
-    "Skill gap analysis with course recommendations",
-    "Mentor matching and outreach tools",
+  offers: { "@type": "Offer", price: "0", priceCurrency: "MYR" },
+};
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: [
+    {
+      "@type": "Question",
+      name: "What is Tenun?",
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: "Tenun is a career discovery platform that helps students and fresh graduates in Malaysia find the right job title — even when they don't know what they're looking for. Powered by TalentBank, you describe what you enjoy and Tenun maps it to real job titles with salary ranges, required skills, and a step-by-step path.",
+      },
+    },
+    {
+      "@type": "Question",
+      name: "Do I need to know my job title to use Tenun?",
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: "No. Tenun starts from what you enjoy doing and works backwards to find the right career path for you. Type something like 'I like working with data' and Tenun will find the matching job titles.",
+      },
+    },
+    {
+      "@type": "Question",
+      name: "What companies are hiring through Tenun?",
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: "Tenun partners with Unilever, Maybank, Petronas, Shell, Lazada, EY, American Express, and Top Glove in Malaysia through TalentBank's employer network.",
+      },
+    },
+    {
+      "@type": "Question",
+      name: "Is Tenun free to use?",
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: "Yes. Exploring jobs and career paths is free. Creating an account lets you save results, upload your CV, and get matched to live job openings at partner companies.",
+      },
+    },
   ],
 };
 
@@ -64,10 +93,8 @@ export default function RootLayout({
   return (
     <html lang="en" className={inter.variable}>
       <head>
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
-        />
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(appJsonLd) }} />
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }} />
       </head>
       <body className="min-h-screen antialiased font-sans">{children}</body>
     </html>

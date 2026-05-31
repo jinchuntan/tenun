@@ -1,9 +1,6 @@
 import { UserProfile, PathwayCard, PersonalizedMentor } from "./types";
 import { mockMentors } from "./mock-mentors";
-
-function clamp(v: number, min = 0, max = 100) {
-  return Math.max(min, Math.min(max, v));
-}
+import { clamp } from "./utils";
 
 export function personalizeMentors(
   profile: UserProfile,

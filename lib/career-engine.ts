@@ -9,12 +9,7 @@ import {
 } from "./types";
 import { mockOpportunities } from "./mock-opportunities";
 import { getCoursesForSkill } from "./course-data";
-
-// ---------- helpers ----------
-
-function clamp(v: number, min = 0, max = 100) {
-  return Math.max(min, Math.min(max, v));
-}
+import { clamp } from "./utils";
 
 function score(base: number, noise = 5) {
   return clamp(base + Math.floor(Math.random() * noise * 2 - noise));
