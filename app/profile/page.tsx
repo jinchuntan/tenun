@@ -18,6 +18,7 @@ import { Badge } from "@/components/ui/badge";
 import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
 import { CVUpload } from "@/components/cv-upload";
+import { AuthGate } from "@/components/auth-gate";
 import { UserProfile } from "@/lib/types";
 import { demoProfile } from "@/lib/demo-data";
 import {
@@ -108,7 +109,7 @@ function TagInput({
   );
 }
 
-export default function ProfilePage() {
+function ProfilePageInner() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [targetJob, setTargetJob] = React.useState<string | null>(null);
@@ -450,5 +451,22 @@ export default function ProfilePage() {
 
       <Footer />
     </div>
+  );
+}
+
+export default function ProfilePage() {
+  return (
+    <AuthGate
+      next="/profile"
+      title="Let's build your CV together"
+      subtitle="Create your free Weaver account first. One tap with Google — no forms, no credit card. Then we'll upload your CV and show you exactly how you fit."
+      perks={[
+        "Upload your CV and get an instant skill-gap analysis",
+        "We keep building and improving your CV over time",
+        "Get matched to real roles at our partner companies",
+      ]}
+    >
+      <ProfilePageInner />
+    </AuthGate>
   );
 }

@@ -18,6 +18,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Navbar } from "@/components/navbar";
+import { AuthGate } from "@/components/auth-gate";
 import { Footer } from "@/components/footer";
 import { ThreadMap } from "@/components/dashboard/thread-map";
 import { PathwayCards } from "@/components/dashboard/pathway-cards";
@@ -353,14 +354,25 @@ function DashboardContent() {
 
 export default function DashboardPage() {
   return (
-    <Suspense
-      fallback={
-        <div className="min-h-screen bg-beige-50 flex items-center justify-center">
-          <Loader2 className="w-8 h-8 animate-spin text-navy-600" />
-        </div>
-      }
+    <AuthGate
+      next="/dashboard"
+      title="Almost there — sign in to see your career weave"
+      subtitle="Create your free Weaver account to unlock your personalised dashboard. One tap with Google, that's it."
+      perks={[
+        "See your full career weave and skill-gap analysis",
+        "Explore your global career atlas and pathways",
+        "Keep everything saved so you can pick up where you left off",
+      ]}
     >
-      <DashboardContent />
-    </Suspense>
+      <Suspense
+        fallback={
+          <div className="min-h-screen bg-beige-50 flex items-center justify-center">
+            <Loader2 className="w-8 h-8 animate-spin text-navy-600" />
+          </div>
+        }
+      >
+        <DashboardContent />
+      </Suspense>
+    </AuthGate>
   );
 }
