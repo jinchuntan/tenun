@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 import Groq from "groq-sdk";
+import { getAuthenticatedUser } from "@/lib/api-auth";
+import { checkRateLimit } from "@/lib/rate-limit";
 
 const SYSTEM_PROMPT = `You are a brutally honest career guide helping students and fresh graduates who don't know their job title yet. Your job is to take whatever they describe — even a single vague word — and show them the full range of genuinely different careers that word could mean.
 
@@ -89,6 +91,11 @@ function safeParseResult(text: string): { overview: string; didYouMean: string[]
 }
 
 export async function POST(request: Request) {
+  // Public endpoint — rate limit by IP so unauthenticated users can search freely
+  const ip = (request.headers.get("x-forwarded-for") ?? "anonymous").split(",")[0].trim();
+  const rateLimited = await checkRateLimit("job-intent", ip);
+  if (rateLimited.limited) return rateLimited.response;
+
   try {
     const body = await request.json();
     const { query, skills = [], interests = [], experience = "" } = body as {
@@ -103,10 +110,7 @@ export async function POST(request: Request) {
     }
 
     if (!process.env.GROQ_API_KEY) {
-      return NextResponse.json(
-        { error: "No API key configured. Add GROQ_API_KEY to your .env.local file and restart the server." },
-        { status: 500 }
-      );
+      return NextResponse.json({ error: "No API key configured." }, { status: 500 });
     }
 
     const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
@@ -127,9 +131,6 @@ export async function POST(request: Request) {
     return NextResponse.json(result);
   } catch (err) {
     console.error("job-intent error:", err);
-    return NextResponse.json(
-      { error: err instanceof Error ? err.message : "Failed to generate suggestions." },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Failed to generate suggestions." }, { status: 500 });
   }
 }

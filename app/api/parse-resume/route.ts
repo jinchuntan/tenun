@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 import Groq from "groq-sdk";
+import { getAuthenticatedUser } from "@/lib/api-auth";
+import { checkRateLimit } from "@/lib/rate-limit";
 import {
   skillSuggestions,
   interestSuggestions,
@@ -49,6 +51,12 @@ function safeParseJSON(text: string): Record<string, any> {
 }
 
 export async function POST(request: Request) {
+  const auth = await getAuthenticatedUser();
+  if (auth.response) return auth.response;
+
+  const rateLimited = await checkRateLimit("parse-resume", auth.user.id);
+  if (rateLimited.limited) return rateLimited.response;
+
   try {
     const { text } = await request.json();
 
@@ -58,7 +66,7 @@ export async function POST(request: Request) {
 
     if (!process.env.GROQ_API_KEY) {
       return NextResponse.json(
-        { error: "No API key configured. Add GROQ_API_KEY to your .env.local file and restart the server." },
+        { error: "No API key configured." },
         { status: 500 }
       );
     }
@@ -112,9 +120,6 @@ export async function POST(request: Request) {
     return NextResponse.json({ profile, confidence, provider: "groq" });
   } catch (err) {
     console.error("Resume parse error:", err);
-    return NextResponse.json(
-      { error: err instanceof Error ? err.message : "Failed to parse resume." },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Failed to parse resume." }, { status: 500 });
   }
 }
