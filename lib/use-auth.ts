@@ -49,8 +49,38 @@ export async function signInWithGoogle(next: string) {
     window.location.href = next;
     return;
   }
-  await supabase.auth.signInWithOAuth({
+  const { error } = await supabase.auth.signInWithOAuth({
     provider: "google",
     options: { redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}` },
   });
+  if (error) throw error;
+}
+
+/** Sign in with email + password. Throws on failure. */
+export async function signInWithEmail(email: string, password: string) {
+  const supabase = createClient();
+  if (!supabase) throw new Error("Authentication isn't configured.");
+  const { error } = await supabase.auth.signInWithPassword({ email, password });
+  if (error) throw error;
+}
+
+/**
+ * Create an account with email + password.
+ * Returns `needsConfirmation: true` when Supabase requires email verification
+ * before the session is active.
+ */
+export async function signUpWithEmail(email: string, password: string, next: string) {
+  const supabase = createClient();
+  if (!supabase) throw new Error("Authentication isn't configured.");
+  const { data, error } = await supabase.auth.signUp({
+    email,
+    password,
+    options: {
+      emailRedirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}`,
+    },
+  });
+  if (error) throw error;
+  // When email confirmation is on, Supabase returns a user with no active session.
+  const needsConfirmation = !data.session;
+  return { needsConfirmation };
 }
