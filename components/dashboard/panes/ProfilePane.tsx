@@ -1,10 +1,11 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Cpu, Briefcase, GraduationCap, Heart, TrendingUp,
-  DollarSign, Sun, Building2, Lightbulb, Share2, X, Send,
+  DollarSign, Sun, Building2, Lightbulb, Share2, X, Send, Upload,
 } from "lucide-react";
 import { CareerThread, CareerArchetype } from "@/lib/types";
 import { mentors } from "@/lib/mentor-data";
@@ -211,6 +212,7 @@ interface Props {
 }
 
 export function ProfilePane({ archetype, threads }: Props) {
+  const router = useRouter();
   const [selectedThread, setSelectedThread] = useState<CareerThread | null>(null);
   const [showShare, setShowShare] = useState(false);
 
@@ -247,14 +249,23 @@ export function ProfilePane({ archetype, threads }: Props) {
             </div>
           </div>
 
-          <button
-            onClick={() => setShowShare(true)}
-            className="shrink-0 flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg border transition-colors hover:bg-white/50"
-            style={{ borderColor: archetype.color + "40", color: archetype.color }}
-          >
-            <Share2 size={13} />
-            Share for Review
-          </button>
+          <div className="shrink-0 flex items-center gap-2 flex-wrap">
+            <button
+              onClick={() => router.push("/profile?upload=true&from=dashboard")}
+              className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg bg-[#d4a017] text-[#0a1628] font-semibold hover:bg-[#e0ad1c] transition-colors"
+            >
+              <Upload size={13} />
+              Edit profile or upload CV
+            </button>
+            <button
+              onClick={() => setShowShare(true)}
+              className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg border transition-colors hover:bg-white/50"
+              style={{ borderColor: archetype.color + "40", color: archetype.color }}
+            >
+              <Share2 size={13} />
+              Share for Review
+            </button>
+          </div>
         </div>
 
         {/* Strengths + Growth */}

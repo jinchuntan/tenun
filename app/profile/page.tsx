@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useState } from "react";
-import { useRouter } from "next/navigation";
+import React, { useState, useEffect, useRef, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
 import {
   User,
@@ -113,6 +113,10 @@ function TagInput({
 
 function ProfilePageInner() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const uploadMode = searchParams.get("upload") === "true";
+  const uploadSectionRef = useRef<HTMLDivElement | null>(null);
+  const [highlightUpload, setHighlightUpload] = useState(false);
   const [loading, setLoading] = useState(false);
   const [targetJob, setTargetJob] = React.useState<string | null>(null);
   const [isLoggedIn, setIsLoggedIn] = React.useState(false);
@@ -122,6 +126,20 @@ function ProfilePageInner() {
     const job = sessionStorage.getItem("tenun-target-job");
     if (job) setTargetJob(job);
   }, []);
+
+  // When arriving via ?upload=true, scroll to the upload card and highlight it
+  useEffect(() => {
+    if (!uploadMode) return;
+    const scrollTimer = setTimeout(() => {
+      uploadSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, 300);
+    setHighlightUpload(true);
+    const highlightTimer = setTimeout(() => setHighlightUpload(false), 3000);
+    return () => {
+      clearTimeout(scrollTimer);
+      clearTimeout(highlightTimer);
+    };
+  }, [uploadMode]);
 
   // Check auth status — only needed to gate the CV upload
   React.useEffect(() => {
@@ -157,6 +175,19 @@ function ProfilePageInner() {
     locationPreference: "",
     resumeText: "",
   });
+
+  // Prefill from a previously saved profile so users returning to edit/upload
+  // don't see a blank form
+  useEffect(() => {
+    const stored = sessionStorage.getItem("tenun-profile");
+    if (!stored) return;
+    try {
+      const parsed = JSON.parse(stored) as Partial<UserProfile>;
+      setProfile((prev) => ({ ...prev, ...parsed }));
+    } catch {
+      /* ignore malformed stored profile */
+    }
+  }, []);
 
   const update = <K extends keyof UserProfile>(
     key: K,
@@ -257,6 +288,14 @@ function ProfilePageInner() {
           className="space-y-6"
         >
           {/* CV Upload — requires sign in */}
+          <div
+            id="upload-cv-portfolio"
+            ref={uploadSectionRef}
+            className={[
+              "rounded-2xl transition-shadow duration-500 scroll-mt-24",
+              highlightUpload ? "ring-2 ring-gold-500 ring-offset-2 shadow-lg" : "",
+            ].join(" ")}
+          >
           {isLoggedIn ? (
             <CVUpload onProfileExtracted={applyParsedProfile} />
           ) : (
@@ -292,6 +331,7 @@ function ProfilePageInner() {
               </p>
             </div>
           )}
+          </div>
 
           {/* Divider */}
           <div className="flex items-center gap-4">
@@ -513,5 +553,15 @@ function ProfilePageInner() {
 }
 
 export default function ProfilePage() {
-  return <ProfilePageInner />;
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-beige-50 flex items-center justify-center">
+          <Loader2 className="w-6 h-6 animate-spin text-navy-400" />
+        </div>
+      }
+    >
+      <ProfilePageInner />
+    </Suspense>
+  );
 }

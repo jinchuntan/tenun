@@ -26,9 +26,13 @@ function NewCVFlow() {
   const searchParams = useSearchParams();
   const dispatch = useAppDispatch();
 
-  const [step, setStep] = useState<Step>(
-    (searchParams.get("style") as CVStyle) ? "job" : "format"
-  );
+  const uploadMode = searchParams.get("upload") === "true";
+
+  const [step, setStep] = useState<Step>(() => {
+    if (uploadMode) return "start";
+    if (searchParams.get("style") as CVStyle) return "job";
+    return "format";
+  });
   const [format, setFormatState] = useState<CVFormat>("resume");
   const [style, setStyleState] = useState<CVStyle>(
     (searchParams.get("style") as CVStyle) ?? "harvard"
@@ -244,14 +248,24 @@ function NewCVFlow() {
                 <button
                   onClick={() => fileRef.current?.click()}
                   disabled={uploading}
-                  className="w-full flex items-center gap-3 p-4 rounded-xl border-2 border-gray-200 hover:border-[#0a1628] hover:bg-[#0a1628]/5 transition-all text-left disabled:opacity-50"
+                  className={[
+                    "w-full flex items-center gap-3 p-4 rounded-xl border-2 transition-all text-left disabled:opacity-50",
+                    uploadMode
+                      ? "border-[#d4a017] bg-[#d4a017]/10 ring-2 ring-[#d4a017]/30"
+                      : "border-gray-200 hover:border-[#0a1628] hover:bg-[#0a1628]/5",
+                  ].join(" ")}
                 >
                   <div className="w-9 h-9 rounded-lg bg-gray-50 flex items-center justify-center shrink-0">
-                    {uploading ? <Loader2 size={18} className="animate-spin text-gray-400" /> : <Upload size={18} className="text-gray-400" />}
+                    {uploading ? <Loader2 size={18} className="animate-spin text-gray-400" /> : <Upload size={18} className={uploadMode ? "text-[#d4a017]" : "text-gray-400"} />}
                   </div>
                   <div>
-                    <p className="font-medium text-[#0a1628] text-sm">Upload my existing CV</p>
-                    <p className="text-xs text-gray-400">PDF only — we pre-fill the blocks for you</p>
+                    <p className="font-medium text-[#0a1628] text-sm flex items-center gap-2">
+                      Upload my existing CV
+                      {uploadMode && (
+                        <span className="text-[10px] font-semibold uppercase tracking-wide text-[#d4a017]">Recommended</span>
+                      )}
+                    </p>
+                    <p className="text-xs text-gray-400">Upload your CV, resume, or portfolio document — we pre-fill the blocks for you</p>
                   </div>
                 </button>
 

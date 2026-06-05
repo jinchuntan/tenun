@@ -4,7 +4,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import {
   User, GitBranch, Globe, Zap, Briefcase,
-  Users, Send, FileText, Menu, X, LogOut,
+  Users, Send, FileText, Menu, X, LogOut, Upload,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 
@@ -26,8 +26,10 @@ const NAV_ITEMS: NavItem[] = [
   { id: "atlas",         label: "Atlas",         icon: <Globe size={18} /> },
   { id: "mentors",       label: "Mentors",       icon: <Users size={18} /> },
   { id: "outreach",      label: "Outreach",      icon: <Send size={18} /> },
-  { id: "cv",            label: "Build CV",      icon: <FileText size={18} /> },
+  { id: "cv",            label: "CV / Portfolio", icon: <FileText size={18} /> },
 ];
+
+const UPLOAD_ROUTE = "/profile?upload=true&from=dashboard";
 
 const MOBILE_PRIMARY: DashboardSection[] = ["profile", "paths", "skills", "mentors", "cv"];
 
@@ -108,6 +110,7 @@ export function DashboardShell({ userName, currentRole, targetJob, children }: P
                 key={item.id}
                 onClick={() => scrollTo(item.id)}
                 aria-label={item.label}
+                title={item.label}
                 className={[
                   "flex items-center gap-3 px-2 py-2.5 rounded-lg transition-colors w-full text-left whitespace-nowrap overflow-hidden",
                   isActive
@@ -162,6 +165,18 @@ export function DashboardShell({ userName, currentRole, targetJob, children }: P
               {targetJob}
             </span>
           )}
+
+          {/* Upload CV / Portfolio CTA */}
+          <button
+            onClick={() => router.push(UPLOAD_ROUTE)}
+            className="shrink-0 flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-[#d4a017] text-[#0a1628] hover:bg-[#e0ad1c] transition-colors text-xs font-semibold"
+            aria-label="Upload CV or portfolio"
+            title="Upload your CV, resume, or portfolio document"
+          >
+            <Upload size={15} />
+            <span className="hidden sm:inline">Upload CV / Portfolio</span>
+            <span className="sm:hidden">Upload</span>
+          </button>
 
           {/* Sign out */}
           <button
@@ -237,7 +252,14 @@ export function DashboardShell({ userName, currentRole, targetJob, children }: P
                 </button>
               ))}
             </nav>
-            <div className="p-3 border-t border-white/5">
+            <div className="p-3 border-t border-white/5 space-y-1">
+              <button
+                onClick={() => { setDrawerOpen(false); router.push(UPLOAD_ROUTE); }}
+                className="flex items-center gap-2 px-3 py-2.5 rounded-lg text-sm font-semibold bg-[#d4a017] text-[#0a1628] hover:bg-[#e0ad1c] transition-colors w-full"
+              >
+                <Upload size={16} />
+                Upload CV / Portfolio
+              </button>
               <button
                 onClick={handleSignOut}
                 className="flex items-center gap-2 px-3 py-2.5 rounded-lg text-sm text-white/40 hover:text-white hover:bg-white/5 transition-colors w-full"
