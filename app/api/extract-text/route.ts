@@ -33,8 +33,15 @@ export async function POST(request: Request) {
     const data = await pdfParse(buffer);
 
     if (!data.text?.trim()) {
+      // No text layer — almost always a visual/scanned/image-exported PDF
+      // (Canva, Figma, Adobe, etc.). Flag it so the client can offer the
+      // manual project-summary fallback instead of a dead-end error.
       return NextResponse.json(
-        { error: "Could not extract text. The PDF may be image-based or empty." },
+        {
+          error:
+            "We could not extract text from this file. This often happens with visual portfolios exported from Canva, Figma, or Adobe, or scanned/image-based PDFs.",
+          code: "image_based",
+        },
         { status: 422 }
       );
     }

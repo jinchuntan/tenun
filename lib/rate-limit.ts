@@ -14,9 +14,13 @@ async function loadUpstash() {
 // Per-route limits: [requests, window]
 const LIMITS: Record<string, { requests: number; window: string }> = {
   "parse-resume": { requests: 5, window: "1 m" },
+  "generate-cv":  { requests: 5, window: "1 m" },
+  "cv-assistant": { requests: 20, window: "1 m" },
   "extract-text": { requests: 10, window: "1 m" },
   "job-intent":   { requests: 15, window: "1 m" },
   "job-detail":   { requests: 15, window: "1 m" },
+  "site-guide":   { requests: 20, window: "1 m" },
+  "mock-interview": { requests: 20, window: "1 m" },
   default:        { requests: 30, window: "1 m" },
 };
 

@@ -4,13 +4,13 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import {
   User, GitBranch, Globe, Zap, Briefcase,
-  Users, Send, FileText, Menu, X, LogOut, Upload,
+  Users, Send, FileText, Menu, X, LogOut, Upload, Mic,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 
 export type DashboardSection =
   | "profile" | "paths" | "atlas" | "skills"
-  | "opportunities" | "mentors" | "outreach" | "cv";
+  | "opportunities" | "mentors" | "outreach" | "cv" | "mock-interview";
 
 interface NavItem {
   id: DashboardSection;
@@ -27,6 +27,7 @@ const NAV_ITEMS: NavItem[] = [
   { id: "mentors",       label: "Mentors",       icon: <Users size={18} /> },
   { id: "outreach",      label: "Outreach",      icon: <Send size={18} /> },
   { id: "cv",            label: "CV / Portfolio", icon: <FileText size={18} /> },
+  { id: "mock-interview", label: "Interview",     icon: <Mic size={18} /> },
 ];
 
 const UPLOAD_ROUTE = "/profile?upload=true&from=dashboard";

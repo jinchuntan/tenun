@@ -68,7 +68,7 @@ export function CVUpload({ onProfileExtracted }: CVUploadProps) {
         if (!rawText.trim()) {
           setState("error");
           setError(
-            "Could not extract any text from this file. It may be image-based or empty."
+            "We could not read text from this file. This often happens with visual portfolios, scanned PDFs, or image-based exports (Canva, Figma, Adobe). Try a DOCX/TXT or text-based PDF, or add your projects in the CV Generator."
           );
           return;
         }

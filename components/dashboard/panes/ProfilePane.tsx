@@ -46,7 +46,7 @@ function RadarChart({
 
   return (
     <div className="flex justify-center">
-      <svg viewBox="0 0 400 400" className="w-full max-w-md h-auto">
+      <svg viewBox="-70 0 540 400" className="w-full max-w-md h-auto">
         {gridLevels.map((level, li) => {
           const pts = threads.map((_, i) => {
             const a = angle(i);
@@ -316,7 +316,7 @@ export function ProfilePane({ archetype, threads }: Props) {
               <RadarChart threads={threads} onSelect={handleSelectThread} />
             </div>
 
-            <div className="md:w-68 shrink-0 flex items-center">
+            <div className="md:w-72 shrink-0 min-w-0 flex items-center">
               <AnimatePresence mode="wait">
                 {selectedThread ? (
                   <ThreadDetail

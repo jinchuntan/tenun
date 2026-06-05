@@ -1,9 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { ChevronLeft, Download } from "lucide-react";
+import { ChevronLeft, Printer, FileText } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
+import { AppTopBar } from "@/components/layout/AppTopBar";
+import { LoadingState } from "@/components/layout/PageState";
 import { HarvardTemplate } from "@/components/cv/templates/HarvardTemplate";
 import { CreativeTemplate } from "@/components/cv/templates/CreativeTemplate";
 import type { CVBlock, CVStyle } from "@/lib/cv-types";
@@ -50,10 +53,13 @@ export default function PreviewCVPage() {
   if (loading) {
     return (
       <div className="min-h-screen bg-[#f5f0e8] flex items-center justify-center">
-        <div className="w-6 h-6 border-2 border-[#0a1628]/20 border-t-[#0a1628] rounded-full animate-spin" />
+        <LoadingState label="Loading preview…" />
       </div>
     );
   }
+
+  const btnSecondary =
+    "inline-flex items-center gap-1.5 rounded-lg border border-beige-300 bg-white px-3 py-1.5 text-xs font-medium text-navy-700 hover:border-navy-300 transition-colors";
 
   return (
     <>
@@ -66,31 +72,43 @@ export default function PreviewCVPage() {
         }
       `}</style>
 
-      {/* Toolbar */}
-      <div className="no-print sticky top-0 z-10 h-12 bg-[#0a1628] flex items-center px-4 gap-3">
-        <button
-          onClick={() => router.push(`/dashboard/cv/${id}/edit`)}
-          className="text-white/40 hover:text-white transition-colors"
-        >
-          <ChevronLeft size={18} />
-        </button>
-        <p className="flex-1 text-white text-sm font-medium truncate">{cv?.title ?? "Preview"}</p>
-        <button
-          onClick={() => window.print()}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#d4a017] text-white text-xs font-medium hover:bg-[#b8860b] transition-colors"
-        >
-          <Download size={13} />
-          Export PDF
-        </button>
-      </div>
+      <div className="min-h-screen bg-gray-200">
+        <AppTopBar
+          className="no-print"
+          breadcrumbs={[
+            { label: "Dashboard", href: "/dashboard" },
+            { label: "CV Builder", href: "/dashboard/cv" },
+            { label: cv?.title ?? "Preview" },
+          ]}
+          returnTo={{ href: "/dashboard", label: "Dashboard" }}
+          actions={
+            <>
+              <Link href={`/dashboard/cv/${id}/edit`} className={btnSecondary}>
+                <ChevronLeft size={14} /> <span className="hidden sm:inline">Back to Editor</span>
+              </Link>
+              <Link href="/dashboard/cv" className={btnSecondary} aria-label="All CVs">
+                <FileText size={14} /> <span className="hidden sm:inline">All CVs</span>
+              </Link>
+              <button
+                onClick={() => window.print()}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#d4a017] text-[#0a1628] text-xs font-semibold hover:bg-[#e0ad1c] transition-colors"
+              >
+                <Printer size={14} />
+                <span className="hidden sm:inline">Print / Save as PDF</span>
+                <span className="sm:hidden">Print</span>
+              </button>
+            </>
+          }
+        />
 
-      {/* Preview */}
-      <div className="no-print bg-gray-200 min-h-screen py-8 px-4">
-        {cv && (
-          <div className="w-[794px] mx-auto shadow-2xl print-page">
-            <Template blocks={cv.blocks.byId} allIds={cv.blocks.allIds} />
-          </div>
-        )}
+        {/* Preview */}
+        <div className="no-print py-8 px-4">
+          {cv && (
+            <div className="w-[794px] max-w-full mx-auto shadow-2xl print-page">
+              <Template blocks={cv.blocks.byId} allIds={cv.blocks.allIds} />
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Print-only render */}

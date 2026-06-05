@@ -48,6 +48,16 @@ CRITICAL RULES — follow these exactly or the response is wrong:
 
 8. Return ONLY valid JSON. No markdown, no code fences, no explanation outside the JSON.`;
 
+// Appended when the user is browsing in Bahasa Melayu. JSON keys stay identical;
+// only the user-facing string VALUES are written in natural Malaysian Malay.
+const MALAY_INSTRUCTION = `
+
+LANGUAGE: The user is using the site in Bahasa Melayu (Malaysian Malay).
+- Write ALL user-facing string values (overview, didYouMean, explanation, dayToDay) in natural, friendly Malaysian Malay — NOT Indonesian, not formal government style.
+- Keep the JSON keys EXACTLY as specified in English. Do not translate keys.
+- Job titles may stay in English when they are common industry terms (e.g. "Data Analyst", "UX Designer").
+- Salary ranges must still use Malaysian context (MYR).`;
+
 function buildUserMessage(query: string, skills: string[], interests: string[], experience: string): string {
   return [
     `User query: "${query}"`,
@@ -97,25 +107,31 @@ export async function POST(request: Request) {
 
   try {
     const body = await request.json();
-    const { query, skills = [], interests = [], experience = "" } = body as {
+    const { query, skills = [], interests = [], experience = "", locale = "en" } = body as {
       query: string;
       skills: string[];
       interests: string[];
       experience: string;
+      locale?: "en" | "ms";
     };
 
     if (!query?.trim()) {
       return NextResponse.json({ error: "Missing query." }, { status: 400 });
     }
 
+    const systemPrompt = locale === "ms" ? SYSTEM_PROMPT + MALAY_INSTRUCTION : SYSTEM_PROMPT;
+
     if (!process.env.OPENROUTER_API_KEY && !process.env.GROQ_API_KEY) {
-      return NextResponse.json({ error: "No API key configured." }, { status: 500 });
+      return NextResponse.json(
+        { error: "OpenRouter API key is not configured on the server (set OPENROUTER_API_KEY, or GROQ_API_KEY for fallback)." },
+        { status: 503 }
+      );
     }
 
     const { raw } = await generateJSONWithFallback({
       routeName: "job-intent",
       messages: [
-        { role: "system", content: SYSTEM_PROMPT },
+        { role: "system", content: systemPrompt },
         { role: "user", content: buildUserMessage(query, skills, interests, experience) },
       ],
       temperature: 0.4,

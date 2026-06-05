@@ -11,7 +11,8 @@ function Divider() {
   return <hr className="border-t border-[#0a1628] my-2" />;
 }
 
-function SectionHeading({ label }: { label: string }) {
+function SectionHeading({ label, show = true }: { label: string; show?: boolean }) {
+  if (!show) return null;
   return (
     <div className="mt-4 mb-1">
       <p className="text-[10px] font-bold uppercase tracking-widest text-[#0a1628]">{label}</p>
@@ -20,7 +21,9 @@ function SectionHeading({ label }: { label: string }) {
   );
 }
 
-function renderBlock(block: CVBlock) {
+// `showHeading` is false when the previous rendered block was the same type,
+// so consecutive entries (e.g. several work experiences) share one heading.
+function renderBlock(block: CVBlock, showHeading = true) {
   switch (block.type) {
     case "personal_info":
       return (
@@ -39,7 +42,7 @@ function renderBlock(block: CVBlock) {
     case "summary":
       return str(block, "text") ? (
         <>
-          <SectionHeading label="Summary" />
+          <SectionHeading label="Summary" show={showHeading} />
           <p className="text-[10.5px] text-gray-700 leading-relaxed">{str(block, "text")}</p>
         </>
       ) : null;
@@ -47,7 +50,7 @@ function renderBlock(block: CVBlock) {
     case "work_experience":
       return str(block, "company") || str(block, "role") ? (
         <>
-          <SectionHeading label="Work Experience" />
+          <SectionHeading label="Work Experience" show={showHeading} />
           <div className="flex justify-between items-baseline">
             <p className="text-[11px] font-bold text-[#0a1628]">{str(block, "role")}</p>
             <p className="text-[9.5px] text-gray-400">{[str(block, "startDate"), str(block, "endDate")].filter(Boolean).join(" - ")}</p>
@@ -67,7 +70,7 @@ function renderBlock(block: CVBlock) {
     case "education":
       return str(block, "institution") || str(block, "degree") ? (
         <>
-          <SectionHeading label="Education" />
+          <SectionHeading label="Education" show={showHeading} />
           <div className="flex justify-between items-baseline">
             <p className="text-[11px] font-bold text-[#0a1628]">{[str(block, "degree"), str(block, "field")].filter(Boolean).join(", ")}</p>
             <p className="text-[9.5px] text-gray-400">{[str(block, "startDate"), str(block, "endDate")].filter(Boolean).join(" - ")}</p>
@@ -80,7 +83,7 @@ function renderBlock(block: CVBlock) {
     case "skills":
       return arr(block, "items").length > 0 ? (
         <>
-          <SectionHeading label="Skills" />
+          <SectionHeading label="Skills" show={showHeading} />
           <p className="text-[10.5px] text-gray-700">{arr(block, "items").join(" · ")}</p>
         </>
       ) : null;
@@ -88,7 +91,7 @@ function renderBlock(block: CVBlock) {
     case "certifications":
       return str(block, "name") ? (
         <>
-          <SectionHeading label="Certifications" />
+          <SectionHeading label="Certifications" show={showHeading} />
           <div className="flex justify-between items-baseline">
             <p className="text-[11px] font-bold text-[#0a1628]">{str(block, "name")}</p>
             <p className="text-[9.5px] text-gray-400">{str(block, "date")}</p>
@@ -100,7 +103,7 @@ function renderBlock(block: CVBlock) {
     case "achievements":
       return arr(block, "bullets").filter(Boolean).length > 0 ? (
         <>
-          <SectionHeading label="Achievements" />
+          <SectionHeading label="Achievements" show={showHeading} />
           <ul className="space-y-0.5">
             {arr(block, "bullets").filter(Boolean).map((b, i) => (
               <li key={i} className="flex items-start gap-1.5 text-[10px] text-gray-700">
@@ -115,7 +118,7 @@ function renderBlock(block: CVBlock) {
     case "extracurricular":
       return str(block, "organisation") ? (
         <>
-          <SectionHeading label="Extracurricular" />
+          <SectionHeading label="Extracurricular" show={showHeading} />
           <div className="flex justify-between items-baseline">
             <p className="text-[11px] font-bold text-[#0a1628]">{str(block, "role")}</p>
             <p className="text-[9.5px] text-gray-400">{[str(block, "startDate"), str(block, "endDate")].filter(Boolean).join(" - ")}</p>
@@ -135,7 +138,7 @@ function renderBlock(block: CVBlock) {
     case "portfolio":
       return str(block, "title") ? (
         <>
-          <SectionHeading label="Portfolio" />
+          <SectionHeading label="Portfolio" show={showHeading} />
           <p className="text-[11px] font-bold text-[#0a1628]">{str(block, "title")}</p>
           {str(block, "url") && <p className="text-[10px] text-[#4164b4]">{str(block, "url")}</p>}
           {str(block, "description") && <p className="text-[10px] text-gray-600 mt-0.5">{str(block, "description")}</p>}
@@ -145,7 +148,7 @@ function renderBlock(block: CVBlock) {
     case "custom":
       return str(block, "heading") || str(block, "body") ? (
         <>
-          <SectionHeading label={str(block, "heading") || "Custom Section"} />
+          <SectionHeading label={str(block, "heading") || "Custom Section"} show={showHeading} />
           <p className="text-[10.5px] text-gray-700 leading-relaxed whitespace-pre-wrap">{str(block, "body")}</p>
         </>
       ) : null;
@@ -156,13 +159,15 @@ function renderBlock(block: CVBlock) {
 }
 
 export function HarvardTemplate({ blocks, allIds }: { blocks: Record<string, CVBlock>; allIds: string[] }) {
+  let prevType: string | null = null;
   return (
     <div className="w-full bg-white font-serif p-8 text-[#0a1628] min-h-[1056px]" style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}>
       {allIds.map((id) => {
         const block = blocks[id];
         if (!block) return null;
-        const rendered = renderBlock(block);
+        const rendered = renderBlock(block, block.type !== prevType);
         if (!rendered) return null;
+        prevType = block.type;
         return <div key={id}>{rendered}</div>;
       })}
     </div>

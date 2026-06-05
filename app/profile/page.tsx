@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef, Suspense } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { motion } from "framer-motion";
 import {
   User,
@@ -18,6 +18,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
+import { SubNavBar } from "@/components/layout/SubNavBar";
+import { getDashboardReturn } from "@/lib/navigation";
 import { CVUpload } from "@/components/cv-upload";
 import { UserProfile } from "@/lib/types";
 import { createClient } from "@/lib/supabase/client";
@@ -113,6 +115,7 @@ function TagInput({
 
 function ProfilePageInner() {
   const router = useRouter();
+  const pathname = usePathname();
   const searchParams = useSearchParams();
   const uploadMode = searchParams.get("upload") === "true";
   const uploadSectionRef = useRef<HTMLDivElement | null>(null);
@@ -250,6 +253,12 @@ function ProfilePageInner() {
       <Navbar />
 
       <div className="pt-24 pb-16 max-w-4xl mx-auto px-4 sm:px-6">
+        <SubNavBar
+          className="mb-8"
+          breadcrumbs={[{ label: "Dashboard", href: "/dashboard" }, { label: "Profile" }]}
+          returnTo={getDashboardReturn(pathname, { loggedIn: isLoggedIn })}
+        />
+
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}

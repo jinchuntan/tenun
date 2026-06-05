@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, useRouter, usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   ArrowLeft,
@@ -19,9 +19,12 @@ import {
 import Link from "next/link";
 import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
+import { SubNavBar } from "@/components/layout/SubNavBar";
+import { getDashboardReturn } from "@/lib/navigation";
 import { Badge } from "@/components/ui/badge";
 import { createClient } from "@/lib/supabase/client";
 import type { JobSuggestion } from "@/lib/types";
+import { useLanguage } from "@/components/i18n/LanguageProvider";
 
 const PARTNER_MAP: Record<string, string[]> = {
   tech: ["Lazada", "Petronas", "Maybank", "American Express"],
@@ -61,6 +64,9 @@ interface JobDetail {
 export default function JobDetailPage() {
   const params = useParams();
   const router = useRouter();
+  const pathname = usePathname();
+  const { dict, locale } = useLanguage();
+  const jd = dict.jobDetail;
   const slug = typeof params.slug === "string" ? params.slug : "";
 
   const [job, setJob] = useState<JobSuggestion | null>(null);
@@ -114,13 +120,19 @@ export default function JobDetailPage() {
       body: JSON.stringify({
         title: job.title,
         context: `${job.explanation} ${job.dayToDay ?? ""}`.trim(),
+        locale,
       }),
     })
-      .then((r) => r.json())
+      .then(async (r) => {
+        const d = await r.json().catch(() => ({}));
+        if (!r.ok || d?.error) throw new Error(d?.error || jd.loadError);
+        return d;
+      })
       .then((d) => setDetail(d))
-      .catch(() => setDetailError("Couldn't load the full breakdown. Try refreshing."))
+      .catch((e) => setDetailError(e instanceof Error ? e.message : jd.loadError))
       .finally(() => setDetailLoading(false));
-  }, [job]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [job, locale]);
 
   const handleSignIn = async () => {
     const supabase = createClient();
@@ -143,15 +155,15 @@ export default function JobDetailPage() {
       <div className="min-h-screen bg-white">
         <Navbar />
         <main className="pt-32 pb-20 text-center px-4">
-          <h1 className="text-xl font-bold text-navy-900 mb-3">Job not found</h1>
+          <h1 className="text-xl font-bold text-navy-900 mb-3">{jd.notFoundTitle}</h1>
           <p className="text-sm text-navy-500 mb-6">
-            This usually happens if you navigated directly to this page. Search for a job first.
+            {jd.notFoundBody}
           </p>
           <Link
             href="/"
             className="inline-flex items-center gap-2 px-5 py-2.5 bg-navy-800 text-white rounded-xl text-sm font-medium hover:bg-navy-700 transition-all"
           >
-            <ArrowLeft className="w-4 h-4" /> Back to search
+            <ArrowLeft className="w-4 h-4" /> {jd.backToSearch}
           </Link>
         </main>
         <Footer />
@@ -176,14 +188,12 @@ export default function JobDetailPage() {
 
       <main className="pt-24 pb-20">
         <div className="max-w-3xl mx-auto px-4 sm:px-6">
-          {/* Back */}
-          <button
-            onClick={() => router.back()}
-            className="flex items-center gap-1.5 text-sm text-navy-500 hover:text-navy-800 transition-colors mb-8 group"
-          >
-            <ArrowLeft className="w-4 h-4 group-hover:-translate-x-0.5 transition-transform" />
-            Back to results
-          </button>
+          {/* Breadcrumb + route-aware return */}
+          <SubNavBar
+            className="mb-8"
+            breadcrumbs={[{ label: "Career Search", href: "/" }, { label: job.title }]}
+            returnTo={getDashboardReturn(pathname, { loggedIn: !!userEmail })}
+          />
 
           {/* Header */}
           <motion.div
@@ -248,10 +258,10 @@ export default function JobDetailPage() {
                 <section className="rounded-xl border border-navy-100 p-5">
                   <div className="flex items-center gap-2 mb-4">
                     <Target className="w-4 h-4 text-navy-600" />
-                    <h2 className="font-semibold text-navy-900">Skills you need</h2>
+                    <h2 className="font-semibold text-navy-900">{jd.skillsYouNeed}</h2>
                   </div>
                   <div className="mb-3">
-                    <p className="text-xs text-navy-500 mb-2 font-medium uppercase tracking-wide">Must-have</p>
+                    <p className="text-xs text-navy-500 mb-2 font-medium uppercase tracking-wide">{jd.mustHave}</p>
                     <div className="flex flex-wrap gap-2">
                       {detail.skills_required.map((s) => (
                         <span key={s} className="text-xs px-2.5 py-1 rounded-full bg-navy-900 text-white font-medium">
@@ -262,7 +272,7 @@ export default function JobDetailPage() {
                   </div>
                   {detail.skills_nice_to_have.length > 0 && (
                     <div>
-                      <p className="text-xs text-navy-500 mb-2 font-medium uppercase tracking-wide">Nice to have</p>
+                      <p className="text-xs text-navy-500 mb-2 font-medium uppercase tracking-wide">{jd.niceToHave}</p>
                       <div className="flex flex-wrap gap-2">
                         {detail.skills_nice_to_have.map((s) => (
                           <span key={s} className="text-xs px-2.5 py-1 rounded-full bg-navy-50 text-navy-600 border border-navy-200">
@@ -279,7 +289,7 @@ export default function JobDetailPage() {
                   <section className="rounded-xl bg-amber-50 border border-amber-200 p-5">
                     <div className="flex items-center gap-2 mb-3">
                       <Sparkles className="w-4 h-4 text-amber-600" />
-                      <h2 className="font-semibold text-navy-900">The secret sauce</h2>
+                      <h2 className="font-semibold text-navy-900">{jd.secretSauce}</h2>
                     </div>
                     <p className="text-sm text-navy-700 leading-relaxed">{detail.secret_sauce}</p>
                   </section>
@@ -290,7 +300,7 @@ export default function JobDetailPage() {
                   <section className="rounded-xl border border-navy-100 p-5">
                     <div className="flex items-center gap-2 mb-4">
                       <HelpCircle className="w-4 h-4 text-navy-600" />
-                      <h2 className="font-semibold text-navy-900">Are you a good fit? Ask yourself:</h2>
+                      <h2 className="font-semibold text-navy-900">{jd.fitTitle}</h2>
                     </div>
                     <ul className="space-y-2.5">
                       {detail.fit_questions.map((q, i) => (
@@ -308,7 +318,7 @@ export default function JobDetailPage() {
                   <section className="rounded-xl border border-navy-100 p-5">
                     <div className="flex items-center gap-2 mb-4">
                       <AlertCircle className="w-4 h-4 text-amber-500" />
-                      <h2 className="font-semibold text-navy-900">What most candidates are missing</h2>
+                      <h2 className="font-semibold text-navy-900">{jd.commonGaps}</h2>
                     </div>
                     <ul className="space-y-2">
                       {detail.common_gaps.map((g, i) => (
@@ -328,12 +338,12 @@ export default function JobDetailPage() {
                   <section className="rounded-xl border border-navy-100 p-5">
                     <div className="flex items-center gap-2 mb-3">
                       <TrendingUp className="w-4 h-4 text-navy-600" />
-                      <h2 className="font-semibold text-navy-900">How to get here as a student or fresh grad</h2>
+                      <h2 className="font-semibold text-navy-900">{jd.howToGetThere}</h2>
                     </div>
                     <p className="text-sm text-navy-700 leading-relaxed">{detail.how_to_get_there}</p>
                     {detail.entry_paths.length > 0 && (
                       <div className="mt-3 flex flex-wrap gap-2">
-                        <span className="text-xs text-navy-400 self-center">Start with:</span>
+                        <span className="text-xs text-navy-400 self-center">{jd.startWith}</span>
                         {detail.entry_paths.map((p) => (
                           <span key={p} className="text-xs px-2.5 py-1 rounded-full bg-navy-50 text-navy-600 border border-navy-200">
                             {p}
@@ -348,10 +358,10 @@ export default function JobDetailPage() {
                 <section className="rounded-xl border border-navy-100 p-5">
                   <div className="flex items-center gap-2 mb-4">
                     <Building2 className="w-4 h-4 text-navy-600" />
-                    <h2 className="font-semibold text-navy-900">Companies hiring for this role</h2>
+                    <h2 className="font-semibold text-navy-900">{jd.companiesHiring}</h2>
                   </div>
                   <p className="text-xs text-navy-500 mb-3">
-                    These TalentBank partners are actively looking for qualified candidates.
+                    {jd.companiesNote}
                   </p>
                   <div className="flex flex-wrap gap-2">
                     {partners.map((company) => (
@@ -379,19 +389,18 @@ export default function JobDetailPage() {
               <Lightbulb className="w-5 h-5 text-amber-400" />
             </div>
             <h2 className="text-white font-bold text-lg mb-2">
-              See exactly how <em>you</em> fit this role
+              {jd.ctaTitle}
             </h2>
             <p className="text-navy-300 text-sm mb-5 max-w-md mx-auto leading-relaxed">
-              Sign in to upload your CV and find out your skill gap, match score, and how
-              to get in front of companies hiring for{" "}
-              <strong className="text-white">{job.title}</strong>. Free for Weavers — one tap, no forms.
+              {jd.ctaBodyPrefix}{" "}
+              <strong className="text-white">{job.title}</strong>{jd.ctaBodySuffix}
             </p>
 
             <button
               onClick={handleContinue}
               className="inline-flex items-center gap-2 px-6 py-3 bg-white text-navy-900 rounded-xl text-sm font-semibold hover:bg-navy-50 transition-all"
             >
-              Build my CV for this role
+              {jd.buildCvForRole}
               <ArrowRight className="w-4 h-4" />
             </button>
           </motion.div>

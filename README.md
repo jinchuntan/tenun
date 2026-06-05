@@ -1,157 +1,332 @@
-# Tenun — The Career Weaving OS
+# Tenun — Career Discovery for Students & Fresh Graduates
 
-**Weave your skills, experience, goals, and opportunities into realistic career pathways.**
+**Don't know your job title? Tell Tenun what you enjoy, and it weaves that into real career paths.**
 
-Tenun is a career decision-support platform that helps students, graduates, and early-career professionals navigate realistic career pathways. It does not predict your future — it helps you compare paths, understand trade-offs, identify skill gaps, and match with opportunities.
+Tenun is a career discovery and CV/profile platform for students, fresh graduates, and early‑career users in Malaysia — with a dedicated employer side for hiring better‑fit early talent. You describe what you enjoy in plain language; Tenun's AI maps it to real job titles with salary ranges, day‑to‑day breakdowns, required skills, and a step‑by‑step path. A friendly mascot chatbot ("Tenun Guide") helps users navigate, and the whole experience is available in **English** and **Bahasa Melayu**.
 
-## Hackathon Fit
+> Tenun helps you explore possibilities. It does **not** guarantee employment outcomes.
 
-Career OS | Career Marketplace | AI Career Coach | Pathway Simulator | Living Portfolio | Opportunity Matching
+---
+
+## Table of contents
+
+- [Features](#features)
+- [Tech stack](#tech-stack)
+- [Getting started](#getting-started)
+- [Environment variables](#environment-variables)
+- [Project structure](#project-structure)
+- [Architecture](#architecture)
+- [Key user flows](#key-user-flows)
+- [API routes](#api-routes)
+- [Internationalization (i18n)](#internationalization-i18n)
+- [Tenun Guide chatbot](#tenun-guide-chatbot)
+- [Deployment](#deployment)
+- [Scripts](#scripts)
+
+---
 
 ## Features
 
-- **Career Thread Map** — Your profile broken into 8 career threads (Skills, Experience, Education, Interests, Market Demand, Salary, Lifestyle, Employer Fit), each scored 1-100 with explanations and improvement suggestions
-- **Pathway Simulator** — Five realistic career pathways (Stable Growth, High Salary, Skill Pivot, Startup/Builder, Leadership), each with timelines, roles, trade-offs, risks, and concrete next actions
-- **Visual Comparisons** — Radar charts, bar graphs, and dimension comparisons using Recharts
-- **Skill Gap Analysis** — Prioritized skill gaps with current vs. required levels and learning resources
-- **Opportunity Marketplace** — Matching jobs, internships, courses, projects, mentors, and portfolio challenges ranked by fit
-- **AI Career Reasoning Engine** — Deterministic mock engine that works without any API keys; optional AI enhancement via environment variable
-- **Demo Mode** — One-click demo with a sample user profile showing attractive results
-- **Responsive Design** — Works on desktop, tablet, and mobile
+### For Weavers (job seekers)
+- **Plain‑language career search** — type "I like working with data" and get **6 genuinely different** role suggestions (AI‑generated).
+- **Job detail breakdowns** — required & nice‑to‑have skills, the "secret sauce" that separates hired candidates, honest fit questions, common gaps, and entry paths.
+- **Profile & CV upload** — upload a CV/resume/portfolio (PDF/DOCX) to pre‑fill a career profile, or fill it in manually.
+- **Dashboard** — a multi‑pane "career weave": pathways, skills/skill‑gaps, opportunities, a global career **Atlas**, **mentors**, **outreach** drafts, and a **CV/portfolio** builder.
+- **CV builder** — create a CV, pick a template (Harvard / Creative), import an existing CV, and edit block by block.
 
-## Tech Stack
+### For Employers
+- Landing page explaining how Tenun surfaces context‑rich, better‑fit early‑career candidates.
+- Candidate‑signal cards, a comparison vs. traditional job boards, a mock recruiter portal preview, and a **role intake form**.
 
-- [Next.js 14](https://nextjs.org/) with App Router
-- [TypeScript](https://www.typescriptlang.org/)
-- [Tailwind CSS](https://tailwindcss.com/)
-- [shadcn/ui](https://ui.shadcn.com/) component patterns
-- [Radix UI](https://www.radix-ui.com/) primitives
-- [Framer Motion](https://www.framer.com/motion/) for animations
-- [Recharts](https://recharts.org/) for data visualization
-- [Lucide React](https://lucide.dev/) for icons
+### Platform
+- **AI with automatic fallback** — OpenRouter (primary) → Groq (fallback), server‑side only.
+- **Tenun Guide** — a floating mascot chatbot that answers strictly from a controlled knowledge base and escalates to a support email when unsure (no hallucination).
+- **Bilingual** — English / Bahasa Melayu, with a navbar switcher; the AI replies in the selected language too.
+- **Auth** — Google sign‑in via Supabase (optional; the app runs without it).
+- **Rate limiting** — IP‑based on AI routes via Upstash Redis (optional; skipped if not configured).
 
-## Getting Started
+---
+
+## Tech stack
+
+| Area | Technology |
+|---|---|
+| Framework | [Next.js 14](https://nextjs.org/) (App Router), [React 18](https://react.dev/) |
+| Language | [TypeScript](https://www.typescriptlang.org/) |
+| Styling | [Tailwind CSS](https://tailwindcss.com/), [tailwindcss-animate](https://github.com/jamiebuilds/tailwindcss-animate) |
+| UI primitives | [Radix UI](https://www.radix-ui.com/), [shadcn/ui](https://ui.shadcn.com/) patterns, [Lucide](https://lucide.dev/) icons |
+| Animation | [Framer Motion](https://www.framer.com/motion/) |
+| State | [Redux Toolkit](https://redux-toolkit.js.org/) + [React-Redux](https://react-redux.js.org/) |
+| Charts / maps | [Recharts](https://recharts.org/), [react-simple-maps](https://www.react-simple-maps.io/) |
+| Drag & drop | [dnd-kit](https://dndkit.com/) (CV block editor) |
+| Auth & DB | [Supabase](https://supabase.com/) (`@supabase/ssr`) |
+| AI | [OpenRouter](https://openrouter.ai/) (primary) + [Groq SDK](https://groq.com/) (fallback) |
+| Rate limiting | [Upstash Ratelimit + Redis](https://upstash.com/) |
+| File parsing | [pdf-parse](https://www.npmjs.com/package/pdf-parse), [mammoth](https://www.npmjs.com/package/mammoth) (DOCX) |
+
+---
+
+## Getting started
 
 ### Prerequisites
+- **Node.js 18+**
+- npm (or yarn/pnpm)
 
-- Node.js 18+ installed
-- npm, yarn, or pnpm
-
-### Installation
-
+### Install & run
 ```bash
-# Clone the repository
-git clone https://github.com/your-username/tenun.git
-cd tenun
-
-# Install dependencies
+git clone https://github.com/jinchuntan/tenun-mock.git
+cd tenun-mock
 npm install
 
-# Start development server
+# Set up environment (see the next section)
+cp .env.example .env.local
+# …then edit .env.local and add at least OPENROUTER_API_KEY
+
 npm run dev
 ```
+Open [http://localhost:3000](http://localhost:3000).
 
-Open [http://localhost:3000](http://localhost:3000) in your browser.
+> The app **builds and runs without any keys**, but AI features (search, job detail, Tenun Guide) will return a graceful fallback message until you add an AI provider key.
 
-### Environment Variables (Optional)
+---
 
-The app works fully without any environment variables. To enable optional AI enhancement:
+## Environment variables
 
-```bash
-# Copy the example env file
-cp .env.example .env.local
+Copy `.env.example` → `.env.local` and fill in what you need. `.env.local` is git‑ignored — never commit real keys.
 
-# Edit .env.local and add your API key
-ANTHROPIC_API_KEY=your-api-key-here
-NEXT_PUBLIC_AI_ENABLED=true
+> ⚠️ Only variables prefixed `NEXT_PUBLIC_` are exposed to the browser. AI and Supabase **service** keys must stay un‑prefixed (server‑side only).
+
+### Required — at least one AI provider
+| Variable | Purpose |
+|---|---|
+| `OPENROUTER_API_KEY` | **Primary** AI provider. Get one at [openrouter.ai/keys](https://openrouter.ai/keys). |
+| `GROQ_API_KEY` | **Fallback** AI provider (used if OpenRouter fails/rate‑limits). Optional but recommended. |
+
+### Recommended — full functionality
+| Variable | Purpose | Fallback if unset |
+|---|---|---|
+| `NEXT_PUBLIC_SUPABASE_URL` | Supabase project URL (Google sign‑in, sessions) | Auth disabled, app still runs |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase public anon key | Auth disabled |
+| `NEXT_PUBLIC_TENUN_SUPPORT_EMAIL` | Email the Tenun Guide redirects users to when unsure | `support@tenun.example` placeholder |
+
+### Optional — sensible defaults exist
+| Variable | Purpose | Default |
+|---|---|---|
+| `OPENROUTER_MODEL_JOB_INTENT` | Model for career search | `qwen/qwen3-next-80b-a3b-instruct:free` |
+| `OPENROUTER_MODEL_JOB_DETAIL` | Model for job detail | same |
+| `OPENROUTER_MODEL_RESUME_PARSE` | Model for resume parsing | same |
+| `OPENROUTER_MODEL_SITE_GUIDE` | Model for Tenun Guide | same |
+| `OPENROUTER_MODEL_CV_GENERATE` | Model for the CV Generator | same |
+| `OPENROUTER_MODEL_CV_ASSISTANT` | Model for the in-editor CV Assistant | same |
+| `OPENROUTER_BASE_URL` | OpenRouter API base URL | `https://openrouter.ai/api/v1` |
+| `GROQ_MODEL` | Groq fallback model | `llama-3.3-70b-versatile` |
+| `OPENROUTER_SITE_URL` | OpenRouter attribution header | `http://localhost:3000` (set to your domain) |
+| `OPENROUTER_APP_NAME` | OpenRouter attribution | `Tenun` |
+| `OPENROUTER_DATA_COLLECTION` | `deny` keeps prompts out of training | `deny` |
+| `UPSTASH_REDIS_REST_URL` | Enables IP rate limiting on AI routes | Rate limiting skipped |
+| `UPSTASH_REDIS_REST_TOKEN` | Upstash token | Rate limiting skipped |
+
+**Minimum viable setup:** just `OPENROUTER_API_KEY`.
+
+> ⚠️ **Server-side only.** AI keys must never be prefixed with `NEXT_PUBLIC_` — that would expose them to the browser.
+
+### Making AI work on Vercel (production)
+
+The AI keys are **not** bundled at build time — they're read at runtime on the server. You must add them in **Vercel → Project → Settings → Environment Variables → Production**, then **redeploy** (a plain refresh is not enough):
+
+```env
+OPENROUTER_API_KEY=your_key_here
+OPENROUTER_SITE_URL=https://tenun-mock.vercel.app
+OPENROUTER_APP_NAME=Tenun
+OPENROUTER_DATA_COLLECTION=deny
+# Optional fallback:
+GROQ_API_KEY=your_key_here
 ```
 
-## Project Structure
+**Verify it works** (no keys are ever returned):
+
+- `GET /api/ai-health` → confirms `openrouterConfigured: true` and shows the resolved model ids.
+- `GET /api/ai-health?test=true` → makes a tiny real call and returns `test.openrouter.ok: true` when OpenRouter responds. If `ok` is `false`, the `status`/`error` fields explain why (e.g. invalid key `401`, unknown model `404`) so you can fix the key or override `OPENROUTER_MODEL_*`.
+
+---
+
+## Project structure
 
 ```
-tenun/
-├── app/
-│   ├── api/analyze/route.ts       # API route for optional AI integration
-│   ├── dashboard/page.tsx         # Main dashboard with all visualizations
-│   ├── profile/page.tsx           # Profile input form
-│   ├── globals.css                # Global styles and custom utilities
-│   ├── layout.tsx                 # Root layout with metadata
-│   └── page.tsx                   # Landing page
+tenun-mock/
+├── app/                              # Next.js App Router
+│   ├── api/                          # Server-side API routes (no keys reach the client)
+│   │   ├── job-intent/route.ts       #   Career search — query → 6 role suggestions
+│   │   ├── job-detail/route.ts       #   Deep breakdown for a single role
+│   │   ├── parse-resume/route.ts     #   CV → structured profile
+│   │   ├── extract-text/route.ts     #   PDF/DOCX → plain text
+│   │   ├── site-guide/route.ts       #   Tenun Guide chatbot (controlled KB)
+│   │   └── employer-intake/route.ts  #   Employer role-submission capture
+│   ├── auth/callback/route.ts        # Supabase OAuth callback
+│   ├── dashboard/                    # Authenticated "career weave" + CV builder
+│   ├── employers/                    # Employer-facing landing page
+│   ├── jobs/[slug]/page.tsx          # Job detail page (calls /api/job-detail)
+│   ├── companies/[slug]/page.tsx     # Partner company pages
+│   ├── profile/, login/, signup/     # Profile form + auth pages
+│   ├── layout.tsx                    # Root layout: providers + Tenun Guide widget
+│   └── page.tsx                      # Landing page (Weaver search)
+│
 ├── components/
-│   ├── dashboard/
-│   │   ├── thread-map.tsx         # Career Thread Map with SVG visualization
-│   │   ├── pathway-cards.tsx      # Expandable pathway comparison cards
-│   │   ├── pathway-chart.tsx      # Radar, bar, and comparison charts
-│   │   ├── skill-gaps.tsx         # Skill gap analysis cards
-│   │   └── opportunity-marketplace.tsx  # Filterable opportunity grid
-│   ├── ui/
-│   │   ├── badge.tsx              # Badge component
-│   │   ├── button.tsx             # Button with variants
-│   │   ├── card.tsx               # Card components
-│   │   ├── progress.tsx           # Progress bar
-│   │   ├── tabs.tsx               # Tab navigation
-│   │   └── tooltip.tsx            # Tooltip component
-│   ├── footer.tsx                 # Footer with copyright
-│   ├── navbar.tsx                 # Responsive navigation bar
-│   └── thread-visual.tsx          # Abstract thread SVG animations
+│   ├── i18n/LanguageProvider.tsx     # Language context (en/ms) + persistence
+│   ├── site-guide/TenunGuideWidget.tsx  # Floating mascot chatbot UI
+│   ├── landing/                      # Hero, ThreeSteps, Partners, Features, CVSupport, FAQ
+│   ├── employers/                    # Hero, Steps, CandidateSignal, Comparison, Form, FAQ …
+│   ├── dashboard/                    # DashboardShell + panes (Profile/Paths/Skills/Opportunities/CV) + Atlas/Mentor/Outreach
+│   ├── cv/                           # CV templates (Harvard/Creative) + block editor
+│   ├── providers/                    # Redux + Auth providers
+│   ├── ui/                           # Reusable primitives (button, card, badge, tabs…)
+│   ├── navbar.tsx / footer.tsx       # Shared chrome (navbar hosts the language switcher)
+│   └── …
+│
 ├── lib/
-│   ├── career-engine.ts           # Mock AI career reasoning engine
-│   ├── demo-data.ts               # Demo user profile (Aisha Lim)
-│   ├── mock-opportunities.ts      # 12 mock opportunities
-│   ├── types.ts                   # TypeScript type definitions
-│   └── utils.ts                   # Utility functions (cn)
-├── .env.example                   # Environment variable template
-├── next.config.js                 # Next.js configuration
-├── package.json                   # Dependencies and scripts
-├── postcss.config.js              # PostCSS configuration
-├── tailwind.config.ts             # Tailwind CSS configuration
-└── tsconfig.json                  # TypeScript configuration
+│   ├── llm.ts                        # OpenRouter→Groq fallback helper (the AI core)
+│   ├── i18n.ts                       # en/ms translation dictionary + helpers
+│   ├── site-guide-knowledge.ts       # Controlled knowledge base for the chatbot
+│   ├── rate-limit.ts                 # Per-route Upstash rate limiting
+│   ├── types.ts                      # Shared TypeScript types
+│   ├── supabase/                     # Browser + server Supabase clients
+│   ├── data/company-jobs.ts          # Partner company + job seed data
+│   ├── *-engine.ts / *-data.ts       # Deterministic scoring engines + seed data
+│   │                                 #   (career, atlas, mentor, course, outreach)
+│   ├── resume-parser.ts, file-extractors.ts  # CV parsing helpers
+│   └── utils.ts                      # cn(), scoring helpers
+│
+├── store/                            # Redux Toolkit
+│   ├── index.ts                      # Store config (auth, dashboard, cv slices)
+│   ├── slices/                       # authSlice, dashboardSlice, cvSlice
+│   └── middleware/autosave.ts        # Autosaves CV/dashboard state
+│
+├── supabase/migrations/              # SQL schema + row-level security
+├── middleware.ts                     # Protects /dashboard, refreshes Supabase session
+├── public/images/                    # Logos, mascots, landing art
+└── tailwind.config.ts, tsconfig.json, next.config.js
 ```
+
+---
 
 ## Architecture
 
-### Career Engine
+### AI layer (`lib/llm.ts`)
+A single helper, `generateJSONWithFallback()`, powers every AI feature:
 
-The core engine (`lib/career-engine.ts`) takes a user profile and produces:
+1. **OpenRouter first** — calls the configured model, requests strict JSON output, times out after 30s.
+2. **Groq fallback** — on any OpenRouter error (HTTP 429/402/5xx, timeout, invalid JSON) or if no OpenRouter key is set.
+3. **Throws only if both fail.** Keys are read from `process.env` **server‑side only** — they never reach the browser.
 
-1. **Thread Extraction** — Analyzes skills, experience, education, interests, and preferences to score 8 career dimensions
-2. **Pathway Generation** — Creates 5 distinct career paths with scores, timelines, roles, trade-offs, risks, and actions
-3. **Skill Gap Identification** — Cross-references required skills across all pathways against user skills
-4. **Opportunity Matching** — Ranks opportunities by relevance to user profile and generated pathways
+Each route passes a `routeName` so the helper can pick the right per‑route model env var. Output is validated with `isJsonParseable()` before being accepted.
 
-The engine uses careful, non-deterministic language ("appears suitable", "based on your current profile") and avoids prediction language ("you will become", "guaranteed").
+### Authentication (`middleware.ts` + `lib/supabase/*`)
+- Supabase handles Google OAuth. `middleware.ts` refreshes the session on every request and **redirects unauthenticated users away from `/dashboard`**.
+- If Supabase env vars are missing, `createClient()` returns `null` and middleware passes through — auth simply becomes a no‑op so the rest of the app still works.
 
-### Data Flow
+### State management (`store/`)
+- Redux Toolkit with three slices: **auth**, **dashboard**, and **cv**.
+- An **autosave middleware** persists CV/dashboard edits.
+- Provided app‑wide via `components/providers/ReduxProvider.tsx`.
 
-```
-User Profile → Career Engine → {
-  threads: CareerThread[8],
-  pathways: PathwayCard[5],
-  skillGaps: SkillGap[],
-  opportunities: Opportunity[12],
-  summary: string
+### Deterministic engines (`lib/*-engine.ts`)
+The dashboard's analysis (career threads, pathways, skill gaps, atlas hubs, mentor/course matches, outreach drafts) is produced by **deterministic scoring engines** over seed data — fast, free, and reproducible. They use careful, non‑predictive language ("appears suitable", "based on your current profile").
+
+### Rate limiting (`lib/rate-limit.ts`)
+Per‑route sliding‑window limits keyed by client IP (e.g. `site-guide`: 20/min, `parse-resume`: 5/min). Backed by Upstash Redis; **automatically disabled** when Upstash env vars are absent (dev‑friendly).
+
+### Internationalization (`lib/i18n.ts` + `components/i18n/LanguageProvider.tsx`)
+A lightweight, dependency‑free system — see [Internationalization](#internationalization-i18n) below.
+
+---
+
+## Key user flows
+
+**Career search (home).** `app/page.tsx` → `POST /api/job-intent` `{ query, locale }` → 6 suggestions rendered as cards → clicking a card stores the suggestion in `sessionStorage` and routes to `/jobs/[slug]`.
+
+**Job detail.** `app/jobs/[slug]/page.tsx` reads the suggestion from `sessionStorage`, then `POST /api/job-detail` `{ title, context, locale }` for the skills / secret‑sauce / fit / gaps breakdown.
+
+**CV upload & parse.** Profile/upload page → `POST /api/extract-text` (PDF/DOCX → text) → `POST /api/parse-resume` (text → structured profile) → pre‑fills the profile/CV builder.
+
+**Tenun Guide.** The floating widget (`components/site-guide/TenunGuideWidget.tsx`) → `POST /api/site-guide` `{ message, history, locale, pageContext }`, answered strictly from `lib/site-guide-knowledge.ts`.
+
+---
+
+## API routes
+
+All routes are POST, server‑side, rate‑limited by IP, and return JSON. They never expose API keys.
+
+| Route | Body | Returns |
+|---|---|---|
+| `/api/job-intent` | `{ query, locale?, skills?, interests?, experience? }` | `{ overview, didYouMean[], suggestions[] }` |
+| `/api/job-detail` | `{ title, context?, locale? }` | `{ skills_required[], skills_nice_to_have[], secret_sauce, fit_questions[], common_gaps[], how_to_get_there, entry_paths[] }` |
+| `/api/parse-resume` | `{ text }` | Structured profile fields |
+| `/api/extract-text` | file upload | `{ text }` |
+| `/api/site-guide` | `{ message, history?, locale?, pageContext? }` | `{ answer, confidence, suggestedActions[], shouldEscalate, escalationMessage? }` |
+| `/api/employer-intake` | role + contact fields | capture confirmation |
+
+For `locale: "ms"`, the AI writes user‑facing **values** in natural Malaysian Malay while keeping JSON keys and technical terms (SQL, Python, React…) unchanged.
+
+---
+
+## Internationalization (i18n)
+
+Tenun ships with **English (`en`)** and **Bahasa Melayu (`ms`)** — friendly Malaysian Malay, not Indonesian.
+
+**How it works**
+- `lib/i18n.ts` exports a typed dictionary. The `en` tree is the source of truth; `ms` must mirror it exactly (TypeScript enforces this at build time).
+- `components/i18n/LanguageProvider.tsx` holds the active locale, persists it to `localStorage`, syncs `<html lang>`, and exposes `useLanguage()` → `{ locale, setLocale, t, dict }`.
+- The navbar (`components/navbar.tsx`) has the switcher (desktop dropdown + mobile toggle). Switching is instant — no page reload — and persists across refreshes. Default is English.
+
+**Use it in a component**
+```tsx
+import { useLanguage } from "@/components/i18n/LanguageProvider";
+
+function Example() {
+  const { dict, t, locale } = useLanguage();
+  return <h1>{dict.home.heroTitleLine3}</h1>;   // or t("home.explore")
 }
 ```
 
-## Demo
+**Add a new string:** add the key under the right section in **both** `en` and `ms` in `lib/i18n.ts` (the build fails if `ms` is missing a key), then reference it via `dict.section.key`.
 
-Click "View Demo" on the landing page to see results for **Aisha Lim**, a final-year computer science student interested in product management, data analytics, and climate technology.
+**Make AI replies localized:** send `locale` in the request body — the route appends a Malay instruction to the system prompt when `locale === "ms"`.
 
-## Suggested Future Improvements
+---
 
-- Real AI integration with streaming responses for deeper analysis
-- User authentication and profile persistence
-- Real-time job data from APIs (LinkedIn, Indeed, etc.)
-- Collaborative features (share your weave, get peer feedback)
-- Progress tracking over time (re-analyze periodically)
-- Export results as PDF
-- Industry-specific pathway templates
-- Mentor matching with real mentorship platforms
-- Integration with learning platforms for direct course enrollment
-- Community features (forums, peer comparisons, success stories)
+## Tenun Guide chatbot
 
-## License
+A floating mascot widget that helps users figure out where to go next, **without hallucinating**:
 
-Built for the Career OS Hackathon 2025.
+- Answers **only** from the controlled knowledge base in `lib/site-guide-knowledge.ts` plus the current page context.
+- Suggested action links are filtered against an **allow‑list of hrefs** — it can never link to an invented page.
+- When unsure, it sets `shouldEscalate` and redirects to `NEXT_PUBLIC_TENUN_SUPPORT_EMAIL`.
+- **Page‑aware** (different greeting + quick‑action chips per route) and **bilingual**.
+- The mascot image lives at `public/images/tenun-mascot.png`, animated with Framer Motion, with a graceful "T" badge fallback if the asset is missing.
 
-Copyright 2025 Tenun. All rights reserved.
+---
+
+## Deployment
+
+The app deploys cleanly to **[Vercel](https://vercel.com/)**:
+
+1. Import the repo into Vercel.
+2. Under **Project → Settings → Environment Variables**, add the variables from the [Environment variables](#environment-variables) section (for Production and Preview). At minimum, set `OPENROUTER_API_KEY`; set `OPENROUTER_SITE_URL` to your production domain.
+3. Deploy. Next.js is auto‑detected; no extra build config needed.
+
+If you use Supabase auth, add `http://localhost:3000/auth/callback` and your production callback URL under **Supabase → Authentication → URL Configuration → Redirect URLs**, and enable the Google provider.
+
+---
+
+## Scripts
+
+| Command | Description |
+|---|---|
+| `npm run dev` | Start the dev server (http://localhost:3000) |
+| `npm run build` | Production build (also type‑checks the whole project) |
+| `npm run start` | Serve the production build |
+| `npm run lint` | Run ESLint |
+
+---
+
+Copyright © Tenun. All rights reserved. Built with [TalentBank](https://www.talentbank.com.my/), Malaysia's talent placement network.

@@ -1,10 +1,18 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Inter, Archivo_Black } from "next/font/google";
 import "./globals.css";
 import { ReduxProvider } from "@/components/providers/ReduxProvider";
 import { AuthProvider } from "@/components/providers/AuthProvider";
+import { LanguageProvider } from "@/components/i18n/LanguageProvider";
+import TenunGuideVisibilityGate from "@/components/site-guide/TenunGuideVisibilityGate";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
+// Heavy display face for big playful headlines (free, loaded via next/font)
+const archivoBlack = Archivo_Black({
+  subsets: ["latin"],
+  weight: "400",
+  variable: "--font-display",
+});
 
 export const metadata: Metadata = {
   title: "Tenun: Don't Know Your Job Title? We Got You.",
@@ -93,7 +101,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className={inter.variable}>
+    <html lang="en" className={`${inter.variable} ${archivoBlack.variable}`}>
       <head>
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(appJsonLd) }} />
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }} />
@@ -101,7 +109,13 @@ export default function RootLayout({
       <body className="min-h-screen antialiased font-sans">
           <ReduxProvider>
             <AuthProvider>
-              {children}
+              <LanguageProvider>
+                {children}
+                {/* Floating mascot guide — temporarily restricted to landing pages
+                    ("/" and "/employers") while secondary-page UX is being polished.
+                    The gate controls WHERE it appears; the widget itself is unchanged. */}
+                <TenunGuideVisibilityGate />
+              </LanguageProvider>
             </AuthProvider>
           </ReduxProvider>
         </body>

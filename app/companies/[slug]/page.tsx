@@ -1,10 +1,9 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, useRouter, usePathname } from "next/navigation";
 import { motion } from "framer-motion";
 import {
-  ArrowLeft,
   Lock,
   MapPin,
   Briefcase,
@@ -15,12 +14,15 @@ import {
 import Image from "next/image";
 import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
+import { SubNavBar } from "@/components/layout/SubNavBar";
+import { getDashboardReturn } from "@/lib/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { getCompany, type JobListing } from "@/lib/data/company-jobs";
 
 export default function CompanyPage() {
   const params = useParams();
   const router = useRouter();
+  const pathname = usePathname();
   const slug = typeof params.slug === "string" ? params.slug : "";
 
   const company = getCompany(slug);
@@ -84,13 +86,11 @@ export default function CompanyPage() {
         {/* Header */}
         <div className="bg-navy-50 border-b border-navy-100">
           <div className="max-w-4xl mx-auto px-4 sm:px-6 py-10">
-            <button
-              onClick={() => router.back()}
-              className="flex items-center gap-1.5 text-sm text-navy-500 hover:text-navy-800 transition-colors mb-6 group"
-            >
-              <ArrowLeft className="w-4 h-4 group-hover:-translate-x-0.5 transition-transform" />
-              Back
-            </button>
+            <SubNavBar
+              className="mb-6"
+              breadcrumbs={[{ label: "Companies", href: "/#partners" }, { label: company.name }]}
+              returnTo={getDashboardReturn(pathname, { loggedIn: !!userEmail })}
+            />
 
             <div className="flex items-start gap-4">
               <div className="w-16 h-16 rounded-xl bg-white border border-navy-200 flex items-center justify-center flex-shrink-0 overflow-hidden p-2 shadow-sm">

@@ -27,6 +27,14 @@ Rules:
 - common_gaps should be things most university students actually lack, not obvious things.
 - Return ONLY valid JSON. No markdown, no code fences.`;
 
+// Appended when the user is browsing in Bahasa Melayu.
+const MALAY_INSTRUCTION = `
+
+LANGUAGE: The user is using the site in Bahasa Melayu (Malaysian Malay).
+- Write the string VALUES (secret_sauce, fit_questions, common_gaps, how_to_get_there, entry_paths) in natural, friendly Malaysian Malay — NOT Indonesian.
+- Keep the JSON keys EXACTLY as specified in English. Do not translate keys.
+- Keep technical skill names unchanged (e.g. SQL, Python, React, Figma, Excel) inside skills_required and skills_nice_to_have.`;
+
 function safeParse(text: string) {
   const fallback = {
     skills_required: [],
@@ -58,7 +66,11 @@ export async function POST(request: Request) {
   if (rateLimited.limited) return rateLimited.response;
 
   try {
-    const { title, context = "" } = await request.json() as { title: string; context: string };
+    const { title, context = "", locale = "en" } = await request.json() as {
+      title: string;
+      context: string;
+      locale?: "en" | "ms";
+    };
 
     if (!title?.trim()) {
       return NextResponse.json({ error: "Missing title." }, { status: 400 });
@@ -68,10 +80,12 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "No API key configured." }, { status: 500 });
     }
 
+    const systemPrompt = locale === "ms" ? SYSTEM_PROMPT + MALAY_INSTRUCTION : SYSTEM_PROMPT;
+
     const { raw } = await generateJSONWithFallback({
       routeName: "job-detail",
       messages: [
-        { role: "system", content: SYSTEM_PROMPT },
+        { role: "system", content: systemPrompt },
         { role: "user", content: `Job title: "${title}"\nContext: "${context}"` },
       ],
       temperature: 0.4,

@@ -12,6 +12,7 @@ import { PathsPane } from "@/components/dashboard/panes/PathsPane";
 import { SkillsPane } from "@/components/dashboard/panes/SkillsPane";
 import { OpportunitiesPane } from "@/components/dashboard/panes/OpportunitiesPane";
 import { CVPane } from "@/components/dashboard/panes/CVPane";
+import { MockInterviewEntryCard } from "@/components/interview/MockInterviewEntryCard";
 import { GlobalCareerAtlas } from "@/components/dashboard/global-career-atlas";
 import { MentorConnect } from "@/components/dashboard/mentor-connect";
 import { OutreachStudio } from "@/components/dashboard/outreach-studio";
@@ -174,6 +175,10 @@ function DashboardContent() {
 
       <Section id="cv">
         <CVPane />
+      </Section>
+
+      <Section id="mock-interview">
+        <MockInterviewEntryCard />
       </Section>
     </DashboardShell>
   );

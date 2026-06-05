@@ -2,61 +2,84 @@
 
 import React from "react";
 import Link from "next/link";
-import { Layers } from "lucide-react";
+import { useLanguage } from "@/components/i18n/LanguageProvider";
+
+const WEAVER_HREFS = [
+  "/#how-it-works",
+  "/",
+  "/profile?upload=true&from=landing",
+  "/#faq",
+];
+
+const EMPLOYER_HREFS = [
+  "/employers#why",
+  "/employers#employer-form",
+  "/employers#candidate-signal",
+  "/employers#portal-preview",
+];
 
 export function Footer() {
+  const { dict } = useLanguage();
+  const ft = dict.footer;
   const currentYear = new Date().getFullYear();
+  const WEAVER_LINKS = ft.weaverLinks.map((label, i) => ({ label, href: WEAVER_HREFS[i] }));
+  const EMPLOYER_LINKS = ft.employerLinks.map((label, i) => ({ label, href: EMPLOYER_HREFS[i] }));
 
   return (
-    <footer className="bg-navy-900 text-white">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-9">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+    <footer className="bg-beige-200 border-t border-beige-300/70 text-navy-900">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-10">
           {/* Brand */}
           <div className="md:col-span-2">
-            <div className="flex items-center gap-2 mb-4">
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-navy-400 to-gold-500 flex items-center justify-center">
-                <Layers className="w-4 h-4 text-white" />
-              </div>
-              <span className="text-xl font-bold tracking-tight">Tenun</span>
-            </div>
-            <p className="text-navy-300 text-sm max-w-sm leading-relaxed mb-3">
-              Career discovery for students and fresh graduates who don&apos;t know their job
-              title yet. Built with TalentBank, Malaysia&apos;s leading talent placement platform.
+            <span className="text-2xl font-black tracking-tight">Tenun</span>
+            <p className="text-navy-600 text-sm max-w-sm leading-relaxed mt-4">
+              {ft.tagline}
             </p>
           </div>
 
-          {/* Platform links */}
+          {/* For Weavers */}
           <div>
-            <h4 className="font-semibold text-sm mb-4 text-gold-400">Platform</h4>
-            <ul className="space-y-2 text-sm text-navy-300">
-              <li><Link href="/#how-it-works" className="hover:text-white transition-colors">How It Works</Link></li>
-              <li><Link href="/#partners" className="hover:text-white transition-colors">Partner Companies</Link></li>
-              <li><Link href="/#features" className="hover:text-white transition-colors">Features</Link></li>
-              <li><Link href="/#faq" className="hover:text-white transition-colors">FAQ</Link></li>
+            <h4 className="font-bold text-sm mb-4 text-navy-900">{ft.forWeavers}</h4>
+            <ul className="space-y-2.5 text-sm text-navy-600">
+              {WEAVER_LINKS.map((link) => (
+                <li key={link.label}>
+                  <Link href={link.href} className="hover:text-gold-600 transition-colors">
+                    {link.label}
+                  </Link>
+                </li>
+              ))}
             </ul>
           </div>
 
-          {/* For companies */}
+          {/* For Employers */}
           <div>
-            <h4 className="font-semibold text-sm mb-4 text-gold-400">For Employers</h4>
-            <ul className="space-y-2 text-sm text-navy-300">
-              <li><Link href="/#companies" className="hover:text-white transition-colors">Why Tenun</Link></li>
-              <li>
-                <a href="mailto:partnerships@tenun.career" className="hover:text-white transition-colors">
-                  Partner with us
-                </a>
-              </li>
-              <li><Link href="/dashboard" className="hover:text-white transition-colors">Recruiter Portal</Link></li>
+            <h4 className="font-bold text-sm mb-4 text-navy-900">{ft.forEmployers}</h4>
+            <ul className="space-y-2.5 text-sm text-navy-600">
+              {EMPLOYER_LINKS.map((link) =>
+                link.href.startsWith("mailto:") ? (
+                  <li key={link.label}>
+                    <a href={link.href} className="hover:text-gold-600 transition-colors">
+                      {link.label}
+                    </a>
+                  </li>
+                ) : (
+                  <li key={link.label}>
+                    <Link href={link.href} className="hover:text-gold-600 transition-colors">
+                      {link.label}
+                    </Link>
+                  </li>
+                )
+              )}
             </ul>
           </div>
         </div>
 
-        <div className="border-t border-navy-800 mt-7 pt-6 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <p className="text-xs text-navy-400">
-            &copy; {currentYear} Tenun. All rights reserved.
+        <div className="border-t border-beige-300/80 mt-10 pt-6 flex flex-col sm:flex-row items-center justify-between gap-3">
+          <p className="text-xs text-navy-500">
+            &copy; {currentYear} Tenun. {ft.rights}
           </p>
           <p className="text-xs text-navy-500">
-            Tenun helps you explore possibilities. It does not guarantee employment outcomes.
+            {ft.disclaimer}
           </p>
         </div>
       </div>

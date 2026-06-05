@@ -65,8 +65,8 @@ export async function POST(request: Request) {
 
     if (!process.env.OPENROUTER_API_KEY && !process.env.GROQ_API_KEY) {
       return NextResponse.json(
-        { error: "No API key configured." },
-        { status: 500 }
+        { error: "AI parsing is unavailable — OpenRouter API key is not configured on the server (set OPENROUTER_API_KEY, or GROQ_API_KEY for fallback)." },
+        { status: 503 }
       );
     }
 

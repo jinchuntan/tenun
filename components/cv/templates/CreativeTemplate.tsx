@@ -9,17 +9,150 @@ function arr(block: CVBlock, key: string): string[] {
   return (block.content[key] as string[]) ?? [];
 }
 
-function SideHeading({ label }: { label: string }) {
+function SideHeading({ label, show = true }: { label: string; show?: boolean }) {
+  if (!show) return null;
   return <p className="text-[9px] font-bold uppercase tracking-widest mb-1.5" style={{ color: ACCENT }}>{label}</p>;
 }
 
-function MainHeading({ label }: { label: string }) {
+function MainHeading({ label, show = true }: { label: string; show?: boolean }) {
+  if (!show) return null;
   return (
     <div className="mb-2 mt-4 first:mt-0">
       <p className="text-[10px] font-bold uppercase tracking-widest" style={{ color: ACCENT }}>{label}</p>
       <div className="h-px mt-0.5" style={{ backgroundColor: ACCENT + "40" }} />
     </div>
   );
+}
+
+// `showHeading` is false when the previous rendered block was the same type,
+// so consecutive entries (e.g. several work experiences) share one heading.
+function renderSideBlock(block: CVBlock, showHeading: boolean) {
+  switch (block.type) {
+    case "skills":
+      return arr(block, "items").length > 0 ? (
+        <div>
+          <SideHeading label="Skills" show={showHeading} />
+          <div className="flex flex-col gap-1">
+            {arr(block, "items").map((s) => (
+              <span key={s} className="text-[10px] text-gray-600">{s}</span>
+            ))}
+          </div>
+        </div>
+      ) : null;
+
+    case "certifications":
+      return str(block, "name") ? (
+        <div>
+          <SideHeading label="Certifications" show={showHeading} />
+          <p className="text-[10px] font-medium text-[#0a1628]">{str(block, "name")}</p>
+          <p className="text-[9.5px] text-gray-400">{str(block, "issuer")}</p>
+          <p className="text-[9.5px] text-gray-400">{str(block, "date")}</p>
+        </div>
+      ) : null;
+
+    case "portfolio":
+      return str(block, "title") ? (
+        <div>
+          <SideHeading label="Portfolio" show={showHeading} />
+          <p className="text-[10px] font-medium text-[#0a1628]">{str(block, "title")}</p>
+          {str(block, "url") && <p className="text-[9.5px]" style={{ color: ACCENT }}>{str(block, "url")}</p>}
+        </div>
+      ) : null;
+
+    default:
+      return null;
+  }
+}
+
+function renderMainBlock(block: CVBlock, showHeading: boolean) {
+  switch (block.type) {
+    case "summary":
+      return str(block, "text") ? (
+        <div>
+          <MainHeading label="Summary" show={showHeading} />
+          <p className="text-[10.5px] text-gray-700 leading-relaxed">{str(block, "text")}</p>
+        </div>
+      ) : null;
+
+    case "work_experience":
+      return str(block, "company") || str(block, "role") ? (
+        <div>
+          <MainHeading label="Work Experience" show={showHeading} />
+          <div className="flex justify-between items-baseline">
+            <p className="text-[11px] font-bold text-[#0a1628]">{str(block, "role")}</p>
+            <p className="text-[9.5px] text-gray-400">{[str(block, "startDate"), str(block, "endDate")].filter(Boolean).join(" - ")}</p>
+          </div>
+          <p className="text-[10px] mb-1" style={{ color: ACCENT }}>{str(block, "company")}</p>
+          <ul className="space-y-0.5">
+            {arr(block, "bullets").filter(Boolean).map((b, i) => (
+              <li key={i} className="flex items-start gap-1.5 text-[10px] text-gray-700">
+                <span className="mt-1.5 w-1 h-1 rounded-full shrink-0" style={{ backgroundColor: ACCENT }} />
+                {b}
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : null;
+
+    case "education":
+      return str(block, "institution") ? (
+        <div>
+          <MainHeading label="Education" show={showHeading} />
+          <div className="flex justify-between items-baseline">
+            <p className="text-[11px] font-bold text-[#0a1628]">{[str(block, "degree"), str(block, "field")].filter(Boolean).join(", ")}</p>
+            <p className="text-[9.5px] text-gray-400">{[str(block, "startDate"), str(block, "endDate")].filter(Boolean).join(" - ")}</p>
+          </div>
+          <p className="text-[10px]" style={{ color: ACCENT }}>{str(block, "institution")}</p>
+          {str(block, "grade") && <p className="text-[9.5px] text-gray-400">Grade: {str(block, "grade")}</p>}
+        </div>
+      ) : null;
+
+    case "achievements":
+      return arr(block, "bullets").filter(Boolean).length > 0 ? (
+        <div>
+          <MainHeading label="Achievements" show={showHeading} />
+          <ul className="space-y-0.5">
+            {arr(block, "bullets").filter(Boolean).map((b, i) => (
+              <li key={i} className="flex items-start gap-1.5 text-[10px] text-gray-700">
+                <span className="mt-1.5 w-1 h-1 rounded-full shrink-0" style={{ backgroundColor: ACCENT }} />
+                {b}
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : null;
+
+    case "extracurricular":
+      return str(block, "organisation") ? (
+        <div>
+          <MainHeading label="Extracurricular" show={showHeading} />
+          <div className="flex justify-between items-baseline">
+            <p className="text-[11px] font-bold text-[#0a1628]">{str(block, "role")}</p>
+            <p className="text-[9.5px] text-gray-400">{[str(block, "startDate"), str(block, "endDate")].filter(Boolean).join(" - ")}</p>
+          </div>
+          <p className="text-[10px] mb-1" style={{ color: ACCENT }}>{str(block, "organisation")}</p>
+          <ul className="space-y-0.5">
+            {arr(block, "bullets").filter(Boolean).map((b, i) => (
+              <li key={i} className="flex items-start gap-1.5 text-[10px] text-gray-700">
+                <span className="mt-1.5 w-1 h-1 rounded-full shrink-0" style={{ backgroundColor: ACCENT }} />
+                {b}
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : null;
+
+    case "custom":
+      return str(block, "body") ? (
+        <div>
+          <MainHeading label={str(block, "heading") || "Custom Section"} show={showHeading} />
+          <p className="text-[10.5px] text-gray-700 leading-relaxed whitespace-pre-wrap">{str(block, "body")}</p>
+        </div>
+      ) : null;
+
+    default:
+      return null;
+  }
 }
 
 export function CreativeTemplate({ blocks, allIds }: { blocks: Record<string, CVBlock>; allIds: string[] }) {
@@ -32,6 +165,9 @@ export function CreativeTemplate({ blocks, allIds }: { blocks: Record<string, CV
   const mainBlocks = orderedBlocks.filter((b) =>
     !["personal_info", "skills", "certifications", "portfolio"].includes(b.type)
   );
+
+  let sidePrevType: string | null = null;
+  let mainPrevType: string | null = null;
 
   return (
     <div className="w-full bg-white text-[#0a1628] min-h-[1056px] flex flex-col" style={{ fontFamily: "system-ui, sans-serif" }}>
@@ -54,135 +190,20 @@ export function CreativeTemplate({ blocks, allIds }: { blocks: Record<string, CV
         {/* Sidebar */}
         <div className="w-44 shrink-0 bg-gray-50 border-r border-gray-100 px-4 py-5 space-y-4">
           {sideBlocks.map((block) => {
-            switch (block.type) {
-              case "skills":
-                return arr(block, "items").length > 0 ? (
-                  <div key={block.id}>
-                    <SideHeading label="Skills" />
-                    <div className="flex flex-col gap-1">
-                      {arr(block, "items").map((s) => (
-                        <span key={s} className="text-[10px] text-gray-600">{s}</span>
-                      ))}
-                    </div>
-                  </div>
-                ) : null;
-
-              case "certifications":
-                return str(block, "name") ? (
-                  <div key={block.id}>
-                    <SideHeading label="Certifications" />
-                    <p className="text-[10px] font-medium text-[#0a1628]">{str(block, "name")}</p>
-                    <p className="text-[9.5px] text-gray-400">{str(block, "issuer")}</p>
-                    <p className="text-[9.5px] text-gray-400">{str(block, "date")}</p>
-                  </div>
-                ) : null;
-
-              case "portfolio":
-                return str(block, "title") ? (
-                  <div key={block.id}>
-                    <SideHeading label="Portfolio" />
-                    <p className="text-[10px] font-medium text-[#0a1628]">{str(block, "title")}</p>
-                    {str(block, "url") && <p className="text-[9.5px]" style={{ color: ACCENT }}>{str(block, "url")}</p>}
-                  </div>
-                ) : null;
-
-              default:
-                return null;
-            }
+            const rendered = renderSideBlock(block, block.type !== sidePrevType);
+            if (!rendered) return null;
+            sidePrevType = block.type;
+            return <div key={block.id}>{rendered}</div>;
           })}
         </div>
 
         {/* Main content */}
         <div className="flex-1 px-6 py-5">
           {mainBlocks.map((block) => {
-            switch (block.type) {
-              case "summary":
-                return str(block, "text") ? (
-                  <div key={block.id}>
-                    <MainHeading label="Summary" />
-                    <p className="text-[10.5px] text-gray-700 leading-relaxed">{str(block, "text")}</p>
-                  </div>
-                ) : null;
-
-              case "work_experience":
-                return str(block, "company") || str(block, "role") ? (
-                  <div key={block.id}>
-                    <MainHeading label="Work Experience" />
-                    <div className="flex justify-between items-baseline">
-                      <p className="text-[11px] font-bold text-[#0a1628]">{str(block, "role")}</p>
-                      <p className="text-[9.5px] text-gray-400">{[str(block, "startDate"), str(block, "endDate")].filter(Boolean).join(" - ")}</p>
-                    </div>
-                    <p className="text-[10px] mb-1" style={{ color: ACCENT }}>{str(block, "company")}</p>
-                    <ul className="space-y-0.5">
-                      {arr(block, "bullets").filter(Boolean).map((b, i) => (
-                        <li key={i} className="flex items-start gap-1.5 text-[10px] text-gray-700">
-                          <span className="mt-1.5 w-1 h-1 rounded-full shrink-0" style={{ backgroundColor: ACCENT }} />
-                          {b}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                ) : null;
-
-              case "education":
-                return str(block, "institution") ? (
-                  <div key={block.id}>
-                    <MainHeading label="Education" />
-                    <div className="flex justify-between items-baseline">
-                      <p className="text-[11px] font-bold text-[#0a1628]">{[str(block, "degree"), str(block, "field")].filter(Boolean).join(", ")}</p>
-                      <p className="text-[9.5px] text-gray-400">{[str(block, "startDate"), str(block, "endDate")].filter(Boolean).join(" - ")}</p>
-                    </div>
-                    <p className="text-[10px]" style={{ color: ACCENT }}>{str(block, "institution")}</p>
-                    {str(block, "grade") && <p className="text-[9.5px] text-gray-400">Grade: {str(block, "grade")}</p>}
-                  </div>
-                ) : null;
-
-              case "achievements":
-                return arr(block, "bullets").filter(Boolean).length > 0 ? (
-                  <div key={block.id}>
-                    <MainHeading label="Achievements" />
-                    <ul className="space-y-0.5">
-                      {arr(block, "bullets").filter(Boolean).map((b, i) => (
-                        <li key={i} className="flex items-start gap-1.5 text-[10px] text-gray-700">
-                          <span className="mt-1.5 w-1 h-1 rounded-full shrink-0" style={{ backgroundColor: ACCENT }} />
-                          {b}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                ) : null;
-
-              case "extracurricular":
-                return str(block, "organisation") ? (
-                  <div key={block.id}>
-                    <MainHeading label="Extracurricular" />
-                    <div className="flex justify-between items-baseline">
-                      <p className="text-[11px] font-bold text-[#0a1628]">{str(block, "role")}</p>
-                      <p className="text-[9.5px] text-gray-400">{[str(block, "startDate"), str(block, "endDate")].filter(Boolean).join(" - ")}</p>
-                    </div>
-                    <p className="text-[10px] mb-1" style={{ color: ACCENT }}>{str(block, "organisation")}</p>
-                    <ul className="space-y-0.5">
-                      {arr(block, "bullets").filter(Boolean).map((b, i) => (
-                        <li key={i} className="flex items-start gap-1.5 text-[10px] text-gray-700">
-                          <span className="mt-1.5 w-1 h-1 rounded-full shrink-0" style={{ backgroundColor: ACCENT }} />
-                          {b}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                ) : null;
-
-              case "custom":
-                return str(block, "body") ? (
-                  <div key={block.id}>
-                    <MainHeading label={str(block, "heading") || "Custom Section"} />
-                    <p className="text-[10.5px] text-gray-700 leading-relaxed whitespace-pre-wrap">{str(block, "body")}</p>
-                  </div>
-                ) : null;
-
-              default:
-                return null;
-            }
+            const rendered = renderMainBlock(block, block.type !== mainPrevType);
+            if (!rendered) return null;
+            mainPrevType = block.type;
+            return <div key={block.id}>{rendered}</div>;
           })}
         </div>
       </div>

@@ -2,6 +2,16 @@ export type CVStyle = "harvard" | "creative";
 export type CVFormat = "resume" | "cv";
 export type SaveStatus = "idle" | "saving" | "saved" | "error";
 
+/**
+ * Generates a v4 UUID. CV and block IDs MUST be UUIDs because the Supabase
+ * `cvs.id` / `cv_blocks.id` columns are `uuid` typed — inserting a non-UUID
+ * string (e.g. nanoid) fails with a type error. `crypto.randomUUID()` is
+ * available in modern browsers (secure context) and Node 16.7+.
+ */
+export function newId(): string {
+  return crypto.randomUUID();
+}
+
 export type BlockType =
   | "personal_info"
   | "summary"
