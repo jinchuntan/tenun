@@ -28,7 +28,6 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "File exceeds the 5 MB limit." }, { status: 413 });
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
     const pdfParse = require("pdf-parse") as (buf: Buffer) => Promise<{ text: string }>;
     const buffer = Buffer.from(await file.arrayBuffer());
     const data = await pdfParse(buffer);

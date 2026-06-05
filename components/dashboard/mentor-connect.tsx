@@ -410,7 +410,7 @@ export function MentorConnect({
       <div>
         <h2 className="text-xl sm:text-2xl font-bold text-navy-900">Mentor Connect</h2>
         <p className="text-sm text-navy-500 mt-1">
-          Swipe right to connect, left to pass — we'll help draft your first message
+          Swipe right to connect, left to pass — we&apos;ll help draft your first message
         </p>
       </div>
 

@@ -28,7 +28,6 @@ IMPORTANT RULES:
 4. Keep "education" and "experience" very concise — no long paragraphs.
 5. Return ONLY valid JSON — no markdown, no code fences, no explanation.`;
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function safeParseJSON(text: string): Record<string, any> {
   let cleaned = text.trim();
   if (cleaned.startsWith("```")) {
