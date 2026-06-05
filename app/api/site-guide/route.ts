@@ -25,7 +25,7 @@ type HistoryItem = { role: "user" | "assistant"; content: string };
 type RequestBody = {
   message?: string;
   history?: HistoryItem[];
-  locale?: "en" | "ms";
+  locale?: "en" | "ms" | "zh-CN";
   pageContext?: {
     pathname?: string;
     pageTitle?: string;
@@ -46,11 +46,13 @@ type GuideResponse = {
 // invented or broken page.
 const ALLOWED_HREFS = new Set<string>(Object.values(GUIDE_ACTIONS).map((a) => a.href));
 
-function buildSystemPrompt(locale: "en" | "ms"): string {
+function buildSystemPrompt(locale: "en" | "ms" | "zh-CN"): string {
   const supportEmail = getSupportEmail();
   const languageRule =
     locale === "ms"
       ? `\nLANGUAGE: Reply ONLY in natural, friendly Malaysian Malay (Bahasa Melayu) — not Indonesian, not formal government style. Also translate the "label" of each suggested action into Malay, but keep the "href" values EXACTLY as given. Keep "Tenun" and "Weaver" as-is.`
+      : locale === "zh-CN"
+      ? `\nLANGUAGE: Reply ONLY in Simplified Chinese (简体中文). Use natural, friendly Mandarin suitable for young Malaysian Chinese users. Also translate the "label" of each suggested action into Chinese, but keep the "href" values EXACTLY as given. Keep "Tenun" and "Weaver" as-is.`
       : `\nLANGUAGE: Reply in clear, friendly English.`;
   return `You are the Tenun mascot guide — a friendly, cute, encouraging, slightly playful helper that guides users around the Tenun website. You speak naturally (not robotic), keep replies short and practical, and never overpromise.
 ${languageRule}
@@ -169,7 +171,7 @@ function safeParse(text: string): GuideResponse | null {
   return { answer, confidence, suggestedActions, shouldEscalate, escalationMessage };
 }
 
-function escalationFallback(locale: "en" | "ms"): GuideResponse {
+function escalationFallback(locale: "en" | "ms" | "zh-CN"): GuideResponse {
   const supportEmail = getSupportEmail();
   if (locale === "ms") {
     return {
@@ -178,6 +180,15 @@ function escalationFallback(locale: "en" | "ms"): GuideResponse {
       suggestedActions: [],
       shouldEscalate: true,
       escalationMessage: `Hubungi pasukan Tenun di ${supportEmail}.`,
+    };
+  }
+  if (locale === "zh-CN") {
+    return {
+      answer: `我还不太确定这个问题的答案。最安全的做法是联系 Tenun 团队：${supportEmail}，他们可以直接帮助你。`,
+      confidence: "low",
+      suggestedActions: [],
+      shouldEscalate: true,
+      escalationMessage: `联系 Tenun 团队：${supportEmail}。`,
     };
   }
   return {
@@ -195,10 +206,10 @@ export async function POST(request: Request) {
   const rateLimited = await checkRateLimit("site-guide", ip);
   if (rateLimited.limited) return rateLimited.response;
 
-  let locale: "en" | "ms" = "en";
+  let locale: "en" | "ms" | "zh-CN" = "en";
   try {
     const body = (await request.json()) as RequestBody;
-    locale = body.locale === "ms" ? "ms" : "en";
+    locale = body.locale === "ms" ? "ms" : body.locale === "zh-CN" ? "zh-CN" : "en";
 
     const message = typeof body.message === "string" ? body.message.trim() : "";
     if (!message) {

@@ -3,7 +3,7 @@
 
 export type InterviewType = "general" | "behavioural" | "technical" | "cv_based";
 export type Difficulty = "easy" | "medium" | "challenging";
-export type Locale = "en" | "ms";
+export type Locale = "en" | "ms" | "zh-CN";
 
 export interface Feedback {
   score: number;

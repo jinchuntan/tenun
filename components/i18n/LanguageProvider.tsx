@@ -36,7 +36,7 @@ type LanguageContextValue = {
 const LanguageContext = createContext<LanguageContextValue | null>(null);
 
 function isLocale(value: string | null): value is Locale {
-  return value === "en" || value === "ms";
+  return value === "en" || value === "ms" || value === "zh-CN";
 }
 
 export function LanguageProvider({ children }: { children: React.ReactNode }) {

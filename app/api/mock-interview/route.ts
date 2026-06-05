@@ -14,7 +14,7 @@ import { generateJSONWithFallback } from "@/lib/llm";
 type Mode = "start" | "evaluate_answer" | "next_question" | "final_report";
 type InterviewType = "general" | "behavioural" | "technical" | "cv_based";
 type Difficulty = "easy" | "medium" | "challenging";
-type Locale = "en" | "ms";
+type Locale = "en" | "ms" | "zh-CN";
 
 interface Feedback {
   score?: number;
@@ -59,9 +59,13 @@ const DIFFICULTY_LABELS: Record<Difficulty, string> = {
 };
 
 function localeRule(locale: Locale): string {
-  return locale === "ms"
-    ? 'Write ALL user-facing text (questions, summary, whatWentWell, toImprove, sampleAnswer, and the final report text) in natural Malaysian Malay (Bahasa Melayu). Keep every JSON key in English. Keep widely-used technical terms and proper nouns as-is.'
-    : "Write all user-facing text in clear, simple, professional English.";
+  if (locale === "ms") {
+    return 'Write ALL user-facing text (questions, summary, whatWentWell, toImprove, sampleAnswer, and the final report text) in natural Malaysian Malay (Bahasa Melayu). Keep every JSON key in English. Keep widely-used technical terms and proper nouns as-is.';
+  }
+  if (locale === "zh-CN") {
+    return 'Write ALL user-facing text (questions, summary, whatWentWell, toImprove, sampleAnswer, and the final report text) in Simplified Chinese (简体中文). Keep every JSON key in English. Keep widely-used technical terms and proper nouns as-is.';
+  }
+  return "Write all user-facing text in clear, simple, professional English.";
 }
 
 const INTERVIEWER_RULES = `You are "Tenun Interview Coach", a friendly but rigorous AI interviewer that helps a candidate practise for a real job interview. This is an interview-practice tool, not a chatbot.
@@ -227,7 +231,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Missing question to evaluate." }, { status: 400 });
     }
 
-    const locale: Locale = body.locale === "ms" ? "ms" : "en";
+    const locale: Locale = body.locale === "ms" ? "ms" : body.locale === "zh-CN" ? "zh-CN" : "en";
 
     const { raw, provider } = await generateJSONWithFallback({
       routeName: "mock-interview",

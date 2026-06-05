@@ -58,6 +58,14 @@ LANGUAGE: The user is using the site in Bahasa Melayu (Malaysian Malay).
 - Job titles may stay in English when they are common industry terms (e.g. "Data Analyst", "UX Designer").
 - Salary ranges must still use Malaysian context (MYR).`;
 
+const CHINESE_INSTRUCTION = `
+
+LANGUAGE: The user is using the site in Simplified Chinese (简体中文).
+- Write ALL user-facing string values (overview, didYouMean, explanation, dayToDay) in natural, friendly Simplified Chinese suitable for young Malaysian Chinese users.
+- Keep the JSON keys EXACTLY as specified in English. Do not translate keys.
+- Job titles may stay in English when they are common industry terms (e.g. "Data Analyst", "UX Designer").
+- Salary ranges must still use Malaysian context (MYR).`;
+
 function buildUserMessage(query: string, skills: string[], interests: string[], experience: string): string {
   return [
     `User query: "${query}"`,
@@ -112,14 +120,14 @@ export async function POST(request: Request) {
       skills: string[];
       interests: string[];
       experience: string;
-      locale?: "en" | "ms";
+      locale?: "en" | "ms" | "zh-CN";
     };
 
     if (!query?.trim()) {
       return NextResponse.json({ error: "Missing query." }, { status: 400 });
     }
 
-    const systemPrompt = locale === "ms" ? SYSTEM_PROMPT + MALAY_INSTRUCTION : SYSTEM_PROMPT;
+    const systemPrompt = locale === "ms" ? SYSTEM_PROMPT + MALAY_INSTRUCTION : locale === "zh-CN" ? SYSTEM_PROMPT + CHINESE_INSTRUCTION : SYSTEM_PROMPT;
 
     if (!process.env.OPENROUTER_API_KEY && !process.env.GROQ_API_KEY) {
       return NextResponse.json(

@@ -21,7 +21,7 @@ export function HeroSection({
 }: HeroSectionProps) {
   const { dict, locale } = useLanguage();
   const h = dict.home;
-  const gamesQuery = locale === "ms" ? `Saya nak ${query} permainan` : `I want to ${query} games`;
+  const gamesQuery = locale === "ms" ? `Saya nak ${query} permainan` : locale === "zh-CN" ? `我想${query}游戏` : `I want to ${query} games`;
   return (
     <section
       className="relative pt-10 pb-12 md:pt-12 md:pb-16 overflow-hidden"

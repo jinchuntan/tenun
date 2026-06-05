@@ -12,7 +12,7 @@ interface GenerateBody {
   style?: "harvard" | "creative";
   portfolioEvidence?: PortfolioEvidence[];
   userNotes?: string;
-  locale?: "en" | "ms";
+  locale?: "en" | "ms" | "zh-CN";
 }
 
 const JSON_SHAPE = `{
@@ -31,7 +31,7 @@ const JSON_SHAPE = `{
   "portfolio": [ { "title": "", "url": "", "description": "" } ]
 }`;
 
-function buildSystemPrompt(format: "resume" | "cv", locale: "en" | "ms"): string {
+function buildSystemPrompt(format: "resume" | "cv", locale: "en" | "ms" | "zh-CN"): string {
   const lengthRule =
     format === "resume"
       ? `This is a RESUME (1 page). Be concise: at most 3 work experiences, at most 3 bullet points each, a 2-3 sentence summary, and roughly 8-12 skills. Omit certifications, achievements, extracurricular, and portfolio unless they are clearly important.`
@@ -40,6 +40,8 @@ function buildSystemPrompt(format: "resume" | "cv", locale: "en" | "ms"): string
   const langRule =
     locale === "ms"
       ? `Write all human-readable content (summary, bullet points, descriptions) in Bahasa Melayu. Keep proper nouns, company names, and technical terms as-is.`
+      : locale === "zh-CN"
+      ? `Write all human-readable content (summary, bullet points, descriptions) in Simplified Chinese (简体中文). Keep proper nouns, company names, and technical terms as-is.`
       : `Write all content in clear, professional English.`;
 
   return `You are an expert CV/resume writer. Produce a complete, well-structured, ATS-friendly ${format} as a single JSON object.
@@ -138,7 +140,7 @@ export async function POST(request: Request) {
 
     const format = body.format === "cv" ? "cv" : "resume";
     const style = body.style === "creative" ? "creative" : "harvard";
-    const locale = body.locale === "ms" ? "ms" : "en";
+    const locale = body.locale === "ms" ? "ms" : body.locale === "zh-CN" ? "zh-CN" : "en";
 
     if (!process.env.OPENROUTER_API_KEY && !process.env.GROQ_API_KEY) {
       return NextResponse.json({ error: "No AI provider is configured." }, { status: 500 });

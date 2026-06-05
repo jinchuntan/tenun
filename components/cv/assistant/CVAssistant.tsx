@@ -101,9 +101,12 @@ function primaryField(content: Record<string, string | string[]>): { key: string
   return { key: keys[0], isList: Array.isArray(content[keys[0]]) };
 }
 
-function readLocale(): "en" | "ms" {
+function readLocale(): "en" | "ms" | "zh-CN" {
   try {
-    return window.localStorage.getItem("tenun-locale") === "ms" ? "ms" : "en";
+    const saved = window.localStorage.getItem("tenun-locale");
+    if (saved === "ms") return "ms";
+    if (saved === "zh-CN") return "zh-CN";
+    return "en";
   } catch {
     return "en";
   }

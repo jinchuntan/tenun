@@ -272,7 +272,7 @@ export function Navbar() {
                             : "text-navy-700 hover:bg-beige-100",
                         ].join(" ")}
                       >
-                        <span>{l === "en" ? dict.nav.english : dict.nav.malay}</span>
+                        <span>{l === "en" ? dict.nav.english : l === "ms" ? dict.nav.malay : dict.nav.chinese}</span>
                         <span className="text-xs font-semibold text-navy-400">{LOCALE_LABEL[l]}</span>
                       </button>
                     ))}

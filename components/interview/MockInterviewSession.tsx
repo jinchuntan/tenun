@@ -54,7 +54,10 @@ const DEFAULT_CONFIG: InterviewConfig = {
 
 function readLocale(): Locale {
   try {
-    return window.localStorage.getItem("tenun-locale") === "ms" ? "ms" : "en";
+    const saved = window.localStorage.getItem("tenun-locale");
+    if (saved === "ms") return "ms";
+    if (saved === "zh-CN") return "zh-CN";
+    return "en";
   } catch {
     return "en";
   }
@@ -158,7 +161,7 @@ export function MockInterviewSession() {
     if (!ttsSupported || !text) return;
     window.speechSynthesis.cancel();
     const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = localeRef.current === "ms" ? "ms-MY" : "en-US";
+    utterance.lang = localeRef.current === "ms" ? "ms-MY" : localeRef.current === "zh-CN" ? "zh-CN" : "en-US";
     utterance.onend = () => setSpeaking(false);
     utterance.onerror = () => setSpeaking(false);
     setSpeaking(true);
@@ -299,7 +302,7 @@ export function MockInterviewSession() {
     setError(null);
   }
 
-  const speechLang = localeRef.current === "ms" ? "ms-MY" : "en-US";
+  const speechLang = localeRef.current === "ms" ? "ms-MY" : localeRef.current === "zh-CN" ? "zh-CN" : "en-US";
   const busy = loadingAction !== null;
 
   // Avoid a flash of the setup screen before we know whether a saved session exists.

@@ -35,6 +35,13 @@ LANGUAGE: The user is using the site in Bahasa Melayu (Malaysian Malay).
 - Keep the JSON keys EXACTLY as specified in English. Do not translate keys.
 - Keep technical skill names unchanged (e.g. SQL, Python, React, Figma, Excel) inside skills_required and skills_nice_to_have.`;
 
+const CHINESE_INSTRUCTION = `
+
+LANGUAGE: The user is using the site in Simplified Chinese (简体中文).
+- Write the string VALUES (secret_sauce, fit_questions, common_gaps, how_to_get_there, entry_paths) in natural, friendly Simplified Chinese suitable for young Malaysian Chinese users.
+- Keep the JSON keys EXACTLY as specified in English. Do not translate keys.
+- Keep technical skill names unchanged (e.g. SQL, Python, React, Figma, Excel) inside skills_required and skills_nice_to_have.`;
+
 function safeParse(text: string) {
   const fallback = {
     skills_required: [],
@@ -69,7 +76,7 @@ export async function POST(request: Request) {
     const { title, context = "", locale = "en" } = await request.json() as {
       title: string;
       context: string;
-      locale?: "en" | "ms";
+      locale?: "en" | "ms" | "zh-CN";
     };
 
     if (!title?.trim()) {
@@ -80,7 +87,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "No API key configured." }, { status: 500 });
     }
 
-    const systemPrompt = locale === "ms" ? SYSTEM_PROMPT + MALAY_INSTRUCTION : SYSTEM_PROMPT;
+    const systemPrompt = locale === "ms" ? SYSTEM_PROMPT + MALAY_INSTRUCTION : locale === "zh-CN" ? SYSTEM_PROMPT + CHINESE_INSTRUCTION : SYSTEM_PROMPT;
 
     const { raw } = await generateJSONWithFallback({
       routeName: "job-detail",
