@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { Workflow, Briefcase, Globe } from "lucide-react";
+import { useLanguage } from "@/components/i18n/LanguageProvider";
 
 interface MenuColumn {
   heading: string;
@@ -10,36 +11,38 @@ interface MenuColumn {
   links: { label: string; href: string }[];
 }
 
-const COLUMNS: MenuColumn[] = [
-  {
-    heading: "Career Weave",
-    icon: <Workflow className="w-5 h-5 text-navy-800" />,
-    links: [
-      { label: "Draft My Portfolio", href: "/profile?upload=true&from=landing" },
-      { label: "Connect to A Mentor", href: "/dashboard#section-mentors" },
-      { label: "My Skills Gap Plan", href: "/dashboard#section-skills" },
-    ],
-  },
-  {
-    heading: "Job",
-    icon: <Briefcase className="w-5 h-5 text-navy-800" />,
-    links: [
-      { label: "Find A Job", href: "/#hero-search" },
-      { label: "Career Matching", href: "/#hero-search" },
-      { label: "Interview Lab", href: "/dashboard#section-outreach" },
-    ],
-  },
-  {
-    heading: "Projects",
-    icon: <Globe className="w-5 h-5 text-navy-800" />,
-    links: [
-      { label: "Explore others", href: "/dashboard#section-atlas" },
-      { label: "Saved Projects", href: "/dashboard" },
-    ],
-  },
-];
-
 export function WeaverMegaMenu({ onNavigate }: { onNavigate?: () => void }) {
+  const { dict } = useLanguage();
+
+  const columns: MenuColumn[] = [
+    {
+      heading: dict.megaMenu.groups.careerWeave,
+      icon: <Workflow className="w-5 h-5 text-navy-800" />,
+      links: [
+        { label: dict.megaMenu.draftPortfolio, href: "/profile?upload=true&from=landing" },
+        { label: dict.megaMenu.connectMentor, href: "/dashboard#section-mentors" },
+        { label: dict.megaMenu.skillsGapPlan, href: "/dashboard#section-skills" },
+      ],
+    },
+    {
+      heading: dict.megaMenu.groups.job,
+      icon: <Briefcase className="w-5 h-5 text-navy-800" />,
+      links: [
+        { label: dict.megaMenu.findJob, href: "/#hero-search" },
+        { label: dict.megaMenu.careerMatching, href: "/#hero-search" },
+        { label: dict.megaMenu.interviewLab, href: "/dashboard#section-outreach" },
+      ],
+    },
+    {
+      heading: dict.megaMenu.groups.projects,
+      icon: <Globe className="w-5 h-5 text-navy-800" />,
+      links: [
+        { label: dict.megaMenu.exploreOthers, href: "/dashboard#section-atlas" },
+        { label: dict.megaMenu.savedProjects, href: "/dashboard" },
+      ],
+    },
+  ];
+
   return (
     <motion.div
       initial={{ opacity: 0, y: -8, scale: 0.98 }}
@@ -49,7 +52,7 @@ export function WeaverMegaMenu({ onNavigate }: { onNavigate?: () => void }) {
       className="rounded-3xl bg-beige-100 border border-beige-300/70 shadow-xl shadow-navy-900/5 p-6 sm:p-8"
     >
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 sm:gap-10">
-        {COLUMNS.map((col) => (
+        {columns.map((col) => (
           <div key={col.heading}>
             <div className="flex items-center gap-2.5 mb-4">
               <span className="flex items-center justify-center w-9 h-9 rounded-xl bg-white border border-beige-300/80 shadow-sm">

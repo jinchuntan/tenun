@@ -5,6 +5,8 @@ import { Plus, Trash2, FolderGit2, Sparkles, Link2 } from "lucide-react";
 import type { PortfolioEvidence } from "@/lib/portfolio-types";
 import { emptyEvidence } from "@/lib/portfolio-types";
 import { saveEvidence, getCareerWeaveEvidence, hasCareerWeaveData } from "@/lib/portfolio-store";
+import { useLanguage } from "@/components/i18n/LanguageProvider";
+import type { Translations } from "@/lib/i18n";
 
 interface Props {
   value: PortfolioEvidence[];
@@ -19,6 +21,7 @@ interface Props {
  * can be reused. Also offers a one-click import from existing Career Weave data.
  */
 export function PortfolioEvidenceInput({ value, onChange }: Props) {
+  const { dict } = useLanguage();
   const [careerWeaveAvailable, setCareerWeaveAvailable] = useState(false);
 
   useEffect(() => {
@@ -58,10 +61,9 @@ export function PortfolioEvidenceInput({ value, onChange }: Props) {
           <FolderGit2 size={16} className="text-[#4164b4]" aria-hidden="true" />
         </div>
         <div className="min-w-0">
-          <p className="text-sm font-semibold text-navy-900">Portfolio or project evidence</p>
+          <p className="text-sm font-semibold text-navy-900">{dict.portfolio.title}</p>
           <p className="text-xs text-navy-400 leading-relaxed">
-            Optional. Great for design or project work — add details and the AI writes truthful CV bullets,
-            even if your portfolio file has no readable text.
+            {dict.portfolio.subtitle}
           </p>
         </div>
       </div>
@@ -75,6 +77,7 @@ export function PortfolioEvidenceInput({ value, onChange }: Props) {
               index={idx}
               onUpdate={(patch) => update(item.id, patch)}
               onRemove={() => remove(item.id)}
+              dict={dict}
             />
           ))}
         </div>
@@ -86,7 +89,7 @@ export function PortfolioEvidenceInput({ value, onChange }: Props) {
           onClick={addManual}
           className="inline-flex items-center gap-1.5 rounded-lg border border-beige-300 bg-white px-3 py-1.5 text-xs font-semibold text-navy-700 hover:border-navy-300 transition-colors"
         >
-          <Plus size={14} aria-hidden="true" /> Add project
+          <Plus size={14} aria-hidden="true" /> {dict.portfolio.addProject}
         </button>
         {careerWeaveAvailable && (
           <button
@@ -94,7 +97,7 @@ export function PortfolioEvidenceInput({ value, onChange }: Props) {
             onClick={importCareerWeave}
             className="inline-flex items-center gap-1.5 rounded-lg border border-[#d4a017]/40 bg-[#d4a017]/10 px-3 py-1.5 text-xs font-semibold text-[#a97d12] hover:bg-[#d4a017]/15 transition-colors"
           >
-            <Sparkles size={14} aria-hidden="true" /> Use my Career Weave portfolio/projects
+            <Sparkles size={14} aria-hidden="true" /> {dict.portfolio.useCareerWeave}
           </button>
         )}
       </div>
@@ -107,11 +110,13 @@ function EvidenceCard({
   index,
   onUpdate,
   onRemove,
+  dict,
 }: {
   item: PortfolioEvidence;
   index: number;
   onUpdate: (patch: Partial<PortfolioEvidence>) => void;
   onRemove: () => void;
+  dict: Translations;
 }) {
   const toolsValue = (item.tools ?? []).join(", ");
 
@@ -119,10 +124,10 @@ function EvidenceCard({
     <div className="rounded-lg border border-beige-300 bg-white p-3 space-y-2.5">
       <div className="flex items-center justify-between gap-2">
         <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-navy-400">
-          Project {index + 1}
+          {dict.portfolio.projectN.replace("{n}", String(index + 1))}
           {item.source === "career_weave" && (
             <span className="rounded-full bg-[#d4a017]/15 text-[#a97d12] px-1.5 py-0.5 text-[10px] normal-case">
-              From Career Weave
+              {dict.portfolio.fromCareerWeave}
             </span>
           )}
           {item.source === "upload" && item.fileName && (
@@ -134,47 +139,47 @@ function EvidenceCard({
         <button
           type="button"
           onClick={onRemove}
-          aria-label={`Remove project ${index + 1}`}
+          aria-label={dict.portfolio.removeProject.replace("{n}", String(index + 1))}
           className="text-navy-300 hover:text-red-500 transition-colors shrink-0"
         >
           <Trash2 size={15} aria-hidden="true" />
         </button>
       </div>
 
-      <Field label="Project title">
+      <Field label={dict.portfolio.projectTitle}>
         <input
           type="text"
           value={item.title}
           onChange={(e) => onUpdate({ title: e.target.value })}
-          placeholder="e.g. Brand identity for a campus café"
+          placeholder={dict.portfolio.projectTitlePlaceholder}
           className={inputClass}
         />
       </Field>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-        <Field label="Role / contribution">
+        <Field label={dict.portfolio.role}>
           <input
             type="text"
             value={item.role ?? ""}
             onChange={(e) => onUpdate({ role: e.target.value })}
-            placeholder="e.g. Lead designer"
+            placeholder={dict.portfolio.rolePlaceholder}
             className={inputClass}
           />
         </Field>
-        <Field label="Tools used">
+        <Field label={dict.portfolio.tools}>
           <input
             type="text"
             value={toolsValue}
             onChange={(e) =>
               onUpdate({ tools: e.target.value.split(",").map((t) => t.trim()).filter(Boolean) })
             }
-            placeholder="Figma, Canva, Illustrator"
+            placeholder={dict.portfolio.toolsPlaceholder}
             className={inputClass}
           />
         </Field>
       </div>
 
-      <Field label="Link (Behance, Figma, Notion, GitHub, website…)">
+      <Field label={dict.portfolio.link}>
         <div className="relative">
           <Link2 size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-navy-300" aria-hidden="true" />
           <input
@@ -187,22 +192,22 @@ function EvidenceCard({
         </div>
       </Field>
 
-      <Field label="Description">
+      <Field label={dict.portfolio.description}>
         <textarea
           value={item.description}
           onChange={(e) => onUpdate({ description: e.target.value })}
           rows={2}
-          placeholder="What was the project, what did you do, who was it for?"
+          placeholder={dict.portfolio.descriptionPlaceholder}
           className={`${inputClass} resize-y`}
         />
       </Field>
 
-      <Field label="Outcome / impact">
+      <Field label={dict.portfolio.outcome}>
         <input
           type="text"
           value={item.outcome ?? ""}
           onChange={(e) => onUpdate({ outcome: e.target.value })}
-          placeholder="e.g. Used by 200+ students; +30% sign-ups"
+          placeholder={dict.portfolio.outcomePlaceholder}
           className={inputClass}
         />
       </Field>

@@ -22,21 +22,21 @@ import { PortfolioEvidenceInput } from "@/components/cv/PortfolioEvidenceInput";
 import type { PortfolioEvidence } from "@/lib/portfolio-types";
 import { emptyEvidence } from "@/lib/portfolio-types";
 import { loadEvidence } from "@/lib/portfolio-store";
+import { useLanguage } from "@/components/i18n/LanguageProvider";
 
 type Step = "format" | "style" | "job" | "start";
 const STEPS: Step[] = ["format", "style", "job", "start"];
-const STEP_LABELS = ["Format", "Style", "Target Role", "Start"];
 
 // Labeled stepper — replaces the old anonymous dots so users always know which
 // stage of the wizard they're on.
-function StepIndicator({ currentIdx }: { currentIdx: number }) {
+function StepIndicator({ currentIdx, stepLabels, stepXofY }: { currentIdx: number; stepLabels: string[]; stepXofY: string }) {
   return (
     <div className="mb-6">
       <ol className="flex items-center">
-        {STEP_LABELS.map((label, i) => {
+        {stepLabels.map((label, i) => {
           const done = i < currentIdx;
           const current = i === currentIdx;
-          const isLast = i === STEP_LABELS.length - 1;
+          const isLast = i === stepLabels.length - 1;
           return (
             <li key={label} className={isLast ? "flex items-center" : "flex items-center flex-1"}>
               <div className="flex items-center gap-1.5 shrink-0">
@@ -67,8 +67,8 @@ function StepIndicator({ currentIdx }: { currentIdx: number }) {
         })}
       </ol>
       <p className="sm:hidden text-center text-[11px] text-navy-500 mt-2">
-        Step {currentIdx + 1} of {STEP_LABELS.length} ·{" "}
-        <span className="font-semibold text-navy-700">{STEP_LABELS[currentIdx]}</span>
+        {stepXofY.replace("{x}", String(currentIdx + 1)).replace("{y}", String(stepLabels.length))} ·{" "}
+        <span className="font-semibold text-navy-700">{stepLabels[currentIdx]}</span>
       </p>
     </div>
   );
@@ -95,6 +95,8 @@ function NewCVFlow() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const dispatch = useAppDispatch();
+  const { dict } = useLanguage();
+  const stepLabels = dict.cvNew.stepLabels;
 
   const uploadMode = searchParams.get("upload") === "true";
 
@@ -135,7 +137,7 @@ function NewCVFlow() {
     if (currentIdx < STEPS.length - 1) setStep(STEPS[currentIdx + 1]);
   }
 
-  const title = targetJob ? `CV for ${targetJob}` : "Untitled CV";
+  const title = targetJob ? dict.cvNew.cvForTarget.replace("{target}", targetJob) : dict.cvNew.untitledCv;
 
   // Persist the new CV and move on to the editor. When Supabase isn't
   // configured the save is skipped and the editor runs from Redux state.
@@ -164,7 +166,7 @@ function NewCVFlow() {
     setExtractionFallback(false);
 
     if (genFile && genFile.size > MAX_FILE_SIZE_BYTES) {
-      setError("File too large. Maximum size is 5MB.");
+      setError(dict.cvNew.errFileTooLarge);
       return;
     }
 
@@ -200,13 +202,13 @@ function NewCVFlow() {
       });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
-        throw new Error(data.error || "Generation failed. Please try again.");
+        throw new Error(data.error || dict.cvNew.errGenerationFailed);
       }
 
       const { generated } = await res.json();
       await finishCreate(buildBlocksFromGenerated(generated));
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Something went wrong. Please try again.");
+      setError(e instanceof Error ? e.message : dict.cvNew.errGeneric);
       setGenerating(false);
     }
   }
@@ -217,7 +219,7 @@ function NewCVFlow() {
     try {
       await finishCreate(buildDefaultBlocks());
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Could not create your CV. Please try again.");
+      setError(e instanceof Error ? e.message : dict.cvNew.errCreateFailed);
       setCreating(false);
     }
   }
@@ -248,7 +250,7 @@ function NewCVFlow() {
 
       await finishCreate(blocks);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Could not import that file. Please try again.");
+      setError(e instanceof Error ? e.message : dict.cvNew.errImportFailed);
       setUploading(false);
     }
   }
@@ -257,44 +259,44 @@ function NewCVFlow() {
     <div className="min-h-screen bg-[#f5f0e8]">
       <AppTopBar
         breadcrumbs={[
-          { label: "Dashboard", href: "/dashboard" },
-          { label: "CV Builder", href: "/dashboard/cv" },
-          { label: "New CV" },
+          { label: dict.cvNew.breadcrumbDashboard, href: "/dashboard" },
+          { label: dict.cvNew.breadcrumbCvBuilder, href: "/dashboard/cv" },
+          { label: dict.cvNew.breadcrumbNewCv },
         ]}
         actions={
           <Link
             href="/dashboard/cv"
             className="inline-flex items-center gap-1.5 rounded-lg border border-beige-300 bg-white px-3 py-1.5 text-xs font-medium text-navy-700 hover:border-navy-300 transition-colors"
           >
-            <ChevronLeft size={14} /> <span className="hidden sm:inline">Back to Your CVs</span>
+            <ChevronLeft size={14} /> <span className="hidden sm:inline">{dict.cvNew.backToYourCvs}</span>
           </Link>
         }
-        returnTo={{ href: "/dashboard", label: "Exit to Dashboard" }}
+        returnTo={{ href: "/dashboard", label: dict.cvNew.exitToDashboard }}
       />
 
       <div className="flex items-start justify-center p-4 pt-8 sm:pt-10">
         <div className="w-full max-w-lg">
           {/* Intro */}
           <div className="text-center mb-6">
-            <h1 className="font-display text-2xl text-navy-900">Create a new CV</h1>
+            <h1 className="font-display text-2xl text-navy-900">{dict.cvNew.createNewCv}</h1>
             <p className="text-sm text-navy-500 mt-1.5">
-              Create a CV from scratch, upload an existing one, or let Tenun generate a first draft.
+              {dict.cvNew.createNewCvSubtitle}
             </p>
           </div>
 
-          <StepIndicator currentIdx={currentIdx} />
+          <StepIndicator currentIdx={currentIdx} stepLabels={stepLabels} stepXofY={dict.cvNew.stepXofY} />
 
           <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm">
           {/* Format step */}
           {step === "format" && (
             <StepLayout
-              title="What are you building?"
-              subtitle="This sets the page limit."
+              title={dict.cvNew.whatAreYouBuilding}
+              subtitle={dict.cvNew.setsPageLimit}
               onNext={next}
               canNext
             >
               <div className="grid grid-cols-2 gap-3">
-                {([["resume", "Resume", "1 page — concise and direct"], ["cv", "CV", "2 pages — full detail"]] as const).map(
+                {([["resume", dict.cvNew.resumeLabel, dict.cvNew.resumeDesc], ["cv", dict.cvNew.cvLabel, dict.cvNew.cvDesc]] as [CVFormat, string, string][]).map(
                   ([val, label, desc]) => (
                     <button
                       key={val}
@@ -315,12 +317,12 @@ function NewCVFlow() {
 
           {/* Style step */}
           {step === "style" && (
-            <StepLayout title="Pick a style" subtitle="You can switch later." onNext={next} onPrev={prev} canNext>
+            <StepLayout title={dict.cvNew.pickAStyle} subtitle={dict.cvNew.canSwitchLater} onNext={next} onPrev={prev} canNext>
               <div className="grid grid-cols-2 gap-3">
                 <StyleCard
                   id="harvard"
-                  label="Harvard / ATS"
-                  description="Clean layout, optimised for applicant tracking systems."
+                  label={dict.cvNew.harvardLabel}
+                  description={dict.cvNew.harvardDesc}
                   icon={<FileText size={20} className="text-[#4164b4]" />}
                   accent="#4164b4"
                   selected={style === "harvard"}
@@ -328,8 +330,8 @@ function NewCVFlow() {
                 />
                 <StyleCard
                   id="creative"
-                  label="Creative / Visual"
-                  description="Two-column layout with colour accents and portfolio."
+                  label={dict.cvNew.creativeLabel}
+                  description={dict.cvNew.creativeDesc}
                   icon={<Palette size={20} className="text-[#6c5ce7]" />}
                   accent="#6c5ce7"
                   selected={style === "creative"}
@@ -342,8 +344,8 @@ function NewCVFlow() {
           {/* Target job step */}
           {step === "job" && (
             <StepLayout
-              title="What role are you targeting?"
-              subtitle="Optional — helps us tailor your CV sections."
+              title={dict.cvNew.whatRole}
+              subtitle={dict.cvNew.whatRoleSubtitle}
               onNext={next}
               onPrev={prev}
               canNext
@@ -352,7 +354,7 @@ function NewCVFlow() {
                 type="text"
                 value={targetJob}
                 onChange={(e) => setTargetJobState(e.target.value)}
-                placeholder="e.g. Product Manager, UX Designer..."
+                placeholder={dict.cvNew.rolePlaceholder}
                 className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm text-[#0a1628] placeholder:text-gray-300 focus:outline-none focus:border-[#0a1628] transition-colors"
                 autoFocus
                 onKeyDown={(e) => e.key === "Enter" && next()}
@@ -362,7 +364,7 @@ function NewCVFlow() {
 
           {/* Start step */}
           {step === "start" && (
-            <StepLayout title="How do you want to start?" onPrev={prev} canNext={false}>
+            <StepLayout title={dict.cvNew.howToStart} onPrev={prev} canNext={false}>
               <div className="space-y-3">
                 {error && (
                   <div className="flex items-start gap-2 p-3 rounded-lg bg-red-50 border border-red-100">
@@ -379,13 +381,13 @@ function NewCVFlow() {
                     </div>
                     <div>
                       <p className="font-semibold text-[#0a1628] text-sm flex items-center gap-2">
-                        Tell Tenun what you&apos;ve done
-                        <span className="text-[10px] font-semibold uppercase tracking-wide text-[#d4a017]">Recommended</span>
+                        {dict.cvNew.tellTenun}
+                        <span className="text-[10px] font-semibold uppercase tracking-wide text-[#d4a017]">{dict.cvNew.recommended}</span>
                       </p>
                       <p className="text-xs text-gray-500">
-                        Describe your background in plain English — we&apos;ll turn it into a
+                        {dict.cvNew.describeBackground}
                         {" "}{format === "cv" ? "CV" : "resume"}
-                        {targetJob ? ` for ${targetJob}` : ""} you can edit.
+                        {targetJob ? ` ${dict.cvNew.forWord} ${targetJob}` : ""} {dict.cvNew.youCanEdit}
                       </p>
                     </div>
                   </div>
@@ -395,17 +397,17 @@ function NewCVFlow() {
                     value={notes}
                     onChange={(e) => setNotes(e.target.value)}
                     rows={4}
-                    placeholder={"e.g. I'm a software engineer. I write backend services and use Perforce to ship. I built a React + Supabase dashboard and led a student project."}
+                    placeholder={dict.cvNew.notesPlaceholder}
                     className="w-full px-3 py-2.5 rounded-lg border border-gray-200 bg-white text-xs text-[#0a1628] placeholder:text-gray-300 focus:outline-none focus:border-[#d4a017] focus:ring-2 focus:ring-[#d4a017]/15 transition-all resize-none"
                   />
 
                   {/* Example starter chips */}
                   <div className="flex flex-wrap gap-1.5">
                     {[
-                      "I'm a software engineer",
-                      "I worked on backend systems",
-                      "I built a React + Supabase dashboard",
-                      "I led a student project",
+                      dict.cvNew.chipSoftwareEngineer,
+                      dict.cvNew.chipBackend,
+                      dict.cvNew.chipDashboard,
+                      dict.cvNew.chipStudentProject,
                     ].map((ex) => (
                       <button
                         key={ex}
@@ -426,7 +428,7 @@ function NewCVFlow() {
                   >
                     <Paperclip size={14} className="text-gray-400 shrink-0" />
                     <span className="text-xs text-gray-500 truncate flex-1">
-                      {genFile ? genFile.name : `Attach an existing CV / resume / portfolio (${ACCEPTED_FILE_LABEL}, optional)`}
+                      {genFile ? genFile.name : `${dict.cvNew.attachExisting} (${ACCEPTED_FILE_LABEL}, ${dict.cvNew.optional})`}
                     </span>
                     {genFile && (
                       <span
@@ -435,14 +437,13 @@ function NewCVFlow() {
                         onClick={(e) => { e.stopPropagation(); setGenFile(null); }}
                         className="text-[11px] text-gray-400 hover:text-red-400 shrink-0"
                       >
-                        Remove
+                        {dict.cvNew.remove}
                       </span>
                     )}
                   </button>
 
                   <p className="text-[11px] text-gray-400 leading-snug">
-                    For best results, upload a DOCX/TXT or text-based PDF. Visual portfolios (Canva, Figma,
-                    Adobe) can still be used — just add a project summary below.
+                    {dict.cvNew.bestResultsTip}
                   </p>
 
                   {/* Image-based / empty file fallback — never a dead end */}
@@ -451,9 +452,7 @@ function NewCVFlow() {
                       <div className="flex items-start gap-2">
                         <ImageOff size={15} className="text-[#a97d12] mt-0.5 shrink-0" aria-hidden="true" />
                         <p className="text-xs text-[#0a1628] leading-snug">
-                          We could not read text from this file. This usually happens with visual portfolios,
-                          scanned PDFs, or PDFs exported as images. You can still continue by adding a short
-                          project description below, adding a portfolio link, or uploading a DOCX/TXT version.
+                          {dict.cvNew.extractionFallbackMsg}
                         </p>
                       </div>
                       <div className="flex flex-wrap gap-2">
@@ -462,21 +461,21 @@ function NewCVFlow() {
                           onClick={startProjectSummary}
                           className="inline-flex items-center gap-1.5 rounded-md bg-[#0a1628] text-white px-2.5 py-1.5 text-[11px] font-semibold hover:bg-[#1a2a4a] transition-colors"
                         >
-                          Add project summary
+                          {dict.cvNew.addProjectSummary}
                         </button>
                         <button
                           type="button"
                           onClick={() => { setExtractionFallback(false); setGenFile(null); genFileRef.current?.click(); }}
                           className="inline-flex items-center gap-1.5 rounded-md border border-beige-300 bg-white px-2.5 py-1.5 text-[11px] font-semibold text-navy-700 hover:border-navy-300 transition-colors"
                         >
-                          Try another file
+                          {dict.cvNew.tryAnotherFile}
                         </button>
                         <button
                           type="button"
                           onClick={() => { setGenFile(null); setExtractionFallback(false); handleGenerate(); }}
                           className="inline-flex items-center gap-1.5 rounded-md border border-beige-300 bg-white px-2.5 py-1.5 text-[11px] font-semibold text-navy-700 hover:border-navy-300 transition-colors"
                         >
-                          Continue without this file
+                          {dict.cvNew.continueWithoutFile}
                         </button>
                       </div>
                     </div>
@@ -491,9 +490,9 @@ function NewCVFlow() {
                     className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-[#d4a017] text-[#0a1628] text-sm font-semibold hover:bg-[#e0ad1c] transition-colors disabled:opacity-60"
                   >
                     {generating ? (
-                      <><Loader2 size={15} className="animate-spin" /> Generating your {format === "cv" ? "CV" : "resume"}…</>
+                      <><Loader2 size={15} className="animate-spin" /> {`${dict.cvNew.generatingYour} ${format === "cv" ? "CV" : "resume"}…`}</>
                     ) : (
-                      <><Sparkles size={15} /> Generate CV</>
+                      <><Sparkles size={15} /> {dict.cvNew.generateCv}</>
                     )}
                   </button>
                 </div>
@@ -509,8 +508,8 @@ function NewCVFlow() {
                       {creating ? <Loader2 size={15} className="animate-spin text-gray-400" /> : <PenLine size={15} className="text-gray-400" />}
                     </div>
                     <div className="min-w-0">
-                      <p className="font-medium text-[#0a1628] text-xs">Start fresh</p>
-                      <p className="text-[11px] text-gray-400 leading-tight">Blank sections</p>
+                      <p className="font-medium text-[#0a1628] text-xs">{dict.cvNew.startFresh}</p>
+                      <p className="text-[11px] text-gray-400 leading-tight">{dict.cvNew.blankSections}</p>
                     </div>
                   </button>
 
@@ -523,8 +522,8 @@ function NewCVFlow() {
                       {uploading ? <Loader2 size={15} className="animate-spin text-gray-400" /> : <Upload size={15} className="text-gray-400" />}
                     </div>
                     <div className="min-w-0">
-                      <p className="font-medium text-[#0a1628] text-xs">Upload &amp; prefill</p>
-                      <p className="text-[11px] text-gray-400 leading-tight">Import without AI</p>
+                      <p className="font-medium text-[#0a1628] text-xs">{dict.cvNew.uploadAndPrefill}</p>
+                      <p className="text-[11px] text-gray-400 leading-tight">{dict.cvNew.importWithoutAi}</p>
                     </div>
                   </button>
                 </div>
@@ -589,6 +588,7 @@ function StepLayout({
   onPrev?: () => void;
   canNext: boolean;
 }) {
+  const { dict } = useLanguage();
   return (
     <div className="p-6 space-y-5">
       <div>
@@ -599,7 +599,7 @@ function StepLayout({
       <div className="flex items-center justify-between pt-2">
         {onPrev ? (
           <button onClick={onPrev} className="flex items-center gap-1 text-xs text-gray-400 hover:text-gray-600 transition-colors">
-            <ChevronLeft size={14} /> Back
+            <ChevronLeft size={14} /> {dict.cvNew.back}
           </button>
         ) : <div />}
         {canNext && onNext && (
@@ -607,7 +607,7 @@ function StepLayout({
             onClick={onNext}
             className="flex items-center gap-1 px-4 py-2 bg-[#0a1628] text-white rounded-lg text-xs font-medium hover:bg-[#1a2a4a] transition-colors"
           >
-            Continue <ChevronRight size={14} />
+            {dict.cvNew.continue} <ChevronRight size={14} />
           </button>
         )}
       </div>

@@ -17,33 +17,6 @@ import { LOCALE_LABEL, LOCALES, type Locale } from "@/lib/i18n";
 const WEAVERS_HREF = "/";
 const EMPLOYERS_HREF = "/employers";
 
-// Flat list of the weaver links so the mobile drawer can reuse them
-const WEAVER_LINKS: { group: string; links: { label: string; href: string }[] }[] = [
-  {
-    group: "Career Weave",
-    links: [
-      { label: "Draft My Portfolio", href: "/profile?upload=true&from=landing" },
-      { label: "Connect to A Mentor", href: "/dashboard#section-mentors" },
-      { label: "My Skills Gap Plan", href: "/dashboard#section-skills" },
-    ],
-  },
-  {
-    group: "Job",
-    links: [
-      { label: "Find A Job", href: "/#hero-search" },
-      { label: "Career Matching", href: "/#hero-search" },
-      { label: "Interview Lab", href: "/dashboard#section-outreach" },
-    ],
-  },
-  {
-    group: "Projects",
-    links: [
-      { label: "Explore others", href: "/dashboard#section-atlas" },
-      { label: "Saved Projects", href: "/dashboard" },
-    ],
-  },
-];
-
 export function Navbar() {
   const router = useRouter();
   const pathname = usePathname();
@@ -56,6 +29,33 @@ export function Navbar() {
   const [langOpen, setLangOpen] = useState(false);
   const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const { locale, setLocale, dict } = useLanguage();
+
+  // Flat list of the weaver links so the mobile drawer can reuse them
+  const weaverLinks = [
+    {
+      group: dict.megaMenu.groups.careerWeave,
+      links: [
+        { label: dict.megaMenu.draftPortfolio, href: "/profile?upload=true&from=landing" },
+        { label: dict.megaMenu.connectMentor, href: "/dashboard#section-mentors" },
+        { label: dict.megaMenu.skillsGapPlan, href: "/dashboard#section-skills" },
+      ],
+    },
+    {
+      group: dict.megaMenu.groups.job,
+      links: [
+        { label: dict.megaMenu.findJob, href: "/#hero-search" },
+        { label: dict.megaMenu.careerMatching, href: "/#hero-search" },
+        { label: dict.megaMenu.interviewLab, href: "/dashboard#section-outreach" },
+      ],
+    },
+    {
+      group: dict.megaMenu.groups.projects,
+      links: [
+        { label: dict.megaMenu.exploreOthers, href: "/dashboard#section-atlas" },
+        { label: dict.megaMenu.savedProjects, href: "/dashboard" },
+      ],
+    },
+  ];
 
   useEffect(() => {
     const supabase = createClient();
@@ -182,7 +182,7 @@ export function Navbar() {
                 <button
                   onClick={() => setUserMenuOpen(!userMenuOpen)}
                   className="flex items-center"
-                  aria-label="User menu"
+                  aria-label={dict.common.userMenu}
                 >
                   <div className="w-8 h-8 rounded-full bg-navy-900 flex items-center justify-center text-white text-sm font-bold">
                     {avatarLetter}
@@ -286,7 +286,7 @@ export function Navbar() {
           <button
             className="md:hidden p-2 text-navy-800"
             onClick={() => setMobileOpen(!mobileOpen)}
-            aria-label="Toggle menu"
+            aria-label={dict.common.toggleMenu}
           >
             {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
           </button>
@@ -298,7 +298,7 @@ export function Navbar() {
         {weaverOpen && (
           <button
             type="button"
-            aria-label="Close menu"
+            aria-label={dict.common.closeMenu}
             tabIndex={-1}
             className="hidden md:block fixed inset-0 z-40 cursor-default"
             onClick={() => setWeaverOpen(false)}
@@ -363,7 +363,7 @@ export function Navbar() {
                 </div>
               </div>
 
-              {WEAVER_LINKS.map((col) => (
+              {weaverLinks.map((col) => (
                 <div key={col.group}>
                   <p className="text-[11px] font-bold text-navy-400 uppercase tracking-widest mb-1.5">
                     {col.group}

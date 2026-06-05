@@ -28,6 +28,7 @@ import { HarvardTemplate } from "@/components/cv/templates/HarvardTemplate";
 import { CreativeTemplate } from "@/components/cv/templates/CreativeTemplate";
 import type { CVBlock, BlockType } from "@/lib/cv-types";
 import { BLOCK_LABELS, PALETTE_BLOCKS } from "@/lib/cv-types";
+import { useLanguage } from "@/components/i18n/LanguageProvider";
 
 // ---------- Sortable block row ----------
 
@@ -42,6 +43,7 @@ function SortableBlock({
   onRemove: () => void;
   onMove: (dir: -1 | 1) => void;
 }) {
+  const { dict } = useLanguage();
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
     useSortable({ id: block.id });
 
@@ -101,7 +103,7 @@ function SortableBlock({
       </div>
 
       {required ? (
-        <span className="shrink-0 text-gray-300" title="Required section — can't be removed" aria-label="Required section">
+        <span className="shrink-0 text-gray-300" title={dict.cvEdit.requiredSection} aria-label={dict.cvEdit.requiredSection}>
           <Lock size={12} />
         </span>
       ) : (
@@ -120,6 +122,7 @@ function SortableBlock({
 // ---------- Save status badge ----------
 
 function SaveBadge({ status }: { status: string }) {
+  const { dict } = useLanguage();
   const map: Record<string, string> = {
     idle: "text-gray-300",
     saving: "text-amber-500",
@@ -127,10 +130,10 @@ function SaveBadge({ status }: { status: string }) {
     error: "text-red-500",
   };
   const label: Record<string, string> = {
-    idle: "No changes",
-    saving: "Saving...",
-    saved: "Saved",
-    error: "Save failed",
+    idle: dict.cvEdit.noChanges,
+    saving: dict.cvEdit.saving,
+    saved: dict.cvEdit.saved,
+    error: dict.cvEdit.saveFailed,
   };
   return <span className={`text-[11px] ${map[status] ?? "text-gray-300"}`}>{label[status]}</span>;
 }
@@ -141,6 +144,7 @@ export default function EditCVPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
   const dispatch = useAppDispatch();
+  const { dict } = useLanguage();
   const { meta, blocks, ui } = useAppSelector((s) => s.cv);
   const [loading, setLoading] = useState(true);
   const [panelTab, setPanelTab] = useState<"edit" | "assistant">("edit");
@@ -212,14 +216,14 @@ export default function EditCVPage() {
   // Guard navigation while a save may still be in flight (autosave debounces 2s).
   const hasUnsaved = meta.isDirty || ui.saveStatus === "saving";
   function leave(href: string) {
-    if (hasUnsaved && !window.confirm("Your latest changes may still be saving. Leave this page anyway?")) return;
+    if (hasUnsaved && !window.confirm(dict.cvEdit.leaveWarning)) return;
     router.push(href);
   }
 
   if (loading) {
     return (
       <div className="min-h-screen bg-[#f5f0e8] flex items-center justify-center">
-        <LoadingSpinner size="lg" label="Loading your CV…" className="flex-col gap-3" labelClassName="text-sm" />
+        <LoadingSpinner size="lg" label={dict.cvEdit.loadingCv} className="flex-col gap-3" labelClassName="text-sm" />
       </div>
     );
   }
@@ -231,16 +235,16 @@ export default function EditCVPage() {
         <button
           onClick={() => leave("/dashboard/cv")}
           className="flex items-center gap-1.5 text-white/60 hover:text-white transition-colors shrink-0"
-          aria-label="Back to all CVs"
+          aria-label={dict.cvEdit.allCvs}
         >
           <ChevronLeft size={18} />
-          <span className="hidden sm:inline text-xs font-medium">All CVs</span>
+          <span className="hidden sm:inline text-xs font-medium">{dict.cvEdit.allCvs}</span>
         </button>
 
         {/* Breadcrumb context */}
         <div className="hidden lg:flex items-center gap-1.5 text-[11px] text-white/30 shrink-0" aria-hidden="true">
-          <span>Dashboard</span><span>/</span><span>CV Builder</span><span>/</span>
-          <span className="text-white/60 font-medium">Editing</span>
+          <span>{dict.cvEdit.breadcrumbDashboard}</span><span>/</span><span>{dict.cvEdit.breadcrumbCvBuilder}</span><span>/</span>
+          <span className="text-white/60 font-medium">{dict.cvEdit.breadcrumbEditing}</span>
         </div>
 
         <div className="hidden lg:block w-px h-4 bg-white/10 shrink-0" />
@@ -249,8 +253,8 @@ export default function EditCVPage() {
           value={meta.title}
           onChange={(e) => dispatch(setTitle(e.target.value))}
           className="flex-1 bg-transparent text-white text-sm font-medium focus:outline-none placeholder:text-white/30 min-w-0"
-          placeholder="Untitled CV"
-          aria-label="CV title"
+          placeholder={dict.cvEdit.untitledCv}
+          aria-label={dict.cvEdit.cvTitleAria}
         />
 
         <SaveBadge status={ui.saveStatus} />
@@ -260,7 +264,7 @@ export default function EditCVPage() {
           className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-white/60 hover:text-white hover:bg-white/5 transition-colors text-xs font-medium shrink-0"
         >
           <LayoutDashboard size={13} />
-          Dashboard
+          {dict.cvEdit.dashboard}
         </button>
 
         <button
@@ -268,13 +272,13 @@ export default function EditCVPage() {
           className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/10 text-white text-xs font-medium hover:bg-white/15 transition-colors shrink-0"
         >
           <Eye size={13} />
-          Preview
+          {dict.cvEdit.previewBtn}
         </button>
       </header>
 
       {/* Mobile view switcher — preview stays behind the header "Preview" button */}
       <div className="lg:hidden flex shrink-0 bg-white border-b border-gray-200">
-        {([["sections", "Sections"], ["edit", "Editor"]] as const).map(([key, label]) => (
+        {([["sections", dict.cvEdit.sections], ["edit", dict.cvEdit.editor]] as ["sections" | "edit", string][]).map(([key, label]) => (
           <button
             key={key}
             onClick={() => setMobileView(key)}
@@ -300,7 +304,7 @@ export default function EditCVPage() {
           ].join(" ")}
         >
           <div className="p-3 border-b border-gray-100">
-            <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-2">Sections</p>
+            <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-2">{dict.cvEdit.sections}</p>
             <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
               <SortableContext items={blocks.allIds} strategy={verticalListSortingStrategy}>
                 <div className="space-y-1">
@@ -327,7 +331,7 @@ export default function EditCVPage() {
 
           {/* Add block palette */}
           <div className="p-3 flex-1 overflow-y-auto">
-            <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-2">Add section</p>
+            <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-2">{dict.cvEdit.addSection}</p>
             <div className="space-y-1">
               {PALETTE_BLOCKS.map((type) => (
                 <button
@@ -369,7 +373,7 @@ export default function EditCVPage() {
                   : "text-gray-400 hover:text-gray-600",
               ].join(" ")}
             >
-              <SlidersHorizontal size={13} /> Edit fields
+              <SlidersHorizontal size={13} /> {dict.cvEdit.editFields}
             </button>
             <button
               onClick={() => setPanelTab("assistant")}
@@ -380,7 +384,7 @@ export default function EditCVPage() {
                   : "text-gray-400 hover:text-gray-600",
               ].join(" ")}
             >
-              <Sparkles size={13} className={panelTab === "assistant" ? "text-[#d4a017]" : ""} /> Assistant
+              <Sparkles size={13} className={panelTab === "assistant" ? "text-[#d4a017]" : ""} /> {dict.cvEdit.assistant}
             </button>
           </div>
 
@@ -389,7 +393,7 @@ export default function EditCVPage() {
               <>
                 <div className="p-4 border-b border-gray-100">
                   <p className="text-xs font-semibold text-[#0a1628]">{BLOCK_LABELS[activeBlock.type as keyof typeof BLOCK_LABELS]}</p>
-                  <p className="text-[11px] text-gray-400 mt-0.5">Edit the fields below</p>
+                  <p className="text-[11px] text-gray-400 mt-0.5">{dict.cvEdit.editFieldsBelow}</p>
                 </div>
                 <div className="flex-1 overflow-y-auto p-4">
                   <BlockEditor block={activeBlock} />
@@ -400,8 +404,8 @@ export default function EditCVPage() {
                 <div className="w-10 h-10 rounded-xl bg-gray-50 flex items-center justify-center mb-3">
                   <SlidersHorizontal size={18} className="text-gray-300" />
                 </div>
-                <p className="text-xs font-medium text-gray-400">Select a section</p>
-                <p className="text-[11px] text-gray-300 mt-1">Click any section on the left to edit its content</p>
+                <p className="text-xs font-medium text-gray-400">{dict.cvEdit.selectSection}</p>
+                <p className="text-[11px] text-gray-300 mt-1">{dict.cvEdit.selectSectionHint}</p>
               </div>
             )
           ) : (

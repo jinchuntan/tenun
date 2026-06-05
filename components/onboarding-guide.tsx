@@ -20,6 +20,7 @@ import {
   BookOpen,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useLanguage } from "@/components/i18n/LanguageProvider";
 
 export interface OnboardingStep {
   id: string;
@@ -29,109 +30,13 @@ export interface OnboardingStep {
   description: string;
 }
 
-const dashboardSteps: OnboardingStep[] = [
-  {
-    id: "welcome",
-    targetId: "",
-    icon: Layers,
-    title: "Welcome to your Career Weave!",
-    description:
-      "This is your personalized career dashboard. We've analyzed your profile and generated insights across multiple dimensions. Let's walk through each section so you know exactly how to use it.",
-  },
-  {
-    id: "summary",
-    targetId: "summary",
-    icon: Sparkles,
-    title: "Your Career Summary",
-    description:
-      "This overview shows your overall thread strength, the number of career pathways generated, and matched opportunities. The summary text provides a high-level analysis of your profile.",
-  },
-  {
-    id: "threads",
-    targetId: "threads",
-    icon: Map,
-    title: "Career Thread Map",
-    description:
-      "Your profile is broken into 8 career threads — Skills, Experience, Education, Interests, Market Demand, Salary, Lifestyle, and Employer Fit. Each thread is scored 1-100 with explanations and improvement tips.",
-  },
-  {
-    id: "atlas",
-    targetId: "atlas",
-    icon: Globe,
-    title: "Global Career Atlas",
-    description:
-      "An interactive world map showing career hubs matched to your profile. Click any city to see industries, roles, salary ranges, and skill gaps. Compare up to 3 cities side by side and save your favorites.",
-  },
-  {
-    id: "pathways",
-    targetId: "pathways",
-    icon: GitBranch,
-    title: "Pathway Simulator",
-    description:
-      "Five distinct career directions tailored to you. Click any pathway to expand it and see suitable roles, required skills, trade-offs, risks, and your next 3 concrete actions. The one marked 'Best Match' has the highest alignment with your profile.",
-  },
-  {
-    id: "charts",
-    targetId: "charts",
-    icon: BarChart3,
-    title: "Visual Comparisons",
-    description:
-      "Switch between three chart views: the Thread Radar shows your strengths at a glance, Pathway Scores compares how well each career path fits you, and Dimension Compare breaks down pathways across salary, growth, stability, flexibility, and impact.",
-  },
-  {
-    id: "outreach",
-    targetId: "outreach",
-    icon: Send,
-    title: "Outreach Studio",
-    description:
-      "Generate personalized message drafts for recruiters, alumni, and mentors. Choose a message type, select your target context, then edit and copy the generated draft. No messages are sent automatically — you're always in control.",
-  },
-  {
-    id: "mentors",
-    targetId: "mentors",
-    icon: Users,
-    title: "Mentor Bridge",
-    description:
-      "Browse mentors matched to your profile and career interests. Each mentor card shows their background, match reason, and suggested questions. Click 'Draft Mentorship Request' to jump to the Outreach Studio.",
-  },
-  {
-    id: "courses",
-    targetId: "courses",
-    icon: BookOpen,
-    title: "Learning & Portfolio Plan",
-    description:
-      "Courses, certifications, portfolio projects, and communities recommended based on your skill gaps and chosen pathways. Each recommendation explains what gap it closes and how it improves your pathway score.",
-  },
-  {
-    id: "skills",
-    targetId: "skills",
-    icon: Target,
-    title: "Skill Gap Plan",
-    description:
-      "These are skills you'll need to develop, prioritized by how many pathways require them. Each card shows your current vs. target level and recommends specific learning resources to close the gap.",
-  },
-  {
-    id: "opportunities",
-    targetId: "opportunities",
-    icon: Briefcase,
-    title: "Opportunity Marketplace",
-    description:
-      "Jobs, internships, courses, projects, mentors, and portfolio challenges — all matched to your profile with a fit percentage. Use the filter tabs to browse by type, and click any card to see why it matches and what skills you'll develop.",
-  },
-  {
-    id: "finish",
-    targetId: "",
-    icon: PartyPopper,
-    title: "You're all set!",
-    description:
-      "Explore each section at your own pace. Click the navigation tabs at the top to jump between sections. Remember — these pathways represent possibilities, not predictions. Your choices shape your journey.",
-  },
-];
+const STEP_ICONS = [Layers, Sparkles, Map, Globe, GitBranch, BarChart3, Send, Users, BookOpen, Target, Briefcase, PartyPopper];
+const STEP_TARGETS = ["", "summary", "threads", "atlas", "pathways", "charts", "outreach", "mentors", "courses", "skills", "opportunities", ""];
 
 const STORAGE_KEY = "tenun-onboarding-completed";
 
 export function OnboardingGuide({
-  steps = dashboardSteps,
+  steps,
   storageKey = STORAGE_KEY,
   forceShow = false,
 }: {
@@ -139,9 +44,20 @@ export function OnboardingGuide({
   storageKey?: string;
   forceShow?: boolean;
 }) {
+  const { dict } = useLanguage();
   const [isActive, setIsActive] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
   const scrollTimeoutRef = useRef<ReturnType<typeof setTimeout>>();
+
+  const defaultSteps: OnboardingStep[] = dict.onboarding.steps.map((s, i) => ({
+    id: STEP_TARGETS[i] || (i === 0 ? "welcome" : "finish"),
+    targetId: STEP_TARGETS[i],
+    icon: STEP_ICONS[i],
+    title: s.title,
+    description: s.description,
+  }));
+
+  const resolvedSteps = steps ?? defaultSteps;
 
   useEffect(() => {
     if (forceShow) {
@@ -174,7 +90,7 @@ export function OnboardingGuide({
           (el as HTMLElement).style.removeProperty("z-index");
         });
 
-      const step = steps[stepIndex];
+      const step = resolvedSteps[stepIndex];
       if (!step?.targetId) return;
 
       const el = document.getElementById(step.targetId);
@@ -199,7 +115,7 @@ export function OnboardingGuide({
         }
       }, 50);
     },
-    [steps]
+    [resolvedSteps]
   );
 
   // Clean up highlights on unmount
@@ -225,7 +141,7 @@ export function OnboardingGuide({
   const goToStep = (index: number) => setCurrentStep(index);
 
   const nextStep = () => {
-    if (currentStep < steps.length - 1) {
+    if (currentStep < resolvedSteps.length - 1) {
       setCurrentStep(currentStep + 1);
     } else {
       completeOnboarding();
@@ -258,12 +174,12 @@ export function OnboardingGuide({
 
   if (!isActive) return null;
 
-  const step = steps[currentStep];
+  const step = resolvedSteps[currentStep];
   const Icon = step.icon;
   const isCenter = !step.targetId;
   const isFirst = currentStep === 0;
-  const isLast = currentStep === steps.length - 1;
-  const progress = ((currentStep + 1) / steps.length) * 100;
+  const isLast = currentStep === resolvedSteps.length - 1;
+  const progress = ((currentStep + 1) / resolvedSteps.length) * 100;
 
   return (
     <AnimatePresence>
@@ -319,13 +235,13 @@ export function OnboardingGuide({
                       {step.title}
                     </h3>
                     <p className="text-[11px] text-navy-400 mt-0.5">
-                      Step {currentStep + 1} of {steps.length}
+                      {dict.onboarding.stepXofY.replace("{x}", String(currentStep + 1)).replace("{y}", String(resolvedSteps.length))}
                     </p>
                   </div>
                   <button
                     onClick={completeOnboarding}
                     className="text-navy-300 hover:text-navy-600 transition-colors p-1 -m-1"
-                    aria-label="Close guide"
+                    aria-label={dict.onboarding.closeGuide}
                   >
                     <X className="w-4 h-4" />
                   </button>
@@ -342,7 +258,7 @@ export function OnboardingGuide({
                     onClick={completeOnboarding}
                     className="text-[11px] sm:text-xs text-navy-400 hover:text-navy-600 transition-colors whitespace-nowrap"
                   >
-                    Skip tour
+                    {dict.onboarding.skipTour}
                   </button>
 
                   <div className="flex items-center gap-1.5 sm:gap-2">
@@ -354,7 +270,7 @@ export function OnboardingGuide({
                         className="gap-1 h-8 px-2.5 text-xs"
                       >
                         <ArrowLeft className="w-3 h-3" />
-                        <span className="hidden sm:inline">Back</span>
+                        <span className="hidden sm:inline">{dict.onboarding.back}</span>
                       </Button>
                     )}
                     <Button
@@ -363,10 +279,10 @@ export function OnboardingGuide({
                       className="gap-1 h-8 px-3 text-xs"
                     >
                       {isLast ? (
-                        "Get Started"
+                        dict.onboarding.getStarted
                       ) : (
                         <>
-                          Next
+                          {dict.onboarding.next}
                           <ArrowRight className="w-3 h-3" />
                         </>
                       )}
@@ -376,7 +292,7 @@ export function OnboardingGuide({
 
                 {/* Step dots */}
                 <div className="flex items-center justify-center gap-1.5 mt-3">
-                  {steps.map((_, i) => (
+                  {resolvedSteps.map((_, i) => (
                     <button
                       key={i}
                       onClick={() => goToStep(i)}
@@ -387,7 +303,7 @@ export function OnboardingGuide({
                           ? "w-1.5 h-1.5 bg-gold-400"
                           : "w-1.5 h-1.5 bg-navy-200"
                       }`}
-                      aria-label={`Go to step ${i + 1}`}
+                      aria-label={dict.onboarding.goToStep.replace("{n}", String(i + 1))}
                     />
                   ))}
                 </div>
@@ -402,14 +318,15 @@ export function OnboardingGuide({
 
 /** Small button to re-trigger the guide from the dashboard */
 export function OnboardingTrigger({ onClick }: { onClick: () => void }) {
+  const { dict } = useLanguage();
   return (
     <button
       onClick={onClick}
       className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-navy-500 hover:bg-navy-50 hover:text-navy-700 transition-all"
-      title="Restart onboarding guide"
+      title={dict.onboarding.restartGuide}
     >
       <Sparkles className="w-3.5 h-3.5" />
-      <span className="hidden sm:inline">Guide</span>
+      <span className="hidden sm:inline">{dict.onboarding.guideLabel}</span>
     </button>
   );
 }

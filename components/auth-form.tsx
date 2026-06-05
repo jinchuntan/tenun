@@ -12,6 +12,7 @@ import {
   signInWithEmail,
   signUpWithEmail,
 } from "@/lib/use-auth";
+import { useLanguage } from "@/components/i18n/LanguageProvider";
 
 type Mode = "login" | "signup";
 
@@ -21,32 +22,31 @@ interface AuthFormProps {
   next?: string;
 }
 
-const copy = {
-  login: {
-    badge: "Welcome back",
-    title: "Sign in to Tenun",
-    subtitle: "Pick up where you left off — your matches and CV are waiting.",
-    cta: "Sign in",
-    googleCta: "Continue with Google",
-    altPrompt: "New to Tenun?",
-    altLink: "Create an account",
-    altHref: "/signup",
-  },
-  signup: {
-    badge: "Free for Weavers",
-    title: "Create your account",
-    subtitle: "Start weaving your career path. It takes less than a minute.",
-    cta: "Create account",
-    googleCta: "Sign up with Google",
-    altPrompt: "Already have an account?",
-    altLink: "Sign in",
-    altHref: "/login",
-  },
-} as const;
-
 export function AuthForm({ mode, next = "/dashboard" }: AuthFormProps) {
   const router = useRouter();
-  const t = copy[mode];
+  const { dict } = useLanguage();
+  const t = mode === "login" ? dict.auth.login : dict.auth.signup;
+  const altHref = mode === "login" ? "/signup" : "/login";
+
+  /** Turn a Supabase/Error into a friendly message. */
+  function messageFor(e: unknown): string {
+    if (e instanceof Error) {
+      const m = e.message.toLowerCase();
+      if (m.includes("invalid login credentials")) return dict.auth.errWrongCredentials;
+      if (m.includes("already registered") || m.includes("already been registered"))
+        return dict.auth.errAlreadyRegistered;
+      if (m.includes("email not confirmed"))
+        return dict.auth.errEmailNotConfirmed;
+      return e.message;
+    }
+    return dict.auth.errGeneric;
+  }
+
+  /** Friendly text for the `auth_error` param the callback route may set. */
+  function friendlyCallbackError(raw: string): string {
+    if (raw === "missing_code") return dict.auth.errSignInIncomplete;
+    return decodeURIComponent(raw);
+  }
 
   // Surface an error bounced back from the OAuth callback route.
   const callbackError = useSearchParams().get("auth_error");
@@ -77,11 +77,11 @@ export function AuthForm({ mode, next = "/dashboard" }: AuthFormProps) {
     setError(null);
 
     if (!email || !password) {
-      setError("Please enter your email and password.");
+      setError(dict.auth.errEmailPassword);
       return;
     }
     if (mode === "signup" && password.length < 6) {
-      setError("Password must be at least 6 characters.");
+      setError(dict.auth.errPasswordLength);
       return;
     }
 
@@ -122,17 +122,16 @@ export function AuthForm({ mode, next = "/dashboard" }: AuthFormProps) {
                 <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-emerald-50 mb-5">
                   <Mail className="w-6 h-6 text-emerald-500" />
                 </div>
-                <h1 className="text-2xl font-bold text-navy-900 mb-3">Check your email</h1>
+                <h1 className="text-2xl font-bold text-navy-900 mb-3">{dict.auth.checkEmail}</h1>
                 <p className="text-sm text-navy-500 leading-relaxed max-w-sm mx-auto">
-                  We sent a confirmation link to{" "}
-                  <span className="font-semibold text-navy-700">{email}</span>. Click it to
-                  activate your account, then come back and sign in.
+                  {dict.auth.confirmSent}{" "}
+                  <span className="font-semibold text-navy-700">{email}</span>{dict.auth.confirmInstructions}
                 </p>
                 <Link
                   href="/login"
                   className="inline-block mt-7 text-sm font-semibold text-navy-900 underline underline-offset-4 hover:text-navy-600"
                 >
-                  Back to sign in
+                  {dict.auth.backToSignIn}
                 </Link>
               </div>
             ) : (
@@ -157,7 +156,7 @@ export function AuthForm({ mode, next = "/dashboard" }: AuthFormProps) {
                   className="w-full flex items-center justify-center gap-2.5 px-5 py-3 bg-white border-2 border-navy-200 rounded-xl text-sm font-semibold text-navy-900 hover:border-navy-400 hover:bg-navy-50 disabled:opacity-60 transition-all"
                 >
                   {googleLoading ? (
-                    <><Loader2 className="w-4 h-4 animate-spin" /> Connecting...</>
+                    <><Loader2 className="w-4 h-4 animate-spin" /> {dict.auth.connecting}</>
                   ) : (
                     <>
                       <svg className="w-4 h-4" viewBox="0 0 24 24" aria-hidden="true">
@@ -174,7 +173,7 @@ export function AuthForm({ mode, next = "/dashboard" }: AuthFormProps) {
                 {/* Divider */}
                 <div className="flex items-center gap-3 my-5">
                   <div className="h-px flex-1 bg-navy-100" />
-                  <span className="text-xs text-navy-400 font-medium">or</span>
+                  <span className="text-xs text-navy-400 font-medium">{dict.auth.or}</span>
                   <div className="h-px flex-1 bg-navy-100" />
                 </div>
 
@@ -182,7 +181,7 @@ export function AuthForm({ mode, next = "/dashboard" }: AuthFormProps) {
                 <form onSubmit={handleEmail} className="space-y-3">
                   <div>
                     <label htmlFor="email" className="block text-xs font-semibold text-navy-700 mb-1.5">
-                      Email
+                      {dict.auth.emailLabel}
                     </label>
                     <input
                       id="email"
@@ -190,13 +189,13 @@ export function AuthForm({ mode, next = "/dashboard" }: AuthFormProps) {
                       autoComplete="email"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      placeholder="you@example.com"
+                      placeholder={dict.auth.emailPlaceholder}
                       className="w-full px-4 py-2.5 rounded-xl border border-navy-200 text-sm text-navy-900 placeholder:text-navy-300 focus:outline-none focus:border-navy-500 focus:ring-2 focus:ring-navy-100 transition-all"
                     />
                   </div>
                   <div>
                     <label htmlFor="password" className="block text-xs font-semibold text-navy-700 mb-1.5">
-                      Password
+                      {dict.auth.passwordLabel}
                     </label>
                     <input
                       id="password"
@@ -204,7 +203,7 @@ export function AuthForm({ mode, next = "/dashboard" }: AuthFormProps) {
                       autoComplete={mode === "login" ? "current-password" : "new-password"}
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
-                      placeholder={mode === "signup" ? "At least 6 characters" : "••••••••"}
+                      placeholder={mode === "signup" ? dict.auth.passwordPlaceholderSignup : dict.auth.passwordPlaceholderLogin}
                       className="w-full px-4 py-2.5 rounded-xl border border-navy-200 text-sm text-navy-900 placeholder:text-navy-300 focus:outline-none focus:border-navy-500 focus:ring-2 focus:ring-navy-100 transition-all"
                     />
                   </div>
@@ -221,7 +220,7 @@ export function AuthForm({ mode, next = "/dashboard" }: AuthFormProps) {
                     className="w-full flex items-center justify-center gap-2 px-5 py-3 bg-navy-900 text-white rounded-xl text-sm font-semibold hover:bg-navy-700 disabled:opacity-60 transition-all"
                   >
                     {submitting ? (
-                      <><Loader2 className="w-4 h-4 animate-spin" /> Please wait...</>
+                      <><Loader2 className="w-4 h-4 animate-spin" /> {dict.auth.pleaseWait}</>
                     ) : (
                       <>
                         {mode === "signup" && <CheckCircle2 className="w-4 h-4" />}
@@ -234,7 +233,7 @@ export function AuthForm({ mode, next = "/dashboard" }: AuthFormProps) {
                 <p className="text-center text-sm text-navy-500 mt-6">
                   {t.altPrompt}{" "}
                   <Link
-                    href={t.altHref}
+                    href={altHref}
                     className="font-semibold text-navy-900 underline underline-offset-4 hover:text-navy-600"
                   >
                     {t.altLink}
@@ -248,26 +247,4 @@ export function AuthForm({ mode, next = "/dashboard" }: AuthFormProps) {
       <Footer />
     </div>
   );
-}
-
-/** Turn a Supabase/Error into a friendly message. */
-function messageFor(e: unknown): string {
-  if (e instanceof Error) {
-    const m = e.message.toLowerCase();
-    if (m.includes("invalid login credentials")) return "Wrong email or password.";
-    if (m.includes("already registered") || m.includes("already been registered"))
-      return "That email already has an account. Try signing in instead.";
-    if (m.includes("email not confirmed"))
-      return "Please confirm your email first — check your inbox for the link.";
-    return e.message;
-  }
-  return "Something went wrong. Please try again.";
-}
-
-/** Friendly text for the `auth_error` param the callback route may set. */
-function friendlyCallbackError(raw: string): string {
-  if (raw === "missing_code")
-    return "Sign-in didn't complete. Please try again.";
-  // Supabase/Google bounce-back messages are usually readable as-is.
-  return decodeURIComponent(raw);
 }

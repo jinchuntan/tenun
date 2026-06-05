@@ -13,34 +13,21 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
+import { useLanguage } from "@/components/i18n/LanguageProvider";
 
 const WELCOME_KEY = "tenun-welcome-shown";
 
-const highlights = [
-  {
-    icon: Layers,
-    title: "Build your profile",
-    description: "Enter your skills, experience, interests, and career preferences.",
-  },
-  {
-    icon: Map,
-    title: "See your career threads",
-    description: "Your profile is analyzed across 8 dimensions — each scored and explained.",
-  },
-  {
-    icon: GitBranch,
-    title: "Compare pathways",
-    description: "Explore 5 realistic career paths with timelines, trade-offs, and next steps.",
-  },
-  {
-    icon: Briefcase,
-    title: "Match with opportunities",
-    description: "Discover jobs, courses, mentors, and projects matched to your profile.",
-  },
-];
+const HIGHLIGHT_ICONS = [Layers, Map, GitBranch, Briefcase];
 
 export function WelcomeModal() {
+  const { dict } = useLanguage();
   const [show, setShow] = useState(false);
+
+  const highlights = dict.welcome.highlights.map((h, i) => ({
+    icon: HIGHLIGHT_ICONS[i],
+    title: h.title,
+    description: h.description,
+  }));
 
   useEffect(() => {
     try {
@@ -120,10 +107,10 @@ export function WelcomeModal() {
                   <Sparkles className="w-7 h-7 text-white" />
                 </div>
                 <h2 className="text-2xl font-bold text-white mb-1">
-                  Welcome to Tenun
+                  {dict.welcome.title}
                 </h2>
                 <p className="text-navy-300 text-sm">
-                  The Career Weaving OS — here&apos;s how it works
+                  {dict.welcome.subtitle}
                 </p>
               </div>
             </div>
@@ -158,13 +145,13 @@ export function WelcomeModal() {
             <div className="px-5 sm:px-6 pb-5 sm:pb-6 flex flex-col sm:flex-row gap-3">
               <Link href="/profile" className="flex-1" onClick={dismiss}>
                 <Button size="lg" className="w-full group">
-                  Start Career Weave
+                  {dict.welcome.startCareerWeave}
                   <ArrowRight className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform" />
                 </Button>
               </Link>
               <Link href="/dashboard?demo=true" className="flex-1" onClick={dismiss}>
                 <Button size="lg" variant="outline" className="w-full">
-                  Try Demo First
+                  {dict.welcome.tryDemoFirst}
                 </Button>
               </Link>
             </div>
@@ -174,7 +161,7 @@ export function WelcomeModal() {
                 onClick={dismiss}
                 className="text-xs text-navy-400 hover:text-navy-600 transition-colors"
               >
-                I&apos;ll explore on my own
+                {dict.welcome.exploreOnOwn}
               </button>
             </div>
           </motion.div>

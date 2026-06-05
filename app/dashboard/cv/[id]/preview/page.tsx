@@ -10,6 +10,7 @@ import { LoadingState } from "@/components/layout/PageState";
 import { HarvardTemplate } from "@/components/cv/templates/HarvardTemplate";
 import { CreativeTemplate } from "@/components/cv/templates/CreativeTemplate";
 import type { CVBlock, CVStyle } from "@/lib/cv-types";
+import { useLanguage } from "@/components/i18n/LanguageProvider";
 
 interface LoadedCV {
   title: string;
@@ -20,6 +21,7 @@ interface LoadedCV {
 export default function PreviewCVPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
+  const { dict } = useLanguage();
   const [cv, setCV] = useState<LoadedCV | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -53,7 +55,7 @@ export default function PreviewCVPage() {
   if (loading) {
     return (
       <div className="min-h-screen bg-[#f5f0e8] flex items-center justify-center">
-        <LoadingState label="Loading preview…" />
+        <LoadingState label={dict.cvPreview.loadingPreview} />
       </div>
     );
   }
@@ -76,26 +78,26 @@ export default function PreviewCVPage() {
         <AppTopBar
           className="no-print"
           breadcrumbs={[
-            { label: "Dashboard", href: "/dashboard" },
-            { label: "CV Builder", href: "/dashboard/cv" },
-            { label: cv?.title ?? "Preview" },
+            { label: dict.cvPreview.breadcrumbDashboard, href: "/dashboard" },
+            { label: dict.cvPreview.breadcrumbCvBuilder, href: "/dashboard/cv" },
+            { label: cv?.title ?? dict.cvPreview.breadcrumbPreview },
           ]}
-          returnTo={{ href: "/dashboard", label: "Dashboard" }}
+          returnTo={{ href: "/dashboard", label: dict.cvPreview.dashboard }}
           actions={
             <>
               <Link href={`/dashboard/cv/${id}/edit`} className={btnSecondary}>
-                <ChevronLeft size={14} /> <span className="hidden sm:inline">Back to Editor</span>
+                <ChevronLeft size={14} /> <span className="hidden sm:inline">{dict.cvPreview.backToEditor}</span>
               </Link>
-              <Link href="/dashboard/cv" className={btnSecondary} aria-label="All CVs">
-                <FileText size={14} /> <span className="hidden sm:inline">All CVs</span>
+              <Link href="/dashboard/cv" className={btnSecondary} aria-label={dict.cvPreview.allCvs}>
+                <FileText size={14} /> <span className="hidden sm:inline">{dict.cvPreview.allCvs}</span>
               </Link>
               <button
                 onClick={() => window.print()}
                 className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#d4a017] text-[#0a1628] text-xs font-semibold hover:bg-[#e0ad1c] transition-colors"
               >
                 <Printer size={14} />
-                <span className="hidden sm:inline">Print / Save as PDF</span>
-                <span className="sm:hidden">Print</span>
+                <span className="hidden sm:inline">{dict.cvPreview.printSaveAsPdf}</span>
+                <span className="sm:hidden">{dict.cvPreview.print}</span>
               </button>
             </>
           }

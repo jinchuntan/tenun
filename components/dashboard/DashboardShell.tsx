@@ -7,6 +7,7 @@ import {
   Users, Send, FileText, Menu, X, LogOut, Upload, Mic,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
+import { useLanguage } from "@/components/i18n/LanguageProvider";
 
 export type DashboardSection =
   | "profile" | "paths" | "atlas" | "skills"
@@ -18,16 +19,9 @@ interface NavItem {
   icon: React.ReactNode;
 }
 
-const NAV_ITEMS: NavItem[] = [
-  { id: "profile",       label: "Profile",       icon: <User size={18} /> },
-  { id: "paths",         label: "Paths",         icon: <GitBranch size={18} /> },
-  { id: "skills",        label: "Skills",        icon: <Zap size={18} /> },
-  { id: "opportunities", label: "Opportunities", icon: <Briefcase size={18} /> },
-  { id: "atlas",         label: "Atlas",         icon: <Globe size={18} /> },
-  { id: "mentors",       label: "Mentors",       icon: <Users size={18} /> },
-  { id: "outreach",      label: "Outreach",      icon: <Send size={18} /> },
-  { id: "cv",            label: "CV / Portfolio", icon: <FileText size={18} /> },
-  { id: "mock-interview", label: "Interview",     icon: <Mic size={18} /> },
+const NAV_IDS: DashboardSection[] = [
+  "profile", "paths", "skills", "opportunities", "atlas",
+  "mentors", "outreach", "cv", "mock-interview",
 ];
 
 const UPLOAD_ROUTE = "/profile?upload=true&from=dashboard";
@@ -43,10 +37,23 @@ interface Props {
 
 export function DashboardShell({ userName, currentRole, targetJob, children }: Props) {
   const router = useRouter();
+  const { dict } = useLanguage();
   const [activeSection, setActiveSection] = useState<DashboardSection>("profile");
   const [sidebarExpanded, setSidebarExpanded] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const observerRef = useRef<IntersectionObserver | null>(null);
+
+  const navItems: NavItem[] = [
+    { id: "profile", label: dict.dashboardShell.navProfile, icon: <User size={18} /> },
+    { id: "paths", label: dict.dashboardShell.navPaths, icon: <GitBranch size={18} /> },
+    { id: "skills", label: dict.dashboardShell.navSkills, icon: <Zap size={18} /> },
+    { id: "opportunities", label: dict.dashboardShell.navOpportunities, icon: <Briefcase size={18} /> },
+    { id: "atlas", label: dict.dashboardShell.navAtlas, icon: <Globe size={18} /> },
+    { id: "mentors", label: dict.dashboardShell.navMentors, icon: <Users size={18} /> },
+    { id: "outreach", label: dict.dashboardShell.navOutreach, icon: <Send size={18} /> },
+    { id: "cv", label: dict.dashboardShell.navCv, icon: <FileText size={18} /> },
+    { id: "mock-interview", label: dict.dashboardShell.navInterview, icon: <Mic size={18} /> },
+  ];
 
   async function handleSignOut() {
     const supabase = createClient();
@@ -56,7 +63,7 @@ export function DashboardShell({ userName, currentRole, targetJob, children }: P
 
   // Intersection observer — highlights active section as user scrolls
   useEffect(() => {
-    const sectionEls = NAV_ITEMS.map((item) => document.getElementById(`section-${item.id}`)).filter(Boolean);
+    const sectionEls = NAV_IDS.map((id) => document.getElementById(`section-${id}`)).filter(Boolean);
 
     observerRef.current = new IntersectionObserver(
       (entries) => {
@@ -104,7 +111,7 @@ export function DashboardShell({ userName, currentRole, targetJob, children }: P
 
         {/* Nav */}
         <nav className="flex-1 flex flex-col gap-0.5 py-3 px-2 overflow-hidden">
-          {NAV_ITEMS.map((item) => {
+          {navItems.map((item) => {
             const isActive = activeSection === item.id;
             return (
               <button
@@ -139,7 +146,7 @@ export function DashboardShell({ userName, currentRole, targetJob, children }: P
           <button
             className="md:hidden text-white/60 hover:text-white transition-colors shrink-0"
             onClick={() => setDrawerOpen(true)}
-            aria-label="Open menu"
+            aria-label={dict.dashboardShell.openMenu}
           >
             <Menu size={20} />
           </button>
@@ -148,7 +155,7 @@ export function DashboardShell({ userName, currentRole, targetJob, children }: P
           <button
             onClick={() => router.push("/")}
             className="hidden md:flex items-center gap-1.5 shrink-0 hover:opacity-80 transition-opacity"
-            aria-label="Go to home"
+            aria-label={dict.dashboardShell.goHome}
           >
             <span className="text-[#d4a017] font-bold text-sm tracking-wide">Tenun</span>
           </button>
@@ -175,18 +182,18 @@ export function DashboardShell({ userName, currentRole, targetJob, children }: P
             title="Upload your CV, resume, or portfolio document"
           >
             <Upload size={15} />
-            <span className="hidden sm:inline">Upload CV / Portfolio</span>
-            <span className="sm:hidden">Upload</span>
+            <span className="hidden sm:inline">{dict.dashboardShell.uploadCvPortfolio}</span>
+            <span className="sm:hidden">{dict.dashboardShell.upload}</span>
           </button>
 
           {/* Sign out */}
           <button
             onClick={handleSignOut}
             className="shrink-0 flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-white/40 hover:text-white hover:bg-white/5 transition-colors text-xs"
-            aria-label="Sign out"
+            aria-label={dict.dashboardShell.signOut}
           >
             <LogOut size={15} />
-            <span className="hidden sm:inline">Sign out</span>
+            <span className="hidden sm:inline">{dict.dashboardShell.signOut}</span>
           </button>
         </header>
 
@@ -197,7 +204,7 @@ export function DashboardShell({ userName, currentRole, targetJob, children }: P
 
         {/* Mobile bottom tab bar */}
         <nav className="md:hidden flex bg-[#0a1628] border-t border-white/5 shrink-0 sticky bottom-0 z-30">
-          {NAV_ITEMS.filter((item) => MOBILE_PRIMARY.includes(item.id)).map((item) => (
+          {navItems.filter((item) => MOBILE_PRIMARY.includes(item.id)).map((item) => (
             <button
               key={item.id}
               onClick={() => scrollTo(item.id)}
@@ -215,7 +222,7 @@ export function DashboardShell({ userName, currentRole, targetJob, children }: P
             className="flex-1 flex flex-col items-center justify-center gap-0.5 py-2 text-[10px] text-white/40"
           >
             <Menu size={18} />
-            <span>More</span>
+            <span>{dict.dashboardShell.more}</span>
           </button>
         </nav>
       </div>
@@ -237,7 +244,7 @@ export function DashboardShell({ userName, currentRole, targetJob, children }: P
               </button>
             </div>
             <nav className="flex-1 flex flex-col gap-0.5 py-3 px-2">
-              {NAV_ITEMS.map((item) => (
+              {navItems.map((item) => (
                 <button
                   key={item.id}
                   onClick={() => scrollTo(item.id)}
@@ -259,14 +266,14 @@ export function DashboardShell({ userName, currentRole, targetJob, children }: P
                 className="flex items-center gap-2 px-3 py-2.5 rounded-lg text-sm font-semibold bg-[#d4a017] text-[#0a1628] hover:bg-[#e0ad1c] transition-colors w-full"
               >
                 <Upload size={16} />
-                Upload CV / Portfolio
+                {dict.dashboardShell.uploadCvPortfolio}
               </button>
               <button
                 onClick={handleSignOut}
                 className="flex items-center gap-2 px-3 py-2.5 rounded-lg text-sm text-white/40 hover:text-white hover:bg-white/5 transition-colors w-full"
               >
                 <LogOut size={16} />
-                Sign out
+                {dict.dashboardShell.signOut}
               </button>
             </div>
           </aside>

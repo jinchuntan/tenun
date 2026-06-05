@@ -30,6 +30,7 @@ import {
   interestSuggestions,
   industrySuggestions,
 } from "@/lib/resume-parser";
+import { useLanguage } from "@/components/i18n/LanguageProvider";
 
 
 function TagInput({
@@ -117,6 +118,7 @@ function ProfilePageInner() {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const { dict } = useLanguage();
   const uploadMode = searchParams.get("upload") === "true";
   const uploadSectionRef = useRef<HTMLDivElement | null>(null);
   const [highlightUpload, setHighlightUpload] = useState(false);
@@ -255,8 +257,8 @@ function ProfilePageInner() {
       <div className="pt-24 pb-16 max-w-4xl mx-auto px-4 sm:px-6">
         <SubNavBar
           className="mb-8"
-          breadcrumbs={[{ label: "Dashboard", href: "/dashboard" }, { label: "Profile" }]}
-          returnTo={getDashboardReturn(pathname, { loggedIn: isLoggedIn })}
+          breadcrumbs={[{ label: dict.profile.breadcrumbDashboard, href: "/dashboard" }, { label: dict.profile.breadcrumbProfile }]}
+          returnTo={getDashboardReturn(pathname, { loggedIn: isLoggedIn, labels: dict.navLabels })}
         />
 
         <motion.div
@@ -269,23 +271,25 @@ function ProfilePageInner() {
             <div className="inline-flex items-center gap-2 bg-emerald-50 border border-emerald-200 rounded-full px-4 py-1.5 mb-4">
               <Sparkles className="w-4 h-4 text-emerald-600" />
               <span className="text-sm text-emerald-700 font-medium">
-                Exploring: <strong>{targetJob}</strong>
+                {dict.profile.exploring} <strong>{targetJob}</strong>
               </span>
             </div>
           )}
           <h1 className="text-3xl sm:text-4xl font-bold text-navy-900 mb-2">
-            {targetJob ? "Now let's see how you fit" : "Build Your Career Profile"}
+            {targetJob ? dict.profile.fitTitle : dict.profile.buildTitle}
           </h1>
           <p className="text-navy-500 max-w-xl mx-auto">
-            Upload your resume and Tenun will extract your skills, map your experience,
-            and show you exactly how you match{targetJob ? ` a ${targetJob} role` : " your target roles"}.
+            {dict.profile.subtitle}{" "}
+            {targetJob
+              ? dict.profile.subtitleTargeted.replace("{target}", targetJob)
+              : dict.profile.subtitleGeneric}.
           </p>
           <button
             onClick={loadDemo}
             className="mt-4 inline-flex items-center gap-2 text-sm text-gold-600 hover:text-gold-700 font-medium transition-colors"
           >
             <Sparkles className="w-4 h-4" />
-            Load demo profile (Aisha Lim)
+            {dict.profile.loadDemo}
           </button>
         </motion.div>
 
@@ -312,9 +316,9 @@ function ProfilePageInner() {
               <div className="w-12 h-12 bg-navy-50 rounded-xl flex items-center justify-center mx-auto mb-3">
                 <Upload className="w-5 h-5 text-navy-400" />
               </div>
-              <p className="text-sm font-semibold text-navy-800 mb-1">Upload your CV</p>
+              <p className="text-sm font-semibold text-navy-800 mb-1">{dict.profile.uploadCv}</p>
               <p className="text-xs text-navy-400 mb-5 max-w-xs mx-auto">
-                Sign in to upload your CV and we will pre-fill your profile instantly.
+                {dict.profile.signInToUpload}
               </p>
               <button
                 onClick={handleSignInForUpload}
@@ -322,7 +326,7 @@ function ProfilePageInner() {
                 className="inline-flex items-center gap-2 px-5 py-2.5 bg-navy-800 text-white rounded-xl text-sm font-medium hover:bg-navy-900 disabled:opacity-60 transition-colors"
               >
                 {signingIn ? (
-                  <><Loader2 className="w-4 h-4 animate-spin" /> Signing in...</>
+                  <><Loader2 className="w-4 h-4 animate-spin" /> {dict.profile.signingIn}</>
                 ) : (
                   <>
                     <svg className="w-4 h-4" viewBox="0 0 24 24" aria-hidden="true">
@@ -331,12 +335,12 @@ function ProfilePageInner() {
                       <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
                       <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
                     </svg>
-                    Sign in with Google
+                    {dict.profile.signInWithGoogle}
                   </>
                 )}
               </button>
               <p className="text-xs text-navy-400 mt-4">
-                Or fill in your profile manually below and sign in later.
+                {dict.profile.manualFallback}
               </p>
             </div>
           )}
@@ -345,7 +349,7 @@ function ProfilePageInner() {
           {/* Divider */}
           <div className="flex items-center gap-4">
             <div className="flex-1 h-px bg-navy-100" />
-            <span className="text-xs text-navy-400 font-medium">or fill in manually below</span>
+            <span className="text-xs text-navy-400 font-medium">{dict.profile.manualDivider}</span>
             <div className="flex-1 h-px bg-navy-100" />
           </div>
 
@@ -354,30 +358,30 @@ function ProfilePageInner() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-lg">
                 <User className="w-5 h-5 text-navy-600" />
-                Basic Information
+                {dict.profile.basicInfo}
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className={labelCls}>Full Name *</label>
+                  <label className={labelCls}>{dict.profile.fullName}</label>
                   <input
                     type="text"
                     required
                     value={profile.name}
                     onChange={(e) => update("name", e.target.value)}
-                    placeholder="e.g. Aisha Lim"
+                    placeholder={dict.profile.fullNamePlaceholder}
                     className={inputCls}
                   />
                 </div>
                 <div>
-                  <label className={labelCls}>Current Role / Background *</label>
+                  <label className={labelCls}>{dict.profile.currentRole}</label>
                   <input
                     type="text"
                     required
                     value={profile.currentRole}
                     onChange={(e) => update("currentRole", e.target.value)}
-                    placeholder="e.g. Final-year CS Student"
+                    placeholder={dict.profile.currentRolePlaceholder}
                     className={inputCls}
                   />
                 </div>
@@ -390,26 +394,26 @@ function ProfilePageInner() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-lg">
                 <GraduationCap className="w-5 h-5 text-navy-600" />
-                Education & Experience
+                {dict.profile.educationExperience}
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
-                <label className={labelCls}>Education</label>
+                <label className={labelCls}>{dict.profile.education}</label>
                 <textarea
                   value={profile.education}
                   onChange={(e) => update("education", e.target.value)}
-                  placeholder="e.g. BSc Computer Science, University of Melbourne"
+                  placeholder={dict.profile.educationPlaceholder}
                   rows={2}
                   className={inputCls + " resize-none"}
                 />
               </div>
               <div>
-                <label className={labelCls}>Work / Project Experience</label>
+                <label className={labelCls}>{dict.profile.workExperience}</label>
                 <textarea
                   value={profile.experience}
                   onChange={(e) => update("experience", e.target.value)}
-                  placeholder="Describe your internships, projects, and relevant experience..."
+                  placeholder={dict.profile.workExperiencePlaceholder}
                   rows={4}
                   className={inputCls + " resize-none"}
                 />
@@ -422,35 +426,35 @@ function ProfilePageInner() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-lg">
                 <Cpu className="w-5 h-5 text-navy-600" />
-                Skills & Interests
+                {dict.profile.skillsInterests}
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
-                <label className={labelCls}>Skills</label>
+                <label className={labelCls}>{dict.profile.skills}</label>
                 <TagInput
                   values={profile.skills}
                   onChange={(v) => update("skills", v)}
                   suggestions={skillSuggestions}
-                  placeholder="Type a skill and press Enter..."
+                  placeholder={dict.profile.skillsPlaceholder}
                 />
               </div>
               <div>
-                <label className={labelCls}>Interests</label>
+                <label className={labelCls}>{dict.profile.interests}</label>
                 <TagInput
                   values={profile.interests}
                   onChange={(v) => update("interests", v)}
                   suggestions={interestSuggestions}
-                  placeholder="Type an interest and press Enter..."
+                  placeholder={dict.profile.interestsPlaceholder}
                 />
               </div>
               <div>
-                <label className={labelCls}>Preferred Industries</label>
+                <label className={labelCls}>{dict.profile.preferredIndustries}</label>
                 <TagInput
                   values={profile.preferredIndustries}
                   onChange={(v) => update("preferredIndustries", v)}
                   suggestions={industrySuggestions}
-                  placeholder="Type an industry and press Enter..."
+                  placeholder={dict.profile.industriesPlaceholder}
                 />
               </div>
             </CardContent>
@@ -461,30 +465,30 @@ function ProfilePageInner() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-lg">
                 <Sun className="w-5 h-5 text-navy-600" />
-                Preferences
+                {dict.profile.preferences}
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className={labelCls}>Salary Expectation</label>
+                  <label className={labelCls}>{dict.profile.salaryExpectation}</label>
                   <input
                     type="text"
                     value={profile.salaryExpectation}
                     onChange={(e) => update("salaryExpectation", e.target.value)}
-                    placeholder="e.g. $70,000 - $90,000"
+                    placeholder={dict.profile.salaryPlaceholder}
                     className={inputCls}
                   />
                 </div>
                 <div>
-                  <label className={labelCls}>Location Preference</label>
+                  <label className={labelCls}>{dict.profile.locationPreference}</label>
                   <input
                     type="text"
                     value={profile.locationPreference}
                     onChange={(e) =>
                       update("locationPreference", e.target.value)
                     }
-                    placeholder="e.g. Melbourne, Remote"
+                    placeholder={dict.profile.locationPlaceholder}
                     className={inputCls}
                   />
                 </div>
@@ -492,26 +496,29 @@ function ProfilePageInner() {
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className={labelCls}>Risk Appetite</label>
+                  <label className={labelCls}>{dict.profile.riskAppetite}</label>
                   <div className="flex gap-2">
-                    {(["low", "medium", "high"] as const).map((r) => (
-                      <button
-                        key={r}
-                        type="button"
-                        onClick={() => update("riskAppetite", r)}
-                        className={`flex-1 py-2.5 rounded-lg text-sm font-medium border-2 transition-all ${
-                          profile.riskAppetite === r
-                            ? "border-navy-700 bg-navy-700 text-white"
-                            : "border-navy-200 text-navy-600 hover:border-navy-400"
-                        }`}
-                      >
-                        {r.charAt(0).toUpperCase() + r.slice(1)}
-                      </button>
-                    ))}
+                    {(["low", "medium", "high"] as const).map((r) => {
+                      const riskLabels = { low: dict.profile.riskLow, medium: dict.profile.riskMedium, high: dict.profile.riskHigh };
+                      return (
+                        <button
+                          key={r}
+                          type="button"
+                          onClick={() => update("riskAppetite", r)}
+                          className={`flex-1 py-2.5 rounded-lg text-sm font-medium border-2 transition-all ${
+                            profile.riskAppetite === r
+                              ? "border-navy-700 bg-navy-700 text-white"
+                              : "border-navy-200 text-navy-600 hover:border-navy-400"
+                          }`}
+                        >
+                          {riskLabels[r]}
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
                 <div>
-                  <label className={labelCls}>Lifestyle Preference</label>
+                  <label className={labelCls}>{dict.profile.lifestylePreference}</label>
                   <select
                     value={profile.lifestylePreference}
                     onChange={(e) =>
@@ -522,10 +529,10 @@ function ProfilePageInner() {
                     }
                     className={inputCls}
                   >
-                    <option value="stability">Stability</option>
-                    <option value="flexibility">Flexibility</option>
-                    <option value="fast-growth">Fast Growth</option>
-                    <option value="purpose-driven">Purpose-driven</option>
+                    <option value="stability">{dict.profile.lifestyleStability}</option>
+                    <option value="flexibility">{dict.profile.lifestyleFlexibility}</option>
+                    <option value="fast-growth">{dict.profile.lifestyleFastGrowth}</option>
+                    <option value="purpose-driven">{dict.profile.lifestylePurposeDriven}</option>
                   </select>
                 </div>
               </div>
@@ -543,11 +550,11 @@ function ProfilePageInner() {
               {loading ? (
                 <>
                   <Loader2 className="mr-2 w-5 h-5 animate-spin" />
-                  Weaving your career threads...
+                  {dict.profile.submitting}
                 </>
               ) : (
                 <>
-                  Generate My Career Weave
+                  {dict.profile.submit}
                   <ArrowRight className="ml-2 w-5 h-5" />
                 </>
               )}

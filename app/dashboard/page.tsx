@@ -5,6 +5,7 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { Loader2, Layers } from "lucide-react";
 import { motion } from "framer-motion";
 
+import { useLanguage } from "@/components/i18n/LanguageProvider";
 import { AuthGate } from "@/components/auth-gate";
 import { DashboardShell } from "@/components/dashboard/DashboardShell";
 import { ProfilePane } from "@/components/dashboard/panes/ProfilePane";
@@ -34,6 +35,7 @@ import type {
 // ---------- Loading screen ----------
 
 function LoadingScreen() {
+  const { dict } = useLanguage();
   return (
     <div className="min-h-screen bg-[#f5f0e8] flex items-center justify-center">
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center">
@@ -52,8 +54,8 @@ function LoadingScreen() {
             <Layers size={20} className="text-[#0a1628]" />
           </div>
         </div>
-        <p className="text-sm font-medium text-[#0a1628]">Building your dashboard...</p>
-        <p className="text-xs text-gray-400 mt-1">Analysing your profile and matching opportunities</p>
+        <p className="text-sm font-medium text-[#0a1628]">{dict.dashboardPage.loading}</p>
+        <p className="text-xs text-gray-400 mt-1">{dict.dashboardPage.loadingSubtitle}</p>
       </motion.div>
     </div>
   );
@@ -187,16 +189,13 @@ function DashboardContent() {
 // ---------- Page ----------
 
 export default function DashboardPage() {
+  const { dict } = useLanguage();
   return (
     <AuthGate
       next="/dashboard"
-      title="Sign in to see your career dashboard"
-      subtitle="Create your free account to unlock your personalised dashboard."
-      perks={[
-        "See your full career profile and skill-gap analysis",
-        "Explore pathways, opportunities, and your global career atlas",
-        "Save your progress and pick up where you left off",
-      ]}
+      title={dict.dashboardPage.authTitle}
+      subtitle={dict.dashboardPage.authSubtitle}
+      perks={dict.dashboardPage.authPerks}
     >
       <Suspense fallback={
         <div className="min-h-screen bg-[#f5f0e8] flex items-center justify-center">

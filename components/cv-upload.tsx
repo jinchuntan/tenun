@@ -14,6 +14,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { extractTextFromFile, getFileType } from "@/lib/file-extractors";
 import { ParseResult } from "@/lib/resume-parser";
 import { UserProfile } from "@/lib/types";
+import { useLanguage } from "@/components/i18n/LanguageProvider";
 
 type UploadState = "idle" | "dragging" | "parsing" | "success" | "error";
 
@@ -23,18 +24,8 @@ interface CVUploadProps {
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 
-const fieldLabels: Record<string, string> = {
-  name: "Name",
-  currentRole: "Role",
-  education: "Education",
-  experience: "Experience",
-  skills: "Skills",
-  interests: "Interests",
-  industries: "Industries",
-  location: "Location",
-};
-
 export function CVUpload({ onProfileExtracted }: CVUploadProps) {
+  const { dict } = useLanguage();
   const [state, setState] = useState<UploadState>("idle");
   const [fileName, setFileName] = useState("");
   const [error, setError] = useState("");
@@ -46,15 +37,13 @@ export function CVUpload({ onProfileExtracted }: CVUploadProps) {
       const fileType = getFileType(file);
       if (!fileType) {
         setState("error");
-        setError(
-          "Unsupported file type. Please upload a PDF, DOCX, or TXT file."
-        );
+        setError(dict.cvUpload.errUnsupported);
         return;
       }
 
       if (file.size > MAX_FILE_SIZE) {
         setState("error");
-        setError("File too large. Maximum size is 5MB.");
+        setError(dict.cvUpload.errTooLarge);
         return;
       }
 
@@ -67,9 +56,7 @@ export function CVUpload({ onProfileExtracted }: CVUploadProps) {
 
         if (!rawText.trim()) {
           setState("error");
-          setError(
-            "We could not read text from this file. This often happens with visual portfolios, scanned PDFs, or image-based exports (Canva, Figma, Adobe). Try a DOCX/TXT or text-based PDF, or add your projects in the CV Generator."
-          );
+          setError(dict.cvUpload.errNoText);
           return;
         }
 
@@ -81,7 +68,7 @@ export function CVUpload({ onProfileExtracted }: CVUploadProps) {
 
         if (!response.ok) {
           const errData = await response.json().catch(() => ({}));
-          throw new Error(errData.error || "Failed to parse resume.");
+          throw new Error(errData.error || dict.cvUpload.errParseFailed);
         }
 
         const result: ParseResult = await response.json();
@@ -95,11 +82,11 @@ export function CVUpload({ onProfileExtracted }: CVUploadProps) {
       } catch (err) {
         setState("error");
         setError(
-          err instanceof Error ? err.message : "Failed to process file."
+          err instanceof Error ? err.message : dict.cvUpload.errProcess
         );
       }
     },
-    [onProfileExtracted]
+    [onProfileExtracted, dict]
   );
 
   const handleDrop = useCallback(
@@ -150,7 +137,7 @@ export function CVUpload({ onProfileExtracted }: CVUploadProps) {
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-lg">
           <Upload className="w-5 h-5 text-navy-600" />
-          Upload Your CV / Resume
+          {dict.cvUpload.title}
         </CardTitle>
       </CardHeader>
       <CardContent>
@@ -181,9 +168,9 @@ export function CVUpload({ onProfileExtracted }: CVUploadProps) {
                   }`}
                 />
                 <p className="text-sm font-medium text-navy-700 mb-1">
-                  Drag & drop your resume here
+                  {dict.cvUpload.dragDrop}
                 </p>
-                <p className="text-xs text-navy-400 mb-3">or</p>
+                <p className="text-xs text-navy-400 mb-3">{dict.cvUpload.or}</p>
                 <Button
                   type="button"
                   variant="outline"
@@ -193,10 +180,10 @@ export function CVUpload({ onProfileExtracted }: CVUploadProps) {
                     fileInputRef.current?.click();
                   }}
                 >
-                  Browse files
+                  {dict.cvUpload.browseFiles}
                 </Button>
                 <p className="text-xs text-navy-400 mt-3">
-                  PDF, DOCX, or TXT (max 5MB)
+                  {dict.cvUpload.fileTypes}
                 </p>
               </div>
               <input
@@ -221,7 +208,7 @@ export function CVUpload({ onProfileExtracted }: CVUploadProps) {
             >
               <Loader2 className="w-5 h-5 text-navy-600 animate-spin" />
               <span className="text-sm text-navy-600">
-                Parsing {fileName}...
+                {dict.cvUpload.parsing.replace("{name}", fileName)}
               </span>
             </motion.div>
           )}
@@ -242,7 +229,7 @@ export function CVUpload({ onProfileExtracted }: CVUploadProps) {
                     {fileName}
                   </p>
                   <p className="text-xs text-navy-500">
-                    Auto-filled {filledCount} of {totalFields} fields
+                    {dict.cvUpload.autoFilled.replace("{filled}", String(filledCount)).replace("{total}", String(totalFields))}
                   </p>
                 </div>
               </div>
@@ -265,7 +252,7 @@ export function CVUpload({ onProfileExtracted }: CVUploadProps) {
                           &times;
                         </span>
                       )}
-                      {fieldLabels[field] || field}
+                      {dict.cvUpload.fieldLabels[field as keyof typeof dict.cvUpload.fieldLabels] || field}
                     </div>
                   )
                 )}
@@ -276,7 +263,7 @@ export function CVUpload({ onProfileExtracted }: CVUploadProps) {
                 onClick={reset}
                 className="text-xs text-navy-500 hover:text-navy-700 underline transition-colors"
               >
-                Upload different file
+                {dict.cvUpload.uploadDifferent}
               </button>
             </motion.div>
           )}
@@ -294,14 +281,14 @@ export function CVUpload({ onProfileExtracted }: CVUploadProps) {
               <AlertCircle className="w-8 h-8 text-red-500 mx-auto mb-2" />
               <p className="text-sm text-red-600 mb-3">{error}</p>
               <Button type="button" variant="outline" size="sm" onClick={reset}>
-                Try again
+                {dict.cvUpload.tryAgain}
               </Button>
             </motion.div>
           )}
         </AnimatePresence>
 
         <p className="text-xs text-navy-400 mt-3">
-          Your file is processed locally and never stored.
+          {dict.cvUpload.localNote}
         </p>
       </CardContent>
     </Card>

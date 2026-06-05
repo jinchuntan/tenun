@@ -56,7 +56,7 @@ export function AppTopBar({
             >
               <LayoutDashboard className="w-3.5 h-3.5" aria-hidden="true" />
               <span className="hidden sm:inline">{returnTo.label}</span>
-              <span className="sm:hidden">Dashboard</span>
+              <span className="sm:hidden">{returnTo.label}</span>
             </Link>
           )}
         </div>
