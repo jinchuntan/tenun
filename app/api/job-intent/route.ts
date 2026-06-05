@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
-import Groq from "groq-sdk";
-import { getAuthenticatedUser } from "@/lib/api-auth";
 import { checkRateLimit } from "@/lib/rate-limit";
+import { generateJSONWithFallback } from "@/lib/llm";
 
 const SYSTEM_PROMPT = `You are a brutally honest career guide helping students and fresh graduates who don't know their job title yet. Your job is to take whatever they describe — even a single vague word — and show them the full range of genuinely different careers that word could mean.
 
@@ -109,23 +108,20 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Missing query." }, { status: 400 });
     }
 
-    if (!process.env.GROQ_API_KEY) {
+    if (!process.env.OPENROUTER_API_KEY && !process.env.GROQ_API_KEY) {
       return NextResponse.json({ error: "No API key configured." }, { status: 500 });
     }
 
-    const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
-    const completion = await groq.chat.completions.create({
-      model: "llama-3.3-70b-versatile",
+    const { raw } = await generateJSONWithFallback({
+      routeName: "job-intent",
       messages: [
         { role: "system", content: SYSTEM_PROMPT },
         { role: "user", content: buildUserMessage(query, skills, interests, experience) },
       ],
       temperature: 0.4,
-      max_tokens: 3000,
-      response_format: { type: "json_object" },
+      maxTokens: 3000,
     });
 
-    const raw = completion.choices[0]?.message?.content || "";
     const result = safeParseResult(raw);
     result.suggestions = result.suggestions.slice(0, 6);
     return NextResponse.json(result);

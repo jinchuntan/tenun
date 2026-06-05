@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { nanoid } from "@reduxjs/toolkit";
 import { FileText, Palette, Upload, PenLine, ChevronRight, ChevronLeft, Loader2 } from "lucide-react";
@@ -21,7 +21,7 @@ function buildDefaultBlocks(): CVBlock[] {
   return DEFAULT_BLOCK_ORDER.map(makeBlock);
 }
 
-export default function NewCVPage() {
+function NewCVFlow() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const dispatch = useAppDispatch();
@@ -271,6 +271,22 @@ export default function NewCVPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+// ---------- Page ----------
+
+export default function NewCVPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-[#f5f0e8] flex items-center justify-center">
+          <Loader2 size={24} className="animate-spin text-[#0a1628]" />
+        </div>
+      }
+    >
+      <NewCVFlow />
+    </Suspense>
   );
 }
 

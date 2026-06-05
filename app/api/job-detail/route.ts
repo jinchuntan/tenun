@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
-import Groq from "groq-sdk";
-import { getAuthenticatedUser } from "@/lib/api-auth";
 import { checkRateLimit } from "@/lib/rate-limit";
+import { generateJSONWithFallback } from "@/lib/llm";
 
 const SYSTEM_PROMPT = `You are a brutally honest career mentor helping a student understand what it really takes to land a specific job.
 
@@ -65,23 +64,20 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Missing title." }, { status: 400 });
     }
 
-    if (!process.env.GROQ_API_KEY) {
+    if (!process.env.OPENROUTER_API_KEY && !process.env.GROQ_API_KEY) {
       return NextResponse.json({ error: "No API key configured." }, { status: 500 });
     }
 
-    const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
-    const completion = await groq.chat.completions.create({
-      model: "llama-3.3-70b-versatile",
+    const { raw } = await generateJSONWithFallback({
+      routeName: "job-detail",
       messages: [
         { role: "system", content: SYSTEM_PROMPT },
         { role: "user", content: `Job title: "${title}"\nContext: "${context}"` },
       ],
       temperature: 0.4,
-      max_tokens: 1500,
-      response_format: { type: "json_object" },
+      maxTokens: 1500,
     });
 
-    const raw = completion.choices[0]?.message?.content || "";
     return NextResponse.json(safeParse(raw));
   } catch (err) {
     console.error("job-detail error:", err);

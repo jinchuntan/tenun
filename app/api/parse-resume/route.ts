@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
-import Groq from "groq-sdk";
 import { getAuthenticatedUser } from "@/lib/api-auth";
 import { checkRateLimit } from "@/lib/rate-limit";
+import { generateJSONWithFallback } from "@/lib/llm";
 import {
   skillSuggestions,
   interestSuggestions,
@@ -64,16 +64,15 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Missing or invalid resume text." }, { status: 400 });
     }
 
-    if (!process.env.GROQ_API_KEY) {
+    if (!process.env.OPENROUTER_API_KEY && !process.env.GROQ_API_KEY) {
       return NextResponse.json(
         { error: "No API key configured." },
         { status: 500 }
       );
     }
 
-    const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
-    const completion = await groq.chat.completions.create({
-      model: "llama-3.3-70b-versatile",
+    const { raw, provider } = await generateJSONWithFallback({
+      routeName: "parse-resume",
       messages: [
         { role: "system", content: SYSTEM_PROMPT },
         {
@@ -82,11 +81,9 @@ export async function POST(request: Request) {
         },
       ],
       temperature: 0.1,
-      max_tokens: 4096,
-      response_format: { type: "json_object" },
+      maxTokens: 4096,
     });
 
-    const raw = completion.choices[0]?.message?.content || "";
     const parsed = safeParseJSON(raw);
 
     const confidence = {
@@ -117,7 +114,7 @@ export async function POST(request: Request) {
       ...(parsed.locationPreference && { locationPreference: parsed.locationPreference }),
     };
 
-    return NextResponse.json({ profile, confidence, provider: "groq" });
+    return NextResponse.json({ profile, confidence, provider });
   } catch (err) {
     console.error("Resume parse error:", err);
     return NextResponse.json({ error: "Failed to parse resume." }, { status: 500 });
