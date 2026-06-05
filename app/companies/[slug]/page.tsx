@@ -16,6 +16,7 @@ import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
 import { SubNavBar } from "@/components/layout/SubNavBar";
 import { getDashboardReturn } from "@/lib/navigation";
+import { useLanguage } from "@/components/i18n/LanguageProvider";
 import { createClient } from "@/lib/supabase/client";
 import { getCompany, type JobListing } from "@/lib/data/company-jobs";
 
@@ -23,6 +24,7 @@ export default function CompanyPage() {
   const params = useParams();
   const router = useRouter();
   const pathname = usePathname();
+  const { dict } = useLanguage();
   const slug = typeof params.slug === "string" ? params.slug : "";
 
   const company = getCompany(slug);
@@ -89,7 +91,7 @@ export default function CompanyPage() {
             <SubNavBar
               className="mb-6"
               breadcrumbs={[{ label: "Companies", href: "/#partners" }, { label: company.name }]}
-              returnTo={getDashboardReturn(pathname, { loggedIn: !!userEmail })}
+              returnTo={getDashboardReturn(pathname, { loggedIn: !!userEmail, labels: dict.navLabels })}
             />
 
             <div className="flex items-start gap-4">

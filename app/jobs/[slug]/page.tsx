@@ -192,7 +192,7 @@ export default function JobDetailPage() {
           <SubNavBar
             className="mb-8"
             breadcrumbs={[{ label: "Career Search", href: "/" }, { label: job.title }]}
-            returnTo={getDashboardReturn(pathname, { loggedIn: !!userEmail })}
+            returnTo={getDashboardReturn(pathname, { loggedIn: !!userEmail, labels: dict.navLabels })}
           />
 
           {/* Header */}

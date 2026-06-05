@@ -6,6 +6,7 @@ import { Search, Users, Star, FolderCheck, CalendarCheck, Loader2 } from "lucide
 import { Navbar } from "@/components/navbar";
 import { SubNavBar } from "@/components/layout/SubNavBar";
 import { getDashboardReturn } from "@/lib/navigation";
+import { useLanguage } from "@/components/i18n/LanguageProvider";
 import { Footer } from "@/components/footer";
 import { CandidateCard } from "@/components/employers/dashboard/CandidateCard";
 import { CandidateDetail } from "@/components/employers/dashboard/CandidateDetail";
@@ -39,6 +40,7 @@ function StatCard({
 function DashboardInner() {
   const searchParams = useSearchParams();
   const pathname = usePathname();
+  const { dict } = useLanguage();
   const initialRole = (searchParams.get("role") ?? DEFAULT_ROLE).trim() || DEFAULT_ROLE;
 
   const [query, setQuery] = useState(initialRole);
@@ -88,7 +90,7 @@ function DashboardInner() {
         <SubNavBar
           className="mb-6"
           breadcrumbs={[{ label: "Employers", href: "/employers" }, { label: "Candidate Dashboard" }]}
-          returnTo={getDashboardReturn(pathname)}
+          returnTo={getDashboardReturn(pathname, { labels: dict.navLabels })}
         />
 
         {/* Header */}
