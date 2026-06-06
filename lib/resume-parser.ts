@@ -5,10 +5,18 @@ import { UserProfile } from "./types";
 // ============================
 
 export const skillSuggestions = [
-  "Python", "JavaScript", "TypeScript", "React", "SQL", "Java", "C++",
-  "Figma", "Tableau", "Excel", "Git", "Docker", "AWS", "Machine Learning",
-  "Data Visualization", "Public Speaking", "Project Management",
-  "Research", "Writing", "Leadership", "Communication", "Agile",
+  // Programming
+  "Python", "JavaScript", "TypeScript", "Java", "C", "C++", "Swift", "Kotlin",
+  "React", "Node.js", "HTML/CSS", "SQL",
+  // Data & Cloud
+  "Machine Learning", "Data Analysis", "Tableau", "Power BI", "Excel", "AWS", "Docker",
+  // Design
+  "Figma", "Adobe Photoshop", "Adobe Illustrator", "Canva",
+  // Dev tools
+  "Git",
+  // Soft skills
+  "Public Speaking", "Project Management", "Research", "Writing",
+  "Leadership", "Communication", "Agile",
 ];
 
 export const interestSuggestions = [
