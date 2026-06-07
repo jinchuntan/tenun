@@ -484,7 +484,7 @@ function ProfilePageInner() {
                         : "Tell us about your background."}
                     </h2>
                     <p className="text-sm text-navy-500">
-                      This helps us understand where you've been and where you could go.
+                      This helps us understand where you&apos;ve been and where you could go.
                     </p>
                   </div>
                   <div>
@@ -518,7 +518,7 @@ function ProfilePageInner() {
                       {firstName ? `What are you great at, ${firstName}?` : "What are you great at?"}
                     </h2>
                     <p className="text-sm text-navy-500">
-                      Tap the skills that apply to you. Add your own if you don't see them.
+                      Tap the skills that apply to you. Add your own if you don&apos;t see them.
                     </p>
                   </div>
                   <div>
