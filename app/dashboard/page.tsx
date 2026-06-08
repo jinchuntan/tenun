@@ -21,22 +21,20 @@ import { UniversitiesPane } from "@/components/dashboard/panes/UniversitiesPane"
 import { CVPane } from "@/components/dashboard/panes/CVPane";
 import { MockInterviewEntryCard } from "@/components/interview/MockInterviewEntryCard";
 import { GlobalCareerAtlas } from "@/components/dashboard/global-career-atlas";
-import { MentorConnect } from "@/components/dashboard/mentor-connect";
-import { OutreachStudio } from "@/components/dashboard/outreach-studio";
+import { MentorOutreachPane } from "@/components/dashboard/panes/MentorOutreachPane";
 
 import { useAppDispatch } from "@/store/hooks";
 import { setActivePathwayId } from "@/store/slices/dashboardSlice";
 
 import { generateCareerWeave } from "@/lib/career-engine";
 import { personalizeAtlas } from "@/lib/atlas-engine";
-import { personalizeMentors } from "@/lib/mentor-engine";
 import { personalizeCourses } from "@/lib/course-engine";
 import { careerHubs } from "@/lib/atlas-data";
 import { getDemoProfile, resolveDemoId } from "@/lib/demo-profiles";
 import { DemoPersonaBar } from "@/components/dashboard/DemoPersonaBar";
 import type {
   UserProfile, CareerWeaveResult,
-  PersonalizedHub, PersonalizedMentor, PersonalizedCourseRecommendation,
+  PersonalizedHub, PersonalizedCourseRecommendation,
 } from "@/lib/types";
 
 // ---------- Loading screen ----------
@@ -83,7 +81,6 @@ function DashboardContent() {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [result, setResult] = useState<CareerWeaveResult | null>(null);
   const [atlasHubs, setAtlasHubs] = useState<PersonalizedHub[]>([]);
-  const [mentors, setMentors] = useState<PersonalizedMentor[]>([]);
   const [courses, setCourses] = useState<PersonalizedCourseRecommendation[]>([]);
 
   useEffect(() => {
@@ -107,7 +104,6 @@ function DashboardContent() {
       const weaveResult = generateCareerWeave(p, storedTarget);
       setResult(weaveResult);
       setAtlasHubs(personalizeAtlas(p, careerHubs));
-      setMentors(personalizeMentors(p, weaveResult.pathways));
       setCourses(personalizeCourses(p, weaveResult.skillGaps, weaveResult.pathways, weaveResult.recommendedPathway));
       dispatch(setActivePathwayId(weaveResult.recommendedPathway));
       setLoading(false);
@@ -177,17 +173,11 @@ function DashboardContent() {
     {
       id: "mentors",
       label: ds.navMentors,
-      content: <MentorConnect profile={profile} archetype={result.archetype} />,
-    },
-    {
-      id: "outreach",
-      label: ds.navOutreach,
       content: (
-        <OutreachStudio
+        <MentorOutreachPane
           profile={profile}
           pathways={result.pathways}
-          mentors={mentors}
-          hubs={atlasHubs}
+          recommendedPathwayId={result.recommendedPathway}
           skillGaps={result.skillGaps}
         />
       ),

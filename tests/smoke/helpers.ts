@@ -15,8 +15,7 @@ export const TAB_CHECKS: { label: string; content: string }[] = [
   { label: "Opportunities", content: "Showing matches for" },
   { label: "Universities", content: "University Career Bridge" },
   { label: "Atlas", content: "Global Career Atlas" },
-  { label: "Mentors", content: "Mentor Connect" },
-  { label: "Outreach", content: "Outreach Studio" },
+  { label: "Mentors", content: "Mentors & Outreach" },
   { label: "CV / Portfolio", content: "Build your CV" },
   { label: "Interview", content: "AI Mock Interview" },
 ];

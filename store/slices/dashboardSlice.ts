@@ -9,7 +9,6 @@ export type DashboardSection =
   | "opportunities"
   | "universities"
   | "mentors"
-  | "outreach"
   | "cv"
   | "mock-interview";
 
