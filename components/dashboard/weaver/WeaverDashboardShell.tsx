@@ -112,7 +112,6 @@ export function WeaverDashboardShell({ userName, currentRole, targetJob, tabs }:
           tabs={navTabs}
           activeId={activeTab.id}
           onSelect={go}
-          moreLabel={dict.dashboardShell.more}
         />
 
         <div

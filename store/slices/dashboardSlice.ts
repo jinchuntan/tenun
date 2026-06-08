@@ -7,6 +7,7 @@ export type DashboardSection =
   | "atlas"
   | "skills"
   | "opportunities"
+  | "universities"
   | "mentors"
   | "outreach"
   | "cv"

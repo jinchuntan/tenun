@@ -17,6 +17,7 @@ import { ProfilePane } from "@/components/dashboard/panes/ProfilePane";
 import { PathsPane } from "@/components/dashboard/panes/PathsPane";
 import { SkillsPane } from "@/components/dashboard/panes/SkillsPane";
 import { OpportunitiesPane } from "@/components/dashboard/panes/OpportunitiesPane";
+import { UniversitiesPane } from "@/components/dashboard/panes/UniversitiesPane";
 import { CVPane } from "@/components/dashboard/panes/CVPane";
 import { MockInterviewEntryCard } from "@/components/interview/MockInterviewEntryCard";
 import { GlobalCareerAtlas } from "@/components/dashboard/global-career-atlas";
@@ -155,6 +156,11 @@ function DashboardContent() {
           recommendedPathwayId={result.recommendedPathway}
         />
       ),
+    },
+    {
+      id: "universities",
+      label: ds.navUniversities,
+      content: <UniversitiesPane profile={profile} result={result} />,
     },
     {
       id: "atlas",
