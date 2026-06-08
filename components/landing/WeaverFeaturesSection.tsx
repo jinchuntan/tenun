@@ -30,23 +30,24 @@ export function WeaverFeaturesSection() {
 
   const [index, setIndex] = useState(0);
 
-  // Pauses auto-rotation while the user hovers / focuses / drags / touches.
-  const interactingRef = useRef(false);
-  const pause = useCallback(() => { interactingRef.current = true; }, []);
-  const resume = useCallback(() => { interactingRef.current = false; }, []);
+  // Auto-rotation pauses while the user hovers / focuses / drags / touches.
+  const [paused, setPaused] = useState(false);
+  const pause = useCallback(() => setPaused(true), []);
+  const resume = useCallback(() => setPaused(false), []);
 
   const goNext = useCallback(() => setIndex((i) => (i + 1) % LEN), []);
   const goPrev = useCallback(() => setIndex((i) => (i - 1 + LEN) % LEN), []);
   const goTo = useCallback((t: number) => setIndex(((t % LEN) + LEN) % LEN), []);
 
-  // Auto-rotation (skipped when the user prefers reduced motion).
+  // Single self-resetting timer: re-armed on every index change (auto OR manual)
+  // for an even 5s cadence, and cleared while paused / reduced-motion. Resuming
+  // schedules a fresh 5s tick, so rotation continues a short delay after the
+  // user stops interacting. No duplicate intervals.
   useEffect(() => {
-    if (reduce) return;
-    const id = setInterval(() => {
-      if (!interactingRef.current) goNext();
-    }, AUTO_ROTATE_MS);
-    return () => clearInterval(id);
-  }, [goNext, reduce]);
+    if (reduce || paused) return;
+    const id = setTimeout(goNext, AUTO_ROTATE_MS);
+    return () => clearTimeout(id);
+  }, [index, paused, reduce, goNext]);
 
   // Measure the fan width so the side-card offsets scale with available space.
   const fanRef = useRef<HTMLDivElement>(null);
@@ -99,7 +100,7 @@ export function WeaverFeaturesSection() {
 
   const transition = reduce
     ? { duration: 0 }
-    : { type: "spring" as const, stiffness: 260, damping: 30 };
+    : { type: "spring" as const, stiffness: 210, damping: 26, mass: 0.9 };
 
   return (
     <section id="features" className="py-6 md:py-10 overflow-x-clip">
