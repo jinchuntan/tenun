@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import Image from "next/image";
-import { motion, AnimatePresence, useReducedMotion, type PanInfo } from "framer-motion";
+import { motion, useReducedMotion, type PanInfo } from "framer-motion";
 import { ArrowUpRight, ChevronLeft, ChevronRight } from "lucide-react";
 import { useLanguage } from "@/components/i18n/LanguageProvider";
 
@@ -15,16 +15,11 @@ const FEATURE_MEDIA = [
 const LEN = FEATURE_MEDIA.length;
 const AUTO_ROTATE_MS = 5000;
 
-// Swipe is committed when the drag passes EITHER a distance OR a velocity gate.
-const SWIPE_DISTANCE = 60; // px
-const SWIPE_VELOCITY = 400; // px/s
+// Swipe commits when the drag passes EITHER a distance OR a velocity gate.
+const SWIPE_DISTANCE = 55; // px
+const SWIPE_VELOCITY = 350; // px/s
 
-// Slide variants — direction-aware so "next" always travels the same way.
-const variants = {
-  enter: (dir: number) => ({ x: dir >= 0 ? "100%" : "-100%", opacity: 0 }),
-  center: { x: "0%", opacity: 1 },
-  exit: (dir: number) => ({ x: dir >= 0 ? "-100%" : "100%", opacity: 0 }),
-};
+type Pos = -1 | 0 | 1;
 
 export function WeaverFeaturesSection() {
   const { dict } = useLanguage();
@@ -33,31 +28,18 @@ export function WeaverFeaturesSection() {
 
   const FEATURES = f.cards.map((card, i) => ({ ...card, ...FEATURE_MEDIA[i] }));
 
-  // `page` is unbounded; the visible card is page mod LEN. This loops logically
-  // in both directions without clones, and keeps slide direction consistent.
-  const [[page, direction], setPage] = useState<[number, number]>([0, 0]);
-  const index = ((page % LEN) + LEN) % LEN;
+  const [index, setIndex] = useState(0);
 
   // Pauses auto-rotation while the user hovers / focuses / drags / touches.
   const interactingRef = useRef(false);
   const pause = useCallback(() => { interactingRef.current = true; }, []);
   const resume = useCallback(() => { interactingRef.current = false; }, []);
 
-  const paginate = useCallback((dir: number) => {
-    setPage(([p]) => [p + dir, dir]);
-  }, []);
-  const goNext = useCallback(() => paginate(1), [paginate]);
-  const goPrev = useCallback(() => paginate(-1), [paginate]);
+  const goNext = useCallback(() => setIndex((i) => (i + 1) % LEN), []);
+  const goPrev = useCallback(() => setIndex((i) => (i - 1 + LEN) % LEN), []);
+  const goTo = useCallback((t: number) => setIndex(((t % LEN) + LEN) % LEN), []);
 
-  const goTo = useCallback((target: number) => {
-    setPage(([p]) => {
-      const current = ((p % LEN) + LEN) % LEN;
-      if (target === current) return [p, 0];
-      return [p + (target - current), target > current ? 1 : -1];
-    });
-  }, []);
-
-  // Auto-rotation (skipped entirely when the user prefers reduced motion).
+  // Auto-rotation (skipped when the user prefers reduced motion).
   useEffect(() => {
     if (reduce) return;
     const id = setInterval(() => {
@@ -66,12 +48,42 @@ export function WeaverFeaturesSection() {
     return () => clearInterval(id);
   }, [goNext, reduce]);
 
+  // Measure the fan width so the side-card offsets scale with available space.
+  const fanRef = useRef<HTMLDivElement>(null);
+  const [fanW, setFanW] = useState(360);
+  useEffect(() => {
+    const el = fanRef.current;
+    if (!el || typeof ResizeObserver === "undefined") return;
+    const ro = new ResizeObserver(([entry]) => setFanW(entry.contentRect.width));
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+
+  const desktop = fanW >= 600;
+  const sideX = desktop ? Math.min(fanW * 0.26, 172) : Math.max(fanW * 0.12, 30);
+  const sideY = desktop ? 20 : 14;
+  const sideScale = desktop ? 0.9 : 0.84;
+  const sideRotate = desktop ? 7 : 6;
+  const sideOpacity = desktop ? 0.96 : 0.82;
+
+  const targetFor = (pos: Pos) => {
+    if (pos === 0) return { x: 0, y: 0, rotate: 0, scale: 1.03, opacity: 1, zIndex: 30 };
+    const dir = pos; // -1 left, 1 right
+    return {
+      x: dir * sideX,
+      y: sideY,
+      rotate: dir * sideRotate,
+      scale: sideScale,
+      opacity: sideOpacity,
+      zIndex: pos === 1 ? 20 : 10,
+    };
+  };
+
   const handleDragEnd = useCallback(
     (_: unknown, info: PanInfo) => {
       const { offset, velocity } = info;
       if (offset.x < -SWIPE_DISTANCE || velocity.x < -SWIPE_VELOCITY) goNext();
       else if (offset.x > SWIPE_DISTANCE || velocity.x > SWIPE_VELOCITY) goPrev();
-      // Small drag → AnimatePresence/drag elastic snaps the card back to center.
       resume();
     },
     [goNext, goPrev, resume]
@@ -87,9 +99,7 @@ export function WeaverFeaturesSection() {
 
   const transition = reduce
     ? { duration: 0 }
-    : { x: { type: "spring", stiffness: 320, damping: 34 }, opacity: { duration: 0.25 } };
-
-  const active = FEATURES[index];
+    : { type: "spring" as const, stiffness: 260, damping: 30 };
 
   return (
     <section id="features" className="py-6 md:py-10 overflow-x-clip">
@@ -106,106 +116,119 @@ export function WeaverFeaturesSection() {
             </p>
           </div>
 
-          {/* Carousel */}
-          <div className="lg:col-span-7">
+          {/* Card fan */}
+          <div
+            className="lg:col-span-7 select-none"
+            role="group"
+            aria-roledescription="carousel"
+            aria-label={f.title}
+            onMouseEnter={pause}
+            onMouseLeave={resume}
+            onTouchStart={pause}
+            onTouchEnd={resume}
+            onFocus={pause}
+            onBlur={resume}
+          >
             <div
-              className="relative w-full max-w-[420px] mx-auto select-none"
-              role="group"
-              aria-roledescription="carousel"
-              aria-label={f.title}
-              onMouseEnter={pause}
-              onMouseLeave={resume}
-              onFocus={pause}
-              onBlur={resume}
-              onTouchStart={pause}
-              onTouchEnd={resume}
+              ref={fanRef}
+              tabIndex={0}
+              onKeyDown={handleKeyDown}
+              aria-label={`${FEATURES[index].title} — ${index + 1} of ${LEN}`}
+              className="relative w-full h-[440px] sm:h-[480px] lg:h-[500px] outline-none focus-visible:ring-2 focus-visible:ring-gold-400 focus-visible:ring-offset-2 focus-visible:ring-offset-beige-50 rounded-3xl"
             >
-              {/* Viewport — fixed responsive height so sliding cards never
-                  collapse the layout, overflow-hidden so neighbours stay clipped
-                  cleanly inside the rounded frame. */}
-              <div
-                className="relative h-[460px] sm:h-[480px] lg:h-[500px] overflow-hidden rounded-3xl outline-none focus-visible:ring-2 focus-visible:ring-gold-400 focus-visible:ring-offset-2 focus-visible:ring-offset-beige-100"
-                tabIndex={0}
-                onKeyDown={handleKeyDown}
-                aria-label={`${active.title} — ${index + 1} / ${LEN}`}
-              >
-                <AnimatePresence initial={false} custom={direction}>
+              {FEATURES.map((feature, i) => {
+                const rel = (i - index + LEN) % LEN; // 0 center, 1 right, 2 left
+                const pos: Pos = rel === 0 ? 0 : rel === 1 ? 1 : -1;
+                const isCenter = pos === 0;
+
+                return (
                   <motion.article
-                    key={page}
-                    custom={direction}
-                    variants={variants}
-                    initial="enter"
-                    animate="center"
-                    exit="exit"
+                    key={i}
+                    aria-hidden={!isCenter}
+                    initial={false}
+                    animate={targetFor(pos)}
                     transition={transition}
-                    drag="x"
-                    dragConstraints={{ left: 0, right: 0 }}
-                    dragElastic={0.18}
-                    dragMomentum={false}
-                    onDragStart={pause}
-                    onDragEnd={handleDragEnd}
-                    className="absolute inset-0 flex flex-col rounded-3xl bg-beige-100 border border-beige-300/60 p-3.5 pt-7 shadow-lg shadow-navy-900/10 cursor-grab active:cursor-grabbing"
+                    style={{ width: "min(80vw, 300px)" }}
+                    // Centred via inset-0 + m-auto; Framer transforms ride on top.
+                    className={[
+                      "absolute inset-0 m-auto h-[400px] sm:h-[430px] lg:h-[450px]",
+                      "flex flex-col rounded-3xl bg-beige-100 border border-beige-300/60 p-3.5 pt-7 shadow-xl shadow-navy-900/10",
+                      isCenter ? "cursor-grab active:cursor-grabbing" : "cursor-pointer",
+                    ].join(" ")}
+                    {...(isCenter
+                      ? {
+                          drag: "x" as const,
+                          dragConstraints: { left: 0, right: 0 },
+                          dragElastic: 0.18,
+                          dragMomentum: false,
+                          onDragStart: pause,
+                          onDragEnd: handleDragEnd,
+                        }
+                      : { onClick: () => goTo(i) })}
                   >
                     <div className="px-1">
-                      <div className="flex items-start justify-between gap-3 mb-3">
-                        <h3 className="font-bold text-navy-900 text-lg sm:text-xl leading-snug">
-                          {active.title}
+                      <div className="flex items-start justify-between gap-3 mb-2.5">
+                        <h3 className="font-bold text-navy-900 text-base sm:text-lg lg:text-xl leading-snug">
+                          {feature.title}
                         </h3>
-                        <ArrowUpRight className="w-5 h-5 sm:w-6 sm:h-6 text-navy-400 shrink-0 mt-0.5" />
+                        <ArrowUpRight className="w-5 h-5 lg:w-6 lg:h-6 text-navy-400 shrink-0 mt-0.5" />
                       </div>
-                      <p className="text-sm sm:text-base text-navy-600 leading-relaxed">
-                        {active.body}
+                      <p className="text-xs sm:text-sm text-navy-600 leading-relaxed">
+                        {feature.body}
                       </p>
                     </div>
 
                     <div className="flex-1 relative min-h-0 rounded-2xl bg-white overflow-hidden mt-3">
                       <Image
-                        src={active.image}
-                        alt={active.alt}
+                        src={feature.image}
+                        alt={feature.alt}
                         fill
-                        sizes="(max-width: 640px) 90vw, 420px"
-                        className="object-contain p-4 pointer-events-none"
+                        sizes="(max-width: 640px) 80vw, 300px"
+                        className="object-contain p-3 sm:p-4 pointer-events-none"
                         draggable={false}
+                        priority={i === 0}
                       />
                     </div>
                   </motion.article>
-                </AnimatePresence>
-              </div>
+                );
+              })}
+            </div>
 
-              {/* Arrows — overlaid so they never shift the layout */}
+            {/* Controls — arrows flanking the dots, below the fan */}
+            <div className="flex items-center justify-center gap-4 mt-6">
               <button
                 type="button"
                 onClick={goPrev}
                 aria-label={f.prev}
-                className="absolute left-1 sm:-left-3 top-1/2 -translate-y-1/2 z-10 flex items-center justify-center w-9 h-9 sm:w-10 sm:h-10 rounded-full border border-beige-300 bg-white/90 backdrop-blur text-navy-700 hover:border-gold-400 hover:text-gold-600 transition-colors shadow-sm"
+                className="flex items-center justify-center w-10 h-10 rounded-full border border-beige-300 bg-white text-navy-700 hover:border-gold-400 hover:text-gold-600 transition-colors shadow-sm"
               >
                 <ChevronLeft className="w-5 h-5" />
               </button>
+
+              <div className="flex items-center gap-2">
+                {FEATURES.map((feature, i) => (
+                  <button
+                    key={i}
+                    type="button"
+                    onClick={() => goTo(i)}
+                    aria-label={`Show feature ${i + 1}: ${feature.title}`}
+                    aria-current={i === index}
+                    className={[
+                      "h-2 rounded-full transition-all",
+                      i === index ? "w-6 bg-navy-700" : "w-2 bg-beige-300 hover:bg-navy-300",
+                    ].join(" ")}
+                  />
+                ))}
+              </div>
+
               <button
                 type="button"
                 onClick={goNext}
                 aria-label={f.next}
-                className="absolute right-1 sm:-right-3 top-1/2 -translate-y-1/2 z-10 flex items-center justify-center w-9 h-9 sm:w-10 sm:h-10 rounded-full border border-beige-300 bg-white/90 backdrop-blur text-navy-700 hover:border-gold-400 hover:text-gold-600 transition-colors shadow-sm"
+                className="flex items-center justify-center w-10 h-10 rounded-full border border-beige-300 bg-white text-navy-700 hover:border-gold-400 hover:text-gold-600 transition-colors shadow-sm"
               >
                 <ChevronRight className="w-5 h-5" />
               </button>
-            </div>
-
-            {/* Dots */}
-            <div className="flex items-center justify-center gap-2 mt-5">
-              {FEATURES.map((feature, i) => (
-                <button
-                  key={i}
-                  type="button"
-                  onClick={() => goTo(i)}
-                  aria-label={`Go to: ${feature.title}`}
-                  aria-current={i === index}
-                  className={[
-                    "h-2 rounded-full transition-all",
-                    i === index ? "w-6 bg-navy-700" : "w-2 bg-beige-300 hover:bg-navy-300",
-                  ].join(" ")}
-                />
-              ))}
             </div>
           </div>
         </div>
