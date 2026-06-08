@@ -24,7 +24,7 @@ export function SummaryPane({ archetype }: Props) {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 sm:gap-7">
         {/* Left — illustration + identity */}
         <div>
-          <div className="rounded-2xl bg-[#f7f5f0] flex items-center justify-center p-6 aspect-[4/3]">
+          <div className="rounded-2xl bg-[#fff6dc] flex items-center justify-center p-6 aspect-[4/3]">
             <div className="relative w-full h-full max-w-[260px]">
               <Image
                 src={image}
