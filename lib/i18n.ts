@@ -33,24 +33,24 @@ const en = {
     notifications: "Notifications",
   },
   home: {
-    heroTitleLine1: "Don't know the job title",
-    heroTitleLine2: "you're looking for?",
-    heroTitleLine3: "We got you, Weaver.",
+    heroTitleLine1: "You've built more",
+    heroTitleLine2: "than you think.",
+    heroTitleLine3: "See where it can take you.",
     heroSubtitle:
-      "Whether you're just starting out or ready for your next move, tell us what you enjoy and we'll find the right career path and connect you to real jobs at top Malaysian companies.",
-    searchPlaceholder: "e.g. I want to work with data, or I like designing things...",
+      "Upload your CV or tell us what you've worked on. Tenun maps your existing skills to real roles you could grow into, and shows you the exact next move for each one. A course, a project, or a mentor worth talking to.",
+    searchPlaceholder: "e.g. I've built websites, worked with data, or designed interfaces...",
     explore: "Explore",
     weaving: "Weaving...",
-    searchAria: "Describe the kind of work you want to do",
+    searchAria: "Describe what you've built or worked on",
     exampleQueries: [
-      "I want to build mobile apps",
-      "I like working with data and numbers",
-      "I want to do 3D animations",
-      "I like designing user interfaces",
-      "I want to help people with money",
-      "I'm into AI and machine learning",
+      "I like building apps or websites",
+      "I have experience with data or Excel",
+      "I want to get into design or animation",
+      "I have experience doing slide decks or reports",
+      "I want to get into finance or consulting",
+      "I'm curious about AI or machine learning",
     ],
-    tip: "Tip: describing what you enjoy gets better results, e.g.",
+    tip: "Tip: describing what you've built gets better results, e.g.",
     overviewLabel: "Career space overview",
     alsoExplore: "Also explore:",
     broadPrefix: "is broad. Want more specific results? Try:",
@@ -65,20 +65,20 @@ const en = {
   },
   threeSteps: {
     eyebrow: "Simple. Fast. No fluff.",
-    titleLine1: "From curious to",
-    titleLine2: "career-ready in 3 steps.",
+    titleLine1: "From what you've done,",
+    titleLine2: "to what's next.",
     steps: [
       {
-        title: "Search in plain language",
-        body: "No job title needed. Type what you enjoy — 'I like working with numbers' or 'I want to make things look good.' Tenun maps it to 6 real careers.",
+        title: "Show us what you've built.",
+        body: "Upload your CV, drop in your LinkedIn, or list the projects you've worked on. The more concrete, the sharper the projection.",
       },
       {
-        title: "See what it actually takes",
-        body: "Click any role to see the required skills, salary range, the secret sauce that sets top candidates apart, and an honest fit check.",
+        title: "See where it can go.",
+        body: "Tenun maps your current skills to real roles you could grow into. Salary range, day-to-day, and an honest read on how far you are from each.",
       },
       {
-        title: "Get your personalised path",
-        body: "Sign in and upload your CV. We show exactly how you fit, what to improve, and match you to open roles at top Malaysian companies.",
+        title: "Close the gap.",
+        body: "Every projected role comes with the next move attached. The course to take, the project to build, the mentor to learn from. Then we match you to live openings at Malaysian companies.",
       },
     ],
   },
@@ -87,7 +87,7 @@ const en = {
     titleLine1: "We partner with the companies",
     titleLine2: "you want to work for.",
     subtitle:
-      "Every candidate is vetted by Tenun before being recommended, so partners know you're more than just another application.",
+      "Real roles at the companies you're aiming for. Every Weaver is vetted by Tenun before being recommended, so partners know you're more than another application in the pile.",
     browseAll: "Browse all companies",
   },
   companyTicker: {
@@ -111,23 +111,23 @@ const en = {
   },
   weaverFeatures: {
     eyebrow: "For Weavers.",
-    title: "Built for people who don't know their job title yet.",
+    title: "Built for people who've already started.",
     subtitle:
-      "Most platforms expect you to already know what you want. Tenun starts from where you actually are.",
+      "You don't need a job title in mind. You just need to know what you've already done. Tenun does the projecting.",
     prev: "Previous feature",
     next: "Next feature",
     cards: [
       {
-        title: "Job discovery, not just job search",
-        body: "Type what you enjoy. Get 6 real job titles you may not have known existed, each with salary ranges, day-to-day breakdowns, and required skills.",
+        title: "Projection, not preference.",
+        body: "You don't have to guess what you'd be good at. Tenun reads what you've actually built and maps it to roles that fit. Then you choose where to push.",
       },
       {
-        title: "The secret sauce, not just job descriptions",
-        body: "Learn what actually separates candidates who get hired from those who don't, for every role you explore. No generic advice.",
+        title: "The gap, not the wishlist.",
+        body: "Every projected role shows you exactly what stands between you and it. The skills to add, the project to ship, the person to learn from.",
       },
       {
-        title: "Your path, not just a list",
-        body: "Upload your CV and see what to improve, what to build, and how to position yourself for the roles you actually want.",
+        title: "Trajectory, not a single match.",
+        body: "We don't stop at 'you fit this role.' We show the next two steps after it, so you're picking a direction, not just an opening.",
       },
     ],
   },
@@ -135,7 +135,7 @@ const en = {
     titleLine1: "Don't stress.",
     titleLine2: "We've got you.",
     paragraph:
-      "Most people don't know where to start — and that's completely fine. We build your CV with you, keep it sharp as you grow, and make sure you're always ready when the right door opens.",
+      "Your CV is the input. We make sure it's pulling its weight. Sharp keywords, real numbers, ATS-clean formatting, and a profile that signals readiness to anyone who scans it.",
     viewSample: "View Sample",
     buildCv: "Build my CV",
     ctaNote: "Ready to build yours? Free for Weavers. No credit card required.",
@@ -168,11 +168,15 @@ const en = {
     items: [
       {
         q: "What is Tenun?",
-        a: "Tenun is a career discovery platform that helps students and fresh graduates find the right job title — even when they don't know what they're looking for. You describe what you enjoy doing, and Tenun maps it to real job titles with salary ranges, required skills, and a step-by-step path to get there. Tenun is powered by TalentBank, Malaysia's leading talent placement platform.",
+        a: "Tenun is a career projection engine. You show us what you've already built — your CV, your skills, your projects — and we map it to real roles you could realistically grow into. For each one, you get the gap and the next move to close it: a course, a project to ship, or a mentor worth a coffee. Powered by TalentBank, Malaysia's leading talent placement platform.",
       },
       {
-        q: "How does Tenun find the right job for me?",
-        a: "You type what you enjoy in plain language. Tenun uses AI to map your description to 6 real job titles, then explains what each one actually involves — day-to-day tasks, salary ranges, required skills, and the 'secret sauce' that separates good candidates from great ones.",
+        q: "How does Tenun project the right roles for me?",
+        a: "We read the skills, projects, and experience on your CV (or what you tell us directly) and match them against the skills that real roles actually require. The output is a shortlist of directions your current trajectory points toward, ranked by how close you are to each.",
+      },
+      {
+        q: "Do you predict my future career?",
+        a: "No. Tenun shows you where your current skills could realistically take you, and what you'd need to do to get there. The work is still yours. The decision is still yours. We just make the map clearer.",
       },
       {
         q: "Do I need to know my job title to use Tenun?",
@@ -194,14 +198,14 @@ const en = {
   },
   footer: {
     tagline:
-      "Career discovery for students and fresh graduates who don't know their job title yet. Built with TalentBank, Malaysia's leading talent placement platform.",
+      "Career projection for students and fresh graduates in Malaysia. Built with TalentBank, Malaysia's leading talent placement platform.",
     forWeavers: "For Weavers",
     forEmployers: "For Employers",
     weaverLinks: ["How it works", "Career discovery", "Build CV", "FAQ"],
     employerLinks: ["Why Tenun?", "Post a role", "Candidate matching", "Recruiter preview"],
     rights: "All rights reserved.",
     disclaimer:
-      "Tenun helps you explore possibilities. It does not guarantee employment outcomes.",
+      "Tenun projects possibilities based on your current skills. Outcomes depend on the work you put in.",
   },
   employerHero: {
     badge: "For Employers",
@@ -305,7 +309,7 @@ const en = {
     title: "Start with one role. We'll help you find better-fit early talent.",
     subtitle:
       "Submit your hiring need and we'll help you understand what kind of candidates Tenun can surface.",
-    successTitle: "Thanks — we've received your role.",
+    successTitle: "Thanks! we've received your role.",
     successBody: "The Tenun team will review it and follow up soon.",
     company: "Company name",
     companyPlaceholder: "e.g. Acme Sdn Bhd",
@@ -386,7 +390,7 @@ const en = {
     header: "Tenun Guide",
     subheader: "Ask me where to go next.",
     placeholder: "Ask me anything about Tenun…",
-    needHelp: "Need help? 👋",
+    needHelp: "Need help?",
     close: "Close Tenun Guide",
     open: "Open Tenun Guide",
     send: "Send message",
@@ -435,7 +439,7 @@ const en = {
     login: {
       badge: "Welcome back",
       title: "Sign in to Tenun",
-      subtitle: "Pick up where you left off — your matches and CV are waiting.",
+      subtitle: "Pick up where you left off, your matches and CV are waiting.",
       cta: "Sign in",
       googleCta: "Continue with Google",
       altPrompt: "New to Tenun?",
@@ -651,7 +655,7 @@ const en = {
   },
   welcome: {
     title: "Welcome to Tenun",
-    subtitle: "The Career Weaving OS — here's how it works",
+    subtitle: "Here's how Tenun works",
     highlights: [
       { title: "Build your profile", description: "Enter your skills, experience, interests, and career preferences." },
       { title: "See your career threads", description: "Your profile is analyzed across 8 dimensions — each scored and explained." },
@@ -670,12 +674,12 @@ const en = {
       { title: "Global Career Atlas", description: "An interactive world map showing career hubs matched to your profile. Click any city to see industries, roles, salary ranges, and skill gaps. Compare up to 3 cities side by side and save your favorites." },
       { title: "Pathway Simulator", description: "Five distinct career directions tailored to you. Click any pathway to expand it and see suitable roles, required skills, trade-offs, risks, and your next 3 concrete actions. The one marked 'Best Match' has the highest alignment with your profile." },
       { title: "Visual Comparisons", description: "Switch between three chart views: the Thread Radar shows your strengths at a glance, Pathway Scores compares how well each career path fits you, and Dimension Compare breaks down pathways across salary, growth, stability, flexibility, and impact." },
-      { title: "Outreach Studio", description: "Generate personalized message drafts for recruiters, alumni, and mentors. Choose a message type, select your target context, then edit and copy the generated draft. No messages are sent automatically — you're always in control." },
+      { title: "Outreach Studio", description: "Generate personalized message drafts for recruiters, alumni, and mentors. Choose a message type, select your target context, then edit and copy the generated draft. No messages are sent automatically, you're always in control." },
       { title: "Mentor Bridge", description: "Browse mentors matched to your profile and career interests. Each mentor card shows their background, match reason, and suggested questions. Click 'Draft Mentorship Request' to jump to the Outreach Studio." },
       { title: "Learning & Portfolio Plan", description: "Courses, certifications, portfolio projects, and communities recommended based on your skill gaps and chosen pathways. Each recommendation explains what gap it closes and how it improves your pathway score." },
       { title: "Skill Gap Plan", description: "These are skills you'll need to develop, prioritized by how many pathways require them. Each card shows your current vs. target level and recommends specific learning resources to close the gap." },
-      { title: "Opportunity Marketplace", description: "Jobs, internships, courses, projects, mentors, and portfolio challenges — all matched to your profile with a fit percentage. Use the filter tabs to browse by type, and click any card to see why it matches and what skills you'll develop." },
-      { title: "You're all set!", description: "Explore each section at your own pace. Click the navigation tabs at the top to jump between sections. Remember — these pathways represent possibilities, not predictions. Your choices shape your journey." },
+      { title: "Opportunity Marketplace", description: "Jobs, internships, courses, projects, mentors, and portfolio challenges all matched to your profile with a fit percentage. Use the filter tabs to browse by type, and click any card to see why it matches and what skills you'll develop." },
+      { title: "You're all set!", description: "Explore each section at your own pace. Click the navigation tabs at the top to jump between sections. Remember, these pathways represent possibilities, not predictions. Your choices shape your journey." },
     ],
     stepXofY: "Step {x} of {y}",
     skipTour: "Skip tour",
@@ -780,7 +784,7 @@ const en = {
   },
   portfolio: {
     title: "Portfolio or project evidence",
-    subtitle: "Optional. Great for design or project work — add details and the AI writes truthful CV bullets, even if your portfolio file has no readable text.",
+    subtitle: "Optional. Great for design or project work, add details and the AI writes truthful CV bullets, even if your portfolio file has no readable text.",
     addProject: "Add project",
     useCareerWeave: "Use my Career Weave portfolio/projects",
     projectN: "Project {n}",
@@ -830,24 +834,24 @@ const ms: Translations = {
     notifications: "Pemberitahuan",
   },
   home: {
-    heroTitleLine1: "Tak tahu nama kerja",
-    heroTitleLine2: "yang anda cari?",
-    heroTitleLine3: "Tenun bantu anda, Weaver.",
+    heroTitleLine1: "Anda dah bina lebih",
+    heroTitleLine2: "dari yang anda sangka.",
+    heroTitleLine3: "Lihat ke mana boleh pergi.",
     heroSubtitle:
-      "Sama ada anda baru bermula atau bersedia untuk langkah seterusnya, beritahu kami apa yang anda minat dan kami akan bantu cari laluan kerjaya yang sesuai serta hubungkan anda dengan peluang kerja di syarikat terkemuka Malaysia.",
-    searchPlaceholder: "cth. Saya suka bekerja dengan data, atau saya suka mereka bentuk...",
+      "Muat naik CV anda atau ceritakan apa yang anda dah usahakan. Tenun petakan kemahiran sedia ada anda kepada peranan sebenar yang boleh anda ceburi, dan tunjukkan langkah seterusnya untuk setiap satu. Kursus, projek, atau mentor yang berbaloi.",
+    searchPlaceholder: "cth. Saya dah bina laman web, pernah kerja dengan data, atau reka antara muka...",
     explore: "Teroka",
     weaving: "Menenun...",
-    searchAria: "Terangkan jenis kerja yang anda mahu lakukan",
+    searchAria: "Terangkan apa yang anda dah bina atau kerjakan",
     exampleQueries: [
-      "Saya nak bina aplikasi mudah alih",
-      "Saya suka bekerja dengan data dan nombor",
-      "Saya nak buat animasi 3D",
-      "Saya suka mereka bentuk antara muka pengguna",
-      "Saya nak bantu orang uruskan kewangan",
-      "Saya minat AI dan pembelajaran mesin",
+      "Saya suka bina aplikasi atau laman web",
+      "Saya ada pengalaman dengan data atau Excel",
+      "Saya nak masuk bidang reka bentuk atau animasi",
+      "Saya ada pengalaman buat slaid atau laporan",
+      "Saya nak masuk bidang kewangan atau perundingan",
+      "Saya berminat dengan AI atau pembelajaran mesin",
     ],
-    tip: "Petua: ceritakan apa yang anda minat untuk hasil lebih tepat, cth.",
+    tip: "Petua: ceritakan apa yang anda dah bina untuk hasil lebih tepat, cth.",
     overviewLabel: "Gambaran ruang kerjaya",
     alsoExplore: "Teroka juga:",
     broadPrefix: "agak luas. Mahu hasil lebih spesifik? Cuba:",
@@ -862,20 +866,20 @@ const ms: Translations = {
   },
   threeSteps: {
     eyebrow: "Mudah. Pantas. Tiada basa-basi.",
-    titleLine1: "Daripada ingin tahu kepada",
-    titleLine2: "bersedia berkerjaya dalam 3 langkah.",
+    titleLine1: "Daripada apa yang anda dah buat,",
+    titleLine2: "kepada apa yang seterusnya.",
     steps: [
       {
-        title: "Cari dalam bahasa biasa",
-        body: "Tak perlu nama jawatan. Taip apa yang anda minat — 'Saya suka bekerja dengan nombor' atau 'Saya nak buat benda nampak cantik.' Tenun petakan ia kepada 6 kerjaya sebenar.",
+        title: "Tunjukkan apa yang anda dah bina.",
+        body: "Muat naik CV, masukkan LinkedIn, atau senaraikan projek yang anda dah usahakan. Semakin konkrit, semakin tajam unjuran.",
       },
       {
-        title: "Lihat apa yang sebenarnya diperlukan",
-        body: "Klik mana-mana peranan untuk lihat kemahiran diperlukan, julat gaji, rahsia yang membezakan calon terbaik, dan semakan kesesuaian yang jujur.",
+        title: "Lihat ke mana ia boleh pergi.",
+        body: "Tenun petakan kemahiran semasa anda kepada peranan sebenar yang boleh anda kembang ke. Julat gaji, gambaran harian, dan penilaian jujur sejauh mana anda dari setiap satu.",
       },
       {
-        title: "Dapatkan laluan peribadi anda",
-        body: "Log masuk dan muat naik CV anda. Kami tunjukkan dengan tepat bagaimana anda sesuai, apa yang perlu diperbaiki, dan padankan anda dengan peranan terbuka di syarikat terkemuka Malaysia.",
+        title: "Tutup jurang itu.",
+        body: "Setiap peranan yang diunjurkan datang dengan langkah seterusnya. Kursus untuk diambil, projek untuk dibina, mentor untuk dipelajari. Kemudian kami padankan anda dengan peluang kerja di syarikat Malaysia.",
       },
     ],
   },
@@ -884,7 +888,7 @@ const ms: Translations = {
     titleLine1: "Kami bekerjasama dengan syarikat",
     titleLine2: "yang anda idamkan.",
     subtitle:
-      "Setiap calon disaring oleh Tenun sebelum disyorkan, jadi rakan kongsi tahu anda lebih daripada sekadar satu lagi permohonan.",
+      "Peranan sebenar di syarikat yang anda tuju. Setiap Weaver disaring oleh Tenun sebelum disyorkan, jadi rakan kongsi tahu anda lebih dari sekadar satu lagi permohonan dalam timbunan.",
     browseAll: "Lihat semua syarikat",
   },
   companyTicker: {
@@ -908,23 +912,23 @@ const ms: Translations = {
   },
   weaverFeatures: {
     eyebrow: "Untuk Weavers.",
-    title: "Dibina untuk mereka yang belum tahu nama kerja mereka.",
+    title: "Dibina untuk mereka yang sudah pun bermula.",
     subtitle:
-      "Kebanyakan platform mahu anda sudah tahu apa yang anda mahu. Tenun bermula daripada tempat anda sebenarnya berada.",
+      "Anda tak perlu ada nama jawatan dalam kepala. Anda cuma perlu tahu apa yang anda dah buat. Tenun yang akan unjurkan.",
     prev: "Ciri sebelumnya",
     next: "Ciri seterusnya",
     cards: [
       {
-        title: "Penemuan kerja, bukan sekadar carian kerja",
-        body: "Taip apa yang anda minat. Dapatkan 6 nama jawatan sebenar yang mungkin anda tak tahu wujud, setiap satu dengan julat gaji, gambaran harian, dan kemahiran diperlukan.",
+        title: "Unjuran, bukan keutamaan.",
+        body: "Anda tak perlu teka apa yang anda pandai. Tenun baca apa yang anda dah bina dan petakan kepada peranan yang sesuai. Kemudian anda pilih ke mana nak ditolak.",
       },
       {
-        title: "Rahsia kejayaan, bukan sekadar deskripsi kerja",
-        body: "Pelajari apa yang sebenarnya membezakan calon yang diterima bekerja daripada yang tidak, untuk setiap peranan yang anda teroka. Tiada nasihat generik.",
+        title: "Jurang, bukan senarai impian.",
+        body: "Setiap peranan yang diunjurkan tunjukkan dengan tepat apa yang memisahkan anda daripada ia. Kemahiran yang perlu ditambah, projek yang perlu disiapkan, orang yang perlu dipelajari.",
       },
       {
-        title: "Laluan anda, bukan sekadar senarai",
-        body: "Muat naik CV anda dan lihat apa yang perlu diperbaiki, apa yang perlu dibina, dan cara memposisikan diri untuk peranan yang anda betul-betul mahu.",
+        title: "Trajektori, bukan sekadar satu padanan.",
+        body: "Kami tak berhenti di 'anda sesuai dengan peranan ini.' Kami tunjukkan dua langkah seterusnya selepas itu, supaya anda pilih arah, bukan sekadar satu jawatan.",
       },
     ],
   },
@@ -932,7 +936,7 @@ const ms: Translations = {
     titleLine1: "Jangan risau.",
     titleLine2: "Kami ada untuk anda.",
     paragraph:
-      "Kebanyakan orang tak tahu nak mula di mana — dan itu tak mengapa. Kami bina CV anda bersama anda, kekalkan ia tajam apabila anda berkembang, dan pastikan anda sentiasa bersedia apabila peluang yang betul tiba.",
+      "CV anda adalah input. Kami pastikan ia melakukan kerjanya. Kata kunci yang tepat, nombor yang nyata, format bersih untuk ATS, dan profil yang menunjukkan kesediaan kepada sesiapa yang mengimbas.",
     viewSample: "Lihat Contoh",
     buildCv: "Bina CV saya",
     ctaNote: "Bersedia untuk bina CV anda? Percuma untuk Weavers. Tiada kad kredit diperlukan.",
@@ -965,15 +969,19 @@ const ms: Translations = {
     items: [
       {
         q: "Apa itu Tenun?",
-        a: "Tenun ialah platform penemuan kerjaya yang membantu pelajar dan graduan baharu mencari nama jawatan yang betul — walaupun anda tak tahu apa yang anda cari. Anda terangkan apa yang anda minat, dan Tenun petakan ia kepada nama jawatan sebenar lengkap dengan julat gaji, kemahiran diperlukan, dan laluan langkah demi langkah untuk sampai ke sana. Tenun dikuasakan oleh TalentBank, platform penempatan bakat terkemuka Malaysia.",
+        a: "Tenun ialah enjin unjuran kerjaya. Anda tunjukkan apa yang anda dah bina — CV, kemahiran, projek anda — dan kami petakan kepada peranan sebenar yang anda boleh kembang ke secara realistik. Untuk setiap satu, anda dapat jurang dan langkah seterusnya untuk menutupnya: kursus, projek untuk disiapkan, atau mentor yang berbaloi untuk diajak berbual. Dikuasakan oleh TalentBank, platform penempatan bakat terkemuka Malaysia.",
       },
       {
-        q: "Bagaimana Tenun cari kerja yang sesuai untuk saya?",
-        a: "Anda taip apa yang anda minat dalam bahasa biasa. Tenun guna AI untuk petakan deskripsi anda kepada 6 nama jawatan sebenar, kemudian terangkan apa yang setiap satu sebenarnya melibatkan — tugas harian, julat gaji, kemahiran diperlukan, dan 'rahsia kejayaan' yang membezakan calon baik daripada yang hebat.",
+        q: "Bagaimana Tenun mengunjurkan peranan yang sesuai untuk saya?",
+        a: "Kami baca kemahiran, projek, dan pengalaman dalam CV anda (atau apa yang anda ceritakan terus) dan padankan ia dengan kemahiran yang peranan sebenar benar-benar perlukan. Hasilnya adalah senarai pendek arah yang trajektori semasa anda tunjuk, disusun mengikut sejauh mana anda dari setiap satu.",
+      },
+      {
+        q: "Adakah Tenun meramal kerjaya masa depan saya?",
+        a: "Tidak. Tenun tunjukkan ke mana kemahiran semasa anda boleh membawa anda secara realistik, dan apa yang anda perlu lakukan untuk sampai ke sana. Usahanya masih milik anda. Keputusannya masih milik anda. Kami cuma buat petanya lebih jelas.",
       },
       {
         q: "Perlukah saya tahu nama jawatan untuk guna Tenun?",
-        a: "Tidak — itulah maksudnya. Kebanyakan papan kerja andaikan anda sudah tahu apa nak cari. Tenun bermula daripada apa yang anda minat ('Saya suka bekerja dengan data' atau 'Saya nak mereka bentuk benda') dan bekerja ke belakang untuk cari laluan kerjaya yang sesuai untuk anda.",
+        a: "Tidak itulah premisnya. Kebanyakan papan kerja andaikan anda sudah tahu apa nak cari. Tenun bermula daripada apa yang anda minat ('Saya suka bekerja dengan data' atau 'Saya nak mereka bentuk benda') dan bekerja ke belakang untuk cari laluan kerjaya yang sesuai untuk anda.",
       },
       {
         q: "Syarikat mana yang mengambil pekerja melalui Tenun?",
@@ -991,14 +999,14 @@ const ms: Translations = {
   },
   footer: {
     tagline:
-      "Penemuan kerjaya untuk pelajar dan graduan baharu yang belum tahu nama kerja mereka. Dibina bersama TalentBank, platform penempatan bakat terkemuka Malaysia.",
+      "Unjuran kerjaya untuk pelajar dan graduan baharu di Malaysia. Dibina bersama TalentBank, platform penempatan bakat terkemuka Malaysia.",
     forWeavers: "Untuk Weavers",
     forEmployers: "Untuk Majikan",
     weaverLinks: ["Cara ia berfungsi", "Penemuan kerjaya", "Bina CV", "Soalan Lazim"],
     employerLinks: ["Kenapa Tenun?", "Siar peranan", "Padanan calon", "Pratonton perekrut"],
     rights: "Hak cipta terpelihara.",
     disclaimer:
-      "Tenun membantu anda meneroka kemungkinan. Ia tidak menjamin hasil pekerjaan.",
+      "Tenun mengunjurkan kemungkinan berdasarkan kemahiran semasa anda. Hasilnya bergantung pada usaha yang anda laburkan.",
   },
   employerHero: {
     badge: "Untuk Majikan",
@@ -1183,7 +1191,7 @@ const ms: Translations = {
     header: "Panduan Tenun",
     subheader: "Tanya saya ke mana hendak pergi.",
     placeholder: "Tanya saya apa-apa tentang Tenun…",
-    needHelp: "Perlukan bantuan? 👋",
+    needHelp: "Perlukan bantuan?",
     close: "Tutup Panduan Tenun",
     open: "Buka Panduan Tenun",
     send: "Hantar mesej",
@@ -1386,7 +1394,7 @@ const ms: Translations = {
     editFieldsBelow: "Sunting medan di bawah",
     leaveWarning: "Perubahan terbaru anda mungkin masih disimpan. Tinggalkan halaman ini?",
     loadingCv: "Memuatkan CV anda…",
-    requiredSection: "Bahagian wajib — tidak boleh dibuang",
+    requiredSection: "Bahagian wajib, tidak boleh dibuang",
   },
   cvPreview: {
     breadcrumbDashboard: "Papan Pemuka",
@@ -1624,24 +1632,24 @@ const zhCN: Translations = {
     notifications: "通知",
   },
   home: {
-    heroTitleLine1: "不知道自己想找",
-    heroTitleLine2: "什么职位？",
-    heroTitleLine3: "我们帮你，Weaver。",
+    heroTitleLine1: "你的积累，",
+    heroTitleLine2: "超乎你的想象。",
+    heroTitleLine3: "看看能走多远。",
     heroSubtitle:
-      "无论你是刚起步，还是准备迈出下一步，告诉我们你喜欢什么，我们会为你找到合适的职业方向，并将你与马来西亚顶尖公司的真实职位连接起来。",
-    searchPlaceholder: "例如：我想做数据相关的工作，或者我喜欢设计……",
+      "上传你的 CV 或告诉我们你做过什么。Tenun 将你现有的技能映射到你能够成长的真实职位，并为每个职位指出具体的下一步。一门课程、一个项目，或值得一谈的导师。",
+    searchPlaceholder: "例如：我喜欢开发应用，或者我想进入咨询领域……",
     explore: "探索",
     weaving: "编织中……",
-    searchAria: "描述你想做的工作类型",
+    searchAria: "描述你做过什么或擅长什么",
     exampleQueries: [
-      "我想开发手机应用",
-      "我喜欢和数据、数字打交道",
-      "我想做 3D 动画",
-      "我喜欢设计用户界面",
-      "我想帮助别人管理财务",
-      "我对 AI 和机器学习感兴趣",
+      "我喜欢开发应用或网站",
+      "我有数据或 Excel 相关经验",
+      "我想进入设计或动画领域",
+      "我有做 PPT 或报告的经验",
+      "我想进入金融或咨询领域",
+      "我对 AI 或机器学习感兴趣",
     ],
-    tip: "提示：描述你喜欢做的事能得到更好的结果，例如",
+    tip: "提示：描述你做过的事能得到更好的结果，例如",
     overviewLabel: "职业领域概览",
     alsoExplore: "也可以探索：",
     broadPrefix: "范围较广。想要更精确的结果？试试：",
@@ -1656,20 +1664,20 @@ const zhCN: Translations = {
   },
   threeSteps: {
     eyebrow: "简单。快速。不废话。",
-    titleLine1: "从好奇到",
-    titleLine2: "做好职业准备，只需 3 步。",
+    titleLine1: "从你已经做的，",
+    titleLine2: "到下一步该做什么。",
     steps: [
       {
-        title: "用日常语言搜索",
-        body: "不需要知道职位名称。输入你喜欢的事——\u201C我喜欢和数字打交道\u201D或\u201C我想让东西变好看\u201D。Tenun 会为你匹配 6 个真实职业。",
+        title: "告诉我们你做过什么。",
+        body: "上传你的 CV，粘贴你的 LinkedIn，或者列出你参与过的项目。信息越具体，展望越精准。",
       },
       {
-        title: "了解真正需要什么",
-        body: "点击任一职位，查看所需技能、薪资范围、让顶尖候选人脱颖而出的秘诀，以及真诚的匹配度评估。",
+        title: "看看它能带你去哪里。",
+        body: "Tenun 将你现有的技能映射到你能够成长的真实职位。薪资范围、日常工作内容，以及对你距离每个职位有多远的诚实评估。",
       },
       {
-        title: "获取你的专属路径",
-        body: "登录并上传你的 CV。我们会展示你的匹配程度、需要改进的地方，并将你与马来西亚顶尖公司的在招职位进行匹配。",
+        title: "缩小差距。",
+        body: "每个展望职位都附带具体的下一步。要学的课程、要做的项目、要请教的导师。然后我们将你与马来西亚企业的在招职位进行匹配。",
       },
     ],
   },
@@ -1678,7 +1686,7 @@ const zhCN: Translations = {
     titleLine1: "我们与你梦想",
     titleLine2: "加入的公司合作。",
     subtitle:
-      "每位候选人在被推荐前都经过 Tenun 审核，合作伙伴知道你不仅仅是又一份普通申请。",
+      "你瞄准的公司的真实职位。每位 Weaver 在被推荐前都经过 Tenun 审核，合作伙伴知道你不只是众多申请中的又一份。",
     browseAll: "浏览所有公司",
   },
   companyTicker: {
@@ -1702,23 +1710,23 @@ const zhCN: Translations = {
   },
   weaverFeatures: {
     eyebrow: "Weaver 专区。",
-    title: "为还不知道自己想做什么的人打造。",
+    title: "为已经开始行动的人打造。",
     subtitle:
-      "大多数平台默认你已经知道自己想要什么。Tenun 从你真正所在的起点开始。",
+      "你不需要想好职位名称。只需告诉我们你已经做过什么。Tenun 来做展望。",
     prev: "上一个特色",
     next: "下一个特色",
     cards: [
       {
-        title: "职业发现，而不仅仅是职位搜索",
-        body: "输入你喜欢的事。获取 6 个你可能从未听说过的真实职位名称，每个都附带薪资范围、日常工作内容和所需技能。",
+        title: "路径展望，而不是偏好猜测。",
+        body: "你不需要猜自己擅长什么。Tenun 读取你真实做过的事，并将其映射到合适的职位。然后你来决定往哪个方向发力。",
       },
       {
-        title: "成功秘诀，而不仅仅是职位描述",
-        body: "了解在每个你探索的职位中，被录用的候选人和落选者之间真正的差别。没有泛泛之谈。",
+        title: "差距，而不是愿望清单。",
+        body: "每个展望职位都精准显示你与它之间的距离。要补的技能、要做的项目、要学习的对象。",
       },
       {
-        title: "你的专属路径，而不仅仅是一份清单",
-        body: "上传你的 CV，查看需要改进什么、需要积累什么，以及如何为你真正想要的职位做好准备。",
+        title: "轨迹，而不是单一匹配。",
+        body: "我们不止步于「你适合这个职位」。我们展示它之后的两步，让你选择的是方向，而不只是一个职位空缺。",
       },
     ],
   },
@@ -1726,7 +1734,7 @@ const zhCN: Translations = {
     titleLine1: "别紧张。",
     titleLine2: "我们帮你。",
     paragraph:
-      "大多数人不知道从哪里开始——这完全没关系。我们和你一起打造 CV，在你成长的过程中不断优化它，确保当合适的机会来临时，你随时准备好。",
+      "你的 CV 是输入。我们确保它充分发挥作用。精准的关键词、真实的数字、ATS 友好的格式，以及一份能向任何扫描者传达准备就绪信号的个人档案。",
     viewSample: "查看示例",
     buildCv: "创建我的 CV",
     ctaNote: "准备好创建你的 CV 了吗？Weaver 免费使用，无需信用卡。",
@@ -1759,15 +1767,15 @@ const zhCN: Translations = {
     items: [
       {
         q: "Tenun 是什么？",
-        a: "Tenun 是一个职业发现平台，帮助学生和应届毕业生找到合适的职位——即使你不知道自己在找什么。你描述自己喜欢做的事，Tenun 会将它映射到真实的职位名称，并附带薪资范围、所需技能和达到目标的逐步路径。Tenun 由 TalentBank——马来西亚领先的人才配置平台驱动。",
+        a: "Tenun 是一个职业路径推演引擎。你向我们展示你已经积累的——你的 CV、技能、项目——我们将其映射到你能够切实成长的真实职位。对于每个职位，你会得到差距分析和缩小差距的下一步：一门课程、一个要做的项目，或值得一谈的导师。由 TalentBank——马来西亚领先的人才配置平台驱动。",
       },
       {
-        q: "Tenun 如何为我找到合适的工作？",
-        a: "你用日常语言输入你喜欢的事。Tenun 用 AI 将你的描述映射到 6 个真实职位名称，然后解释每个职位的实际内容——日常任务、薪资范围、所需技能，以及区分优秀候选人和顶尖候选人的\u201C成功秘诀\u201D。",
+        q: "Tenun 如何为我推演合适的职位？",
+        a: "我们读取你 CV 上的技能、项目和经验（或你直接告诉我们的内容），并将其与真实职位实际要求的技能进行匹配。输出结果是你当前轨迹指向的一组方向，按照你距离每个职位的远近排序。",
       },
       {
-        q: "使用 Tenun 需要知道职位名称吗？",
-        a: "不需要——这正是我们的初衷。大多数求职网站默认你已经知道要搜索什么。Tenun 从你喜欢做的事开始（\u201C我喜欢和数据打交道\u201D或\u201C我想设计东西\u201D），反向为你找到合适的职业路径。",
+        q: "Tenun 能预测我的未来职业吗？",
+        a: "不能。Tenun 向你展示你当前的技能能够切实带你去哪里，以及你需要做什么才能到达那里。努力还是你的，决定还是你的。我们只是让地图更清晰。",
       },
       {
         q: "哪些公司在通过 Tenun 招聘？",
@@ -1785,14 +1793,14 @@ const zhCN: Translations = {
   },
   footer: {
     tagline:
-      "为还不知道自己想做什么的学生和应届毕业生打造的职业发现平台。与 TalentBank——马来西亚领先的人才配置平台联合打造。",
+      "为马来西亚学生和应届毕业生打造的职业路径推演平台。与 TalentBank——马来西亚领先的人才配置平台联合打造。",
     forWeavers: "Weaver 专区",
     forEmployers: "雇主专区",
     weaverLinks: ["如何使用", "职业发现", "创建 CV", "常见问题"],
     employerLinks: ["为什么选 Tenun？", "发布职位", "候选人匹配", "招聘人员预览"],
     rights: "版权所有。",
     disclaimer:
-      "Tenun 帮助你探索可能性，不保证就业结果。",
+      "Tenun 基于你当前的技能推演可能性。结果取决于你付出的努力。",
   },
   employerHero: {
     badge: "雇主专区",

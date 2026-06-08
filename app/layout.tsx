@@ -15,32 +15,32 @@ const archivoBlack = Archivo_Black({
 });
 
 export const metadata: Metadata = {
-  title: "Tenun: Don't Know Your Job Title? We Got You.",
+  title: "Tenun: See Where Your Skills Can Take You.",
   description:
-    "Don't know what job to look for? Tell Tenun what you enjoy doing and we'll find 6 real career paths that match, with salary ranges, required skills, and a step-by-step plan.",
+    "Upload your CV and Tenun maps your existing skills to real roles you could grow into — salary ranges, honest skill gaps, and the next concrete step to close them. Built with TalentBank.",
   keywords: [
-    "career discovery Malaysia",
-    "what job should I get",
-    "job title finder",
+    "career projection Malaysia",
+    "what jobs match my skills",
     "career for fresh graduates Malaysia",
     "TalentBank careers",
+    "skill gap analysis Malaysia",
     "career pathways for students",
-    "skill gap analysis",
-    "find your career path",
+    "CV skills mapping",
     "jobs in Malaysia for fresh graduates",
     "career OS",
+    "next career move Malaysia",
   ],
   openGraph: {
-    title: "Tenun: Don't Know Your Job Title? We Got You.",
+    title: "Tenun: See Where Your Skills Can Take You.",
     description:
-      "Tell us what you enjoy doing. Tenun finds the real career paths that match and connects you to jobs at Malaysia's top companies.",
+      "Tenun maps your CV to real roles you could grow into, and shows the exact next move for each one. A course, a project, or a mentor worth talking to.",
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Tenun: Career Discovery for Students and Fresh Grads",
+    title: "Tenun: Career Projection for Students and Fresh Grads",
     description:
-      "Don't know your job title? Type what you enjoy and Tenun maps it to 6 real careers.",
+      "Upload your CV and see where your skills can take you. Tenun maps your trajectory to real roles and shows the next move for each one.",
   },
 };
 
@@ -50,7 +50,7 @@ const appJsonLd = {
   name: "Tenun",
   url: "https://tenun.career",
   description:
-    "Career discovery platform for students and fresh graduates in Malaysia. Describe what you enjoy doing, get 6 real job title matches, and connect to jobs at top Malaysian companies through TalentBank.",
+    "Career projection engine for students and fresh graduates in Malaysia. Upload your CV and we map your existing skills to real roles you could grow into, with salary ranges, an honest skills gap, and the next concrete step to close it. Built with TalentBank.",
   applicationCategory: "BusinessApplication",
   operatingSystem: "Web",
   offers: { "@type": "Offer", price: "0", priceCurrency: "MYR" },
@@ -65,7 +65,7 @@ const faqJsonLd = {
       name: "What is Tenun?",
       acceptedAnswer: {
         "@type": "Answer",
-        text: "Tenun is a career discovery platform that helps students and fresh graduates in Malaysia find the right job title — even when they don't know what they're looking for. Powered by TalentBank, you describe what you enjoy and Tenun maps it to real job titles with salary ranges, required skills, and a step-by-step path.",
+        text: "Tenun is a career projection engine. You show us what you've already built — your CV, your skills, your projects — and we map it to real roles you could realistically grow into. For each one, you get the gap and the next move to close it: a course, a project to ship, or a mentor worth a coffee. Powered by TalentBank, Malaysia's leading talent placement platform.",
       },
     },
     {
@@ -73,7 +73,7 @@ const faqJsonLd = {
       name: "Do I need to know my job title to use Tenun?",
       acceptedAnswer: {
         "@type": "Answer",
-        text: "No. Tenun starts from what you enjoy doing and works backwards to find the right career path for you. Type something like 'I like working with data' and Tenun will find the matching job titles.",
+        text: "No. Tenun starts from what you've already built and maps it to the roles your current skills can grow into. Upload your CV or describe your experience, and Tenun shows you the directions your trajectory points toward.",
       },
     },
     {

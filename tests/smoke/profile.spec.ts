@@ -6,7 +6,7 @@ import { test, expect } from "@playwright/test";
  */
 test.describe("Profile page", () => {
   test("onboarding wizard renders with inputs", async ({ page }) => {
-    await page.goto("/profile");
+    await page.goto("/profile?skipIntro=true");
 
     // Step indicator shows the first step (desktop label).
     await expect(page.getByText("Basic Info", { exact: false }).first()).toBeVisible();

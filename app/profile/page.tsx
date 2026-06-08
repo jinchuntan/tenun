@@ -14,6 +14,8 @@ import {
   Sparkles,
   Upload,
   Check,
+  CheckCircle2,
+  AlertCircle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -32,6 +34,7 @@ import {
   industrySuggestions,
 } from "@/lib/resume-parser";
 import { useLanguage } from "@/components/i18n/LanguageProvider";
+import { extractTextFromFile } from "@/lib/file-extractors";
 
 const STEPS = [
   { label: "Basic Info", icon: User },
@@ -230,7 +233,11 @@ function ProfilePageInner() {
   const { dict } = useLanguage();
   const uploadMode = searchParams.get("upload") === "true";
   const uploadSectionRef = useRef<HTMLDivElement | null>(null);
+  const introFileRef = useRef<HTMLInputElement>(null);
   const [highlightUpload, setHighlightUpload] = useState(false);
+  const [showIntro, setShowIntro] = useState(() => searchParams.get("skipIntro") !== "true");
+  const [introUploadState, setIntroUploadState] = useState<"idle" | "dragging" | "uploading" | "success" | "error">("idle");
+  const [introError, setIntroError] = useState("");
   const [loading, setLoading] = useState(false);
   const [targetJob, setTargetJob] = React.useState<string | null>(null);
   const [isLoggedIn, setIsLoggedIn] = React.useState(false);
@@ -303,7 +310,19 @@ function ProfilePageInner() {
   const update = <K extends keyof UserProfile>(key: K, value: UserProfile[K]) =>
     setProfile((prev) => ({ ...prev, [key]: value }));
 
-  const loadDemo = () => setProfile(demoProfile);
+  const loadDemo = () => { setProfile(demoProfile); setShowIntro(false); };
+
+  const handleIntroFile = async (file: File) => {
+    if (file.size > 5 * 1024 * 1024) { setIntroError("File is too large (max 5MB)."); setIntroUploadState("error"); return; }
+    setIntroUploadState("uploading"); setIntroError("");
+    try {
+      const text = await extractTextFromFile(file);
+      const res = await fetch("/api/parse-resume", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ text }) });
+      const data = res.ok ? await res.json() : { profile: null };
+      if (data.profile) applyParsedProfile({ ...data.profile, resumeText: text });
+      setIntroUploadState("success");
+    } catch (e) { setIntroError(e instanceof Error ? e.message : "Failed to process file."); setIntroUploadState("error"); }
+  };
 
   const applyParsedProfile = (parsed: Partial<UserProfile>) => {
     setProfile((prev) => {
@@ -344,6 +363,77 @@ function ProfilePageInner() {
     <div className="min-h-screen bg-beige-50">
       <Navbar />
       <div className="pt-24 pb-16 max-w-3xl mx-auto px-4 sm:px-6">
+        {showIntro ? (
+          <div className="text-center">
+            <h1 className="text-4xl sm:text-5xl font-bold text-navy-900 mb-4 max-w-2xl mx-auto leading-tight">
+              Start weaving your career now
+            </h1>
+            <p className="text-navy-500 mb-8 max-w-lg mx-auto text-base">
+              Drop your resume and Tenun will extract your information, map your experience, and match you with your target roles.
+            </p>
+            <button type="button" onClick={() => { loadDemo(); }} className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-beige-100 text-sm text-navy-600 hover:bg-beige-200 transition-colors mb-10">
+              <Sparkles className="w-4 h-4" /> Load demo profile (Aisha Lim)
+            </button>
+            <div className="bg-beige-100 rounded-2xl p-8 max-w-2xl mx-auto mb-6">
+              <p className="text-base font-semibold text-navy-900 mb-5">Upload your CV / Resume</p>
+              {isLoggedIn ? (
+                introUploadState === "success" ? (
+                  <div className="py-8">
+                    <CheckCircle2 className="w-12 h-12 text-green-500 mx-auto mb-3" />
+                    <p className="font-semibold text-navy-900 mb-1">Profile extracted!</p>
+                    <p className="text-sm text-navy-500 mb-6">Your details have been pre-filled. Review and edit them in the next step.</p>
+                    <button type="button" onClick={() => setShowIntro(false)} className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl bg-navy-800 text-white text-sm font-medium hover:bg-navy-900 transition-colors">
+                      Continue <ArrowRight className="w-4 h-4" />
+                    </button>
+                  </div>
+                ) : introUploadState === "error" ? (
+                  <div className="py-8">
+                    <AlertCircle className="w-8 h-8 text-red-500 mx-auto mb-2" />
+                    <p className="text-sm text-red-600 mb-4">{introError}</p>
+                    <button type="button" onClick={() => { setIntroUploadState("idle"); setIntroError(""); }} className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-navy-200 text-sm text-navy-700 hover:border-navy-400 transition-colors">Try again</button>
+                  </div>
+                ) : (
+                  <div
+                    onDrop={(e) => { e.preventDefault(); const f = e.dataTransfer.files[0]; if (f) handleIntroFile(f); }}
+                    onDragOver={(e) => { e.preventDefault(); setIntroUploadState("dragging"); }}
+                    onDragLeave={() => setIntroUploadState((s) => s === "dragging" ? "idle" : s)}
+                    onClick={() => introFileRef.current?.click()}
+                    className={`border-2 border-dashed rounded-xl p-10 cursor-pointer transition-all ${introUploadState === "dragging" ? "border-navy-400 bg-white/80" : "border-navy-200 bg-white hover:border-navy-400"}`}
+                  >
+                    {introUploadState === "uploading" ? (
+                      <div className="flex items-center justify-center gap-2 py-4"><Loader2 className="w-5 h-5 animate-spin text-navy-500" /><span className="text-sm text-navy-500">Extracting profile...</span></div>
+                    ) : (
+                      <>
+                        <div className="flex items-center justify-center mb-4">
+                          <div className="inline-flex items-center gap-2 px-5 py-2.5 bg-navy-800 text-white rounded-full text-sm font-medium"><Upload className="w-4 h-4" /> Upload</div>
+                        </div>
+                        <p className="text-sm text-navy-700 font-medium mb-1">Choose a file or drag &amp; drop it here</p>
+                        <p className="text-xs text-navy-400">PDF, DOCX or TXT (max 5MB file size)</p>
+                      </>
+                    )}
+                    <input ref={introFileRef} type="file" accept=".pdf,.docx,.txt" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) handleIntroFile(f); e.target.value = ""; }} />
+                  </div>
+                )
+              ) : (
+                <div className="border-2 border-dashed border-navy-200 rounded-xl p-10 text-center bg-white">
+                  <div className="w-14 h-14 bg-navy-50 rounded-full flex items-center justify-center mx-auto mb-4"><Upload className="w-6 h-6 text-navy-400" /></div>
+                  <p className="text-sm font-semibold text-navy-800 mb-1">{dict.profile.uploadCv}</p>
+                  <p className="text-xs text-navy-400 mb-5 max-w-xs mx-auto">{dict.profile.signInToUpload}</p>
+                  <button type="button" onClick={handleSignInForUpload} disabled={signingIn} className="inline-flex items-center gap-2 px-5 py-2.5 bg-navy-800 text-white rounded-xl text-sm font-medium hover:bg-navy-900 disabled:opacity-60 transition-colors">
+                    {signingIn ? (<><Loader2 className="w-4 h-4 animate-spin" /> {dict.profile.signingIn}</>) : (
+                      <><svg className="w-4 h-4" viewBox="0 0 24 24" aria-hidden="true"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>{dict.profile.signInWithGoogle}</>
+                    )}
+                  </button>
+                  <p className="text-xs text-navy-400 mt-4">{dict.profile.manualFallback}</p>
+                </div>
+              )}
+            </div>
+            <button type="button" onClick={() => setShowIntro(false)} className="text-sm text-navy-400 underline hover:text-navy-600 transition-colors">
+              Don&apos;t have a CV / Resume ready?
+            </button>
+          </div>
+        ) : (
+        <>
         <SubNavBar
           className="mb-8"
           breadcrumbs={[
@@ -421,47 +511,6 @@ function ProfilePageInner() {
                     </div>
                   </div>
 
-                  <div
-                    id="upload-cv-portfolio"
-                    ref={uploadSectionRef}
-                    className={[
-                      "rounded-2xl transition-shadow duration-500 scroll-mt-24",
-                      highlightUpload ? "ring-2 ring-gold-500 ring-offset-2 shadow-lg" : "",
-                    ].join(" ")}
-                  >
-                    {isLoggedIn ? (
-                      <CVUpload onProfileExtracted={applyParsedProfile} />
-                    ) : (
-                      <div className="rounded-2xl border-2 border-dashed border-navy-200 bg-white p-5 sm:p-8 text-center">
-                        <div className="w-12 h-12 bg-navy-50 rounded-xl flex items-center justify-center mx-auto mb-3">
-                          <Upload className="w-5 h-5 text-navy-400" />
-                        </div>
-                        <p className="text-sm font-semibold text-navy-800 mb-1">{dict.profile.uploadCv}</p>
-                        <p className="text-xs text-navy-400 mb-5 max-w-xs mx-auto">{dict.profile.signInToUpload}</p>
-                        <button
-                          type="button"
-                          onClick={handleSignInForUpload}
-                          disabled={signingIn}
-                          className="inline-flex items-center gap-2 px-5 py-2.5 bg-navy-800 text-white rounded-xl text-sm font-medium hover:bg-navy-900 disabled:opacity-60 transition-colors"
-                        >
-                          {signingIn ? (
-                            <><Loader2 className="w-4 h-4 animate-spin" /> {dict.profile.signingIn}</>
-                          ) : (
-                            <>
-                              <svg className="w-4 h-4" viewBox="0 0 24 24" aria-hidden="true">
-                                <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
-                                <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
-                                <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
-                                <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
-                              </svg>
-                              {dict.profile.signInWithGoogle}
-                            </>
-                          )}
-                        </button>
-                        <p className="text-xs text-navy-400 mt-4">{dict.profile.manualFallback}</p>
-                      </div>
-                    )}
-                  </div>
 
                   <button
                     type="button"
@@ -665,6 +714,8 @@ function ProfilePageInner() {
             )}
           </div>
         </form>
+        </>
+        )}
       </div>
       <Footer />
     </div>
