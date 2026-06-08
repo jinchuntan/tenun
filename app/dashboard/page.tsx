@@ -32,7 +32,8 @@ import { personalizeAtlas } from "@/lib/atlas-engine";
 import { personalizeMentors } from "@/lib/mentor-engine";
 import { personalizeCourses } from "@/lib/course-engine";
 import { careerHubs } from "@/lib/atlas-data";
-import { demoProfile } from "@/lib/demo-data";
+import { getDemoProfile, resolveDemoId } from "@/lib/demo-profiles";
+import { DemoPersonaBar } from "@/components/dashboard/DemoPersonaBar";
 import type {
   UserProfile, CareerWeaveResult,
   PersonalizedHub, PersonalizedMentor, PersonalizedCourseRecommendation,
@@ -74,7 +75,9 @@ function DashboardContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const dispatch = useAppDispatch();
-  const isDemo = searchParams.get("demo") === "true";
+  // `demo` may be "true" (legacy) or a persona id (e.g. "technologist").
+  const demoParam = searchParams.get("demo");
+  const isDemo = demoParam !== null;
 
   const [loading, setLoading] = useState(true);
   const [profile, setProfile] = useState<UserProfile | null>(null);
@@ -85,16 +88,20 @@ function DashboardContent() {
 
   useEffect(() => {
     let p: UserProfile;
+    let storedTarget: string | undefined;
     if (isDemo) {
-      p = demoProfile;
+      // Deterministic persona — no login / Supabase / AI keys required.
+      p = getDemoProfile(demoParam);
+      storedTarget = p.targetJob;
     } else {
       const stored = sessionStorage.getItem("tenun-profile");
       if (!stored) { router.push("/profile"); return; }
       p = JSON.parse(stored);
+      storedTarget = sessionStorage.getItem("tenun-target-job") || undefined;
     }
 
+    setLoading(true);
     setProfile(p);
-    const storedTarget = sessionStorage.getItem("tenun-target-job") || undefined;
 
     const timer = setTimeout(() => {
       const weaveResult = generateCareerWeave(p, storedTarget);
@@ -104,10 +111,10 @@ function DashboardContent() {
       setCourses(personalizeCourses(p, weaveResult.skillGaps, weaveResult.pathways, weaveResult.recommendedPathway));
       dispatch(setActivePathwayId(weaveResult.recommendedPathway));
       setLoading(false);
-    }, 1200);
+    }, isDemo ? 300 : 1200);
 
     return () => clearTimeout(timer);
-  }, [isDemo, router, dispatch]);
+  }, [isDemo, demoParam, router, dispatch]);
 
   if (loading) return <LoadingScreen />;
   if (!result || !profile) return null;
@@ -205,14 +212,25 @@ function DashboardContent() {
         targetJob={result.targetJob}
         tabs={tabs}
       />
+      {isDemo && <DemoPersonaBar activeId={resolveDemoId(demoParam)} />}
     </DashboardPersonalizationProvider>
   );
 }
 
 // ---------- Page ----------
 
-export default function DashboardPage() {
+/**
+ * Reads the `demo` param: in demo mode the dashboard renders directly (no login
+ * required); otherwise it stays behind the AuthGate. Lives inside <Suspense>
+ * because it uses useSearchParams.
+ */
+function DashboardRoute() {
   const { dict } = useLanguage();
+  const searchParams = useSearchParams();
+  const isDemo = searchParams.get("demo") !== null;
+
+  if (isDemo) return <DashboardContent />;
+
   return (
     <AuthGate
       next="/dashboard"
@@ -220,13 +238,19 @@ export default function DashboardPage() {
       subtitle={dict.dashboardPage.authSubtitle}
       perks={dict.dashboardPage.authPerks}
     >
-      <Suspense fallback={
-        <div className="min-h-screen bg-[#f5f0e8] flex items-center justify-center">
-          <Loader2 size={24} className="animate-spin text-[#0a1628]" />
-        </div>
-      }>
-        <DashboardContent />
-      </Suspense>
+      <DashboardContent />
     </AuthGate>
+  );
+}
+
+export default function DashboardPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-[#f5f0e8] flex items-center justify-center">
+        <Loader2 size={24} className="animate-spin text-[#0a1628]" />
+      </div>
+    }>
+      <DashboardRoute />
+    </Suspense>
   );
 }

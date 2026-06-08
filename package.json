@@ -7,7 +7,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "test:e2e": "playwright test",
+    "test:smoke": "playwright test tests/smoke"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",
@@ -44,6 +46,7 @@
     "tailwindcss-animate": "^1.0.7"
   },
   "devDependencies": {
+    "@playwright/test": "^1.60.0",
     "@types/node": "^22.10.2",
     "@types/pdf-parse": "^1.1.5",
     "@types/react": "^18.3.18",

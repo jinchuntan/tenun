@@ -352,6 +352,55 @@ If you use Supabase auth, add `http://localhost:3000/auth/callback` and your pro
 | `npm run build` | Production build (also type‑checks the whole project) |
 | `npm run start` | Serve the production build |
 | `npm run lint` | Run ESLint |
+| `npm run test:smoke` | Run the Playwright smoke tests (`tests/smoke`) |
+| `npm run test:e2e` | Run all Playwright tests |
+
+---
+
+## Testing & demo personas
+
+### Demo personas
+
+Tenun ships a small set of **deterministic demo personas** so the dashboard can be explored (and tested) without onboarding, login, or any AI/Supabase setup. Open any of them at:
+
+```
+/dashboard?demo=<persona>
+```
+
+| URL | Persona | Good for testing |
+|---|---|---|
+| `/dashboard?demo=true` | Generalist (default, legacy) | Summary, Career Discovery, Paths |
+| `/dashboard?demo=generalist` | Generalist | Broad skills, unclear target role |
+| `/dashboard?demo=technologist` | Technologist | Skills, Paths, CV, Mock Interview |
+| `/dashboard?demo=creative` | Creative Designer | CV / Portfolio, creative paths |
+| `/dashboard?demo=builder` | Builder / Startup | Startup path, Outreach, Opportunities |
+| `/dashboard?demo=climate` | Purpose‑driven / Climate | Atlas, Mentors, Opportunities |
+| `/dashboard?demo=university` | University Student | Universities tab, internships |
+| `/dashboard?demo=minimal` | Low‑information user | Fallbacks / empty states |
+
+When a `demo` param is present the dashboard renders directly (no AuthGate), uses the deterministic career engine, and shows a small **demo persona switcher** (bottom‑left) for hopping between personas. Personas live in [`lib/demo-profiles.ts`](lib/demo-profiles.ts) (`demoProfiles`, `demoProfileOptions`, `getDemoProfile()`); the original `demoProfile` is preserved as the generalist for backward compatibility.
+
+These personas are useful for QA and live demos — every section is exercisable, including the minimal user that proves the dashboard doesn't crash on sparse profiles.
+
+### Smoke tests (Playwright)
+
+Lightweight end‑to‑end smoke tests live in [`tests/smoke/`](tests/smoke/). They confirm the app loads and core flows don't crash — they **do not** require an OpenRouter/Groq key, Supabase, Google login, or any real AI response (dashboard tests use demo personas and assert stable UI labels, never AI‑generated text).
+
+First time only, install the browser binary:
+
+```bash
+npx playwright install chromium
+```
+
+Then:
+
+```bash
+npm run build      # production build + type-check
+npm run lint       # ESLint
+npm run test:smoke # Playwright smoke tests
+```
+
+The Playwright config ([`playwright.config.ts`](playwright.config.ts)) boots the app with `npm run dev` on `http://127.0.0.1:3000` and reuses an already‑running server. Coverage: landing page, every dashboard tab (incl. **Universities**), all demo personas, a 390‑px mobile run that checks for horizontal overflow, the employer landing + candidate dashboard, the profile wizard, and the `/dashboard/cv/new` builder entry.
 
 ---
 
