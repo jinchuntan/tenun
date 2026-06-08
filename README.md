@@ -118,6 +118,7 @@ Copy `.env.example` → `.env.local` and fill in what you need. `.env.local` is 
 | `OPENROUTER_MODEL_SITE_GUIDE` | Model for Tenun Guide | same |
 | `OPENROUTER_MODEL_CV_GENERATE` | Model for the CV Generator | same |
 | `OPENROUTER_MODEL_CV_ASSISTANT` | Model for the in-editor CV Assistant | same |
+| `OPENROUTER_MODEL_PERSONALIZE` | Model for the dashboard personalization layer (summary, pathway, skill‑gaps, outreach) | same |
 | `OPENROUTER_BASE_URL` | OpenRouter API base URL | `https://openrouter.ai/api/v1` |
 | `GROQ_MODEL` | Groq fallback model | `llama-3.3-70b-versatile` |
 | `OPENROUTER_SITE_URL` | OpenRouter attribution header | `http://localhost:3000` (set to your domain) |
@@ -231,6 +232,31 @@ Each route passes a `routeName` so the helper can pick the right per‑route mod
 
 ### Deterministic engines (`lib/*-engine.ts`)
 The dashboard's analysis (career threads, pathways, skill gaps, atlas hubs, mentor/course matches, outreach drafts) is produced by **deterministic scoring engines** over seed data — fast, free, and reproducible. They use careful, non‑predictive language ("appears suitable", "based on your current profile").
+
+### AI vs deterministic boundary (the personalization layer)
+
+> **Tenun uses AI for personalized explanations, career search, CV assistance, mock interviews, and communication drafting. Factual marketplace records such as opportunities, mentors, courses, and atlas locations remain structured data to reduce hallucination risk.**
+
+The product principle is simple: **structured data for truth, AI for explanation, personalization, prioritization and writing.** AI never invents factual records.
+
+**AI‑generated (explanation / drafting only):**
+- Career search & job detail (`/api/job-intent`, `/api/job-detail`)
+- Resume parsing & CV generation/assistant (`/api/parse-resume`, `/api/generate-cv`, `/api/cv-assistant`)
+- Mock interview (`/api/mock-interview`)
+- Tenun Guide — grounded strictly in `lib/site-guide-knowledge.ts` (`/api/site-guide`)
+- **Dashboard personalization layer (new):**
+  - `/api/personalize-dashboard-summary` — Summary tab narrative, why‑this‑archetype, strengths/risks, recommended‑path explanation, 30‑day plan, confidence note.
+  - `/api/personalize-pathway` — on‑demand "why it fits / what's hard / test in 30 days" for the **expanded** path only (not all five on load).
+  - `/api/personalize-skill-gaps` — one short explanation per skill gap (why it matters / what to build / urgency). **Course names and links stay curated** in `lib/course-data.ts`.
+  - `/api/personalize-outreach` — drafts/improves outreach messages, grounded in profile + path + role + skill gaps + resume text. Never fabricates achievements; phrases missing experience honestly.
+
+  All four are thin wrappers over `generateJSONWithFallback()` and append the shared **grounding rules** + locale directive from `lib/ai-prompt.ts`. Client fetchers, response types, and the sessionStorage cache live in `lib/personalization.ts`; the `DashboardPersonalizationProvider` (`components/dashboard/personalization-context.tsx`) fetches the summary once and lazily fetches pathway/skill‑gap explanations.
+
+**Intentionally deterministic / seeded (the source of truth — never AI‑invented):**
+- Career archetypes, the five pathway templates, required skills, roles, risks, timelines, trade‑offs (`lib/career-engine.ts`)
+- Opportunity listings, mentor profiles, atlas/career‑hub records, course/resource catalog, employer candidate data, salary ranges, application links, company/school names (the `lib/*-data.ts` seed files)
+
+**Fallback behavior.** Every AI personalization call returns `null` on failure (missing keys, rate‑limit, timeout, bad JSON). When that happens the dashboard renders the **deterministic** archetype, growth areas, pathway data, and curated courses exactly as before — the AI layer simply doesn't appear. The page never blocks on or crashes from an AI failure, and the summary is cached in `sessionStorage` (keyed by a profile/target‑job/locale fingerprint) so switching tabs doesn't re‑call the model.
 
 ### Rate limiting (`lib/rate-limit.ts`)
 Per‑route sliding‑window limits keyed by client IP (e.g. `site-guide`: 20/min, `parse-resume`: 5/min). Backed by Upstash Redis; **automatically disabled** when Upstash env vars are absent (dev‑friendly).

@@ -14,6 +14,8 @@ import {
   RefreshCw,
   ChevronDown,
   Send,
+  Sparkles,
+  Loader2,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -27,6 +29,9 @@ import {
   OutreachDraft,
 } from "@/lib/types";
 import { generateOutreachDraft, OutreachContext } from "@/lib/outreach-engine";
+import { useLanguage } from "@/components/i18n/LanguageProvider";
+import { useDashboardPersonalization } from "@/components/dashboard/personalization-context";
+import { fetchOutreachDraft } from "@/lib/personalization";
 
 const messageTypes: {
   type: OutreachMessageType;
@@ -99,8 +104,13 @@ export function OutreachStudio({
   const [targetCompany, setTargetCompany] = useState("");
   const [draft, setDraft] = useState<OutreachDraft | null>(null);
   const [copied, setCopied] = useState(false);
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiError, setAiError] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const hasHandledMentor = useRef(false);
+
+  const { locale } = useLanguage();
+  const { aiAvailable } = useDashboardPersonalization();
 
   // Handle preselected mentor from Mentor Bridge
   useEffect(() => {
@@ -127,19 +137,59 @@ export function OutreachStudio({
     }
   }, [preselectedMentor]);
 
+  const buildContext = useCallback((): OutreachContext => ({
+    profile,
+    messageType: selectedType,
+    targetMentor: mentors.find((m) => m.id === selectedMentorId),
+    targetPathway: pathways.find((p) => p.id === selectedPathwayId),
+    targetHub: hubs.find((h) => h.id === selectedHubId),
+    targetRole: targetRole || undefined,
+    targetCompany: targetCompany || undefined,
+  }), [profile, selectedType, selectedMentorId, selectedPathwayId, selectedHubId, targetRole, targetCompany, mentors, pathways, hubs]);
+
+  // Deterministic template draft (always available, no AI required).
   const handleGenerate = useCallback(() => {
-    const context: OutreachContext = {
+    setDraft(generateOutreachDraft(buildContext()));
+    setAiError(false);
+    setCopied(false);
+  }, [buildContext]);
+
+  // AI-assisted draft, grounded in profile/path/role/skill gaps/resume. Falls
+  // back to the deterministic template if the AI call fails or is unavailable.
+  const handleAIGenerate = useCallback(async () => {
+    setAiLoading(true);
+    setAiError(false);
+    setCopied(false);
+
+    const base = generateOutreachDraft(buildContext());
+    const mentor = mentors.find((m) => m.id === selectedMentorId);
+    const pathway = pathways.find((p) => p.id === selectedPathwayId);
+    const recipient = mentor
+      ? `${mentor.name}, ${mentor.role} at ${mentor.company}`
+      : targetCompany || base.recipientContext;
+
+    const ai = await fetchOutreachDraft({
       profile,
       messageType: selectedType,
-      targetMentor: mentors.find((m) => m.id === selectedMentorId),
-      targetPathway: pathways.find((p) => p.id === selectedPathwayId),
-      targetHub: hubs.find((h) => h.id === selectedHubId),
+      pathwayName: pathway?.name,
       targetRole: targetRole || undefined,
       targetCompany: targetCompany || undefined,
-    };
-    setDraft(generateOutreachDraft(context));
-    setCopied(false);
-  }, [profile, selectedType, selectedMentorId, selectedPathwayId, selectedHubId, targetRole, targetCompany, mentors, pathways, hubs]);
+      recipientContext: recipient,
+      skillGaps: skillGaps.map((g) => g.skill),
+      resumeText: profile.resumeText,
+      baseDraft: { subject: base.subject, body: base.body },
+      locale,
+    });
+
+    if (ai) {
+      setDraft({ ...base, subject: ai.subject ?? base.subject, body: ai.body });
+    } else {
+      // Graceful fallback — still give the user an editable deterministic draft.
+      setAiError(true);
+      setDraft(base);
+    }
+    setAiLoading(false);
+  }, [buildContext, profile, selectedType, selectedMentorId, selectedPathwayId, targetRole, targetCompany, skillGaps, mentors, pathways, locale]);
 
   const handleCopy = async () => {
     if (!draft) return;
@@ -303,15 +353,38 @@ export function OutreachStudio({
               </div>
             </div>
 
-            {/* Generate button */}
-            <Button
-              onClick={handleGenerate}
-              className="w-full gap-2"
-              size="sm"
-            >
-              <RefreshCw className="w-3.5 h-3.5" />
-              Generate Draft
-            </Button>
+            {/* Generate buttons — AI-first when available, template always works */}
+            <div className="space-y-2">
+              {aiAvailable && (
+                <Button
+                  onClick={handleAIGenerate}
+                  disabled={aiLoading}
+                  className="w-full gap-2"
+                  size="sm"
+                >
+                  {aiLoading ? (
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  ) : (
+                    <Sparkles className="w-3.5 h-3.5" />
+                  )}
+                  {aiLoading ? "Writing…" : "Write with AI"}
+                </Button>
+              )}
+              <Button
+                onClick={handleGenerate}
+                variant={aiAvailable ? "outline" : "default"}
+                className="w-full gap-2"
+                size="sm"
+              >
+                <RefreshCw className="w-3.5 h-3.5" />
+                {aiAvailable ? "Use a template" : "Generate Draft"}
+              </Button>
+              {aiError && (
+                <p className="text-[10px] text-amber-600">
+                  AI is busy right now — here&apos;s a template draft you can edit.
+                </p>
+              )}
+            </div>
           </CardContent>
         </Card>
 
@@ -337,7 +410,23 @@ export function OutreachStudio({
                         To: {draft.recipientContext}
                       </p>
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      {aiAvailable && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={handleAIGenerate}
+                          disabled={aiLoading}
+                          className="gap-1 text-xs h-8"
+                        >
+                          {aiLoading ? (
+                            <Loader2 className="w-3 h-3 animate-spin" />
+                          ) : (
+                            <Sparkles className="w-3 h-3" />
+                          )}
+                          {aiLoading ? "Writing…" : "Improve with AI"}
+                        </Button>
+                      )}
                       <Button
                         variant="outline"
                         size="sm"

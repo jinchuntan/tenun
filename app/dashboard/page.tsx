@@ -11,6 +11,7 @@ import {
   WeaverDashboardShell,
   type WeaverTab,
 } from "@/components/dashboard/weaver/WeaverDashboardShell";
+import { DashboardPersonalizationProvider } from "@/components/dashboard/personalization-context";
 import { SummaryPane } from "@/components/dashboard/panes/SummaryPane";
 import { ProfilePane } from "@/components/dashboard/panes/ProfilePane";
 import { PathsPane } from "@/components/dashboard/panes/PathsPane";
@@ -191,12 +192,14 @@ function DashboardContent() {
   ];
 
   return (
-    <WeaverDashboardShell
-      userName={profile.name}
-      currentRole={profile.currentRole}
-      targetJob={result.targetJob}
-      tabs={tabs}
-    />
+    <DashboardPersonalizationProvider profile={profile} result={result}>
+      <WeaverDashboardShell
+        userName={profile.name}
+        currentRole={profile.currentRole}
+        targetJob={result.targetJob}
+        tabs={tabs}
+      />
+    </DashboardPersonalizationProvider>
   );
 }
 

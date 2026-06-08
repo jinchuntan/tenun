@@ -1,10 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAppSelector } from "@/store/hooks";
 import { SkillGap, PathwayCard } from "@/lib/types";
-import { ExternalLink, ChevronDown } from "lucide-react";
+import { ExternalLink, ChevronDown, Sparkles } from "lucide-react";
+import { useDashboardPersonalization } from "@/components/dashboard/personalization-context";
+import type { SkillGapExplanation } from "@/lib/personalization";
 
 /** Each priority maps to a learning-horizon column. */
 const COLUMNS: { key: SkillGap["priority"]; label: string }[] = [
@@ -21,18 +23,27 @@ interface Props {
 
 export function SkillsPane({ skillGaps, pathways, recommendedPathwayId }: Props) {
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
+  const { aiAvailable, skillGapByKey, ensureSkillGaps } = useDashboardPersonalization();
 
   const activePathwayId = useAppSelector((s) => s.dashboard.activePathwayId) ?? recommendedPathwayId;
   const activePathway = pathways.find((p) => p.id === activePathwayId);
 
-  const filteredGaps = activePathway
-    ? skillGaps.filter((g) =>
-        activePathway.requiredSkills.some((rs) => rs.toLowerCase() === g.skill.toLowerCase())
-      )
-    : skillGaps;
+  const displayGaps = useMemo(() => {
+    const filtered = activePathway
+      ? skillGaps.filter((g) =>
+          activePathway.requiredSkills.some((rs) => rs.toLowerCase() === g.skill.toLowerCase())
+        )
+      : skillGaps;
+    // Gracefully fall back to all gaps when the active path filters everything out.
+    return filtered.length > 0 ? filtered : skillGaps;
+  }, [skillGaps, activePathway]);
 
-  // Gracefully fall back to all gaps when the active path filters everything out.
-  const displayGaps = filteredGaps.length > 0 ? filteredGaps : skillGaps;
+  const pathKey = activePathway?.name ?? "All paths";
+
+  // Batch-fetch one explanation set per pathway (deduped inside the context).
+  useEffect(() => {
+    if (aiAvailable) ensureSkillGaps(pathKey, displayGaps);
+  }, [aiAvailable, pathKey, displayGaps, ensureSkillGaps]);
 
   function toggle(skill: string) {
     setExpanded((prev) => {
@@ -81,6 +92,7 @@ export function SkillsPane({ skillGaps, pathways, recommendedPathwayId }: Props)
                       gap={g}
                       expanded={expanded.has(g.skill)}
                       onToggle={() => toggle(g.skill)}
+                      explanation={skillGapByKey[g.skill.toLowerCase()]}
                     />
                   ))
                 )}
@@ -106,10 +118,12 @@ function SkillCard({
   gap,
   expanded,
   onToggle,
+  explanation,
 }: {
   gap: SkillGap;
   expanded: boolean;
   onToggle: () => void;
+  explanation?: SkillGapExplanation;
 }) {
   return (
     <div className="rounded-2xl bg-[#f3f1ec] overflow-hidden">
@@ -139,6 +153,32 @@ function SkillCard({
             transition={{ duration: 0.2 }}
             className="overflow-hidden"
           >
+            {/* AI explanation layer — grounded, optional. Courses below stay curated. */}
+            {explanation && (explanation.whyItMatters || explanation.whatToBuild) && (
+              <div className="mx-3 mt-1 mb-2 rounded-xl bg-[#0a1628] text-white p-3">
+                <div className="flex items-center gap-1.5 mb-1.5">
+                  <Sparkles size={12} className="text-[#d4a017]" />
+                  <span className="text-[10px] font-semibold uppercase tracking-wider text-[#d4a017]">
+                    Why this matters
+                  </span>
+                  {explanation.urgency && (
+                    <span className="ml-auto text-[10px] px-2 py-0.5 rounded-full bg-white/15 text-white/80">
+                      {explanation.urgency}
+                    </span>
+                  )}
+                </div>
+                {explanation.whyItMatters && (
+                  <p className="text-xs leading-snug text-white/90">{explanation.whyItMatters}</p>
+                )}
+                {explanation.whatToBuild && (
+                  <p className="text-xs leading-snug text-white/70 mt-1.5">
+                    <span className="font-semibold text-white/90">Prove it: </span>
+                    {explanation.whatToBuild}
+                  </p>
+                )}
+              </div>
+            )}
+
             <div className="px-3 pb-3 space-y-2">
               {gap.courses.length === 0 ? (
                 <p className="text-xs text-[#0a1628]/40 px-1 py-2">

@@ -1,14 +1,15 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowRight, Clock, ChevronDown } from "lucide-react";
+import { ArrowRight, Clock, ChevronDown, Sparkles, Loader2 } from "lucide-react";
 
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { setActivePathwayId } from "@/store/slices/dashboardSlice";
 import { PathwayCard } from "@/lib/types";
 import { getPathwayImage } from "@/lib/dashboard-images";
+import { useDashboardPersonalization } from "@/components/dashboard/personalization-context";
 
 interface Props {
   pathways: PathwayCard[];
@@ -66,6 +67,13 @@ function PathRow({
   onToggle: () => void;
 }) {
   const image = getPathwayImage(p);
+  const { aiAvailable, ensurePathway } = useDashboardPersonalization();
+
+  // Lazily fetch the AI explanation only when this path is expanded — avoids
+  // spamming the API for all five paths on load.
+  useEffect(() => {
+    if (expanded && aiAvailable) ensurePathway(p);
+  }, [expanded, aiAvailable, p, ensurePathway]);
 
   return (
     <div className="rounded-2xl bg-[#dedbd3] overflow-hidden">
@@ -135,6 +143,9 @@ function PathDetail({ pathway: p }: { pathway: PathwayCard }) {
         <Clock size={13} />
         {p.timeline}
       </div>
+
+      {/* AI personalization layer (grounded; optional) */}
+      <PathAIExplanation pathwayId={p.id} />
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Role progression */}
@@ -216,6 +227,54 @@ function PathDetail({ pathway: p }: { pathway: PathwayCard }) {
             ))}
           </ul>
         </div>
+      </div>
+    </div>
+  );
+}
+
+/** Grounded AI explanation for the active path. Renders nothing on fallback. */
+function PathAIExplanation({ pathwayId }: { pathwayId: string }) {
+  const { aiAvailable, getPathway } = useDashboardPersonalization();
+  const entry = getPathway(pathwayId);
+
+  if (!aiAvailable) return null;
+  if (!entry || entry.status === "error") return null;
+
+  if (entry.status === "loading") {
+    return (
+      <div className="rounded-2xl bg-[#0a1628] text-white/80 p-4 flex items-center gap-2.5">
+        <Loader2 size={15} className="animate-spin text-[#d4a017]" />
+        <span className="text-xs">Personalizing this path for you…</span>
+      </div>
+    );
+  }
+
+  const d = entry.data;
+  if (!d || (!d.whyFits && !d.whatsDifficult && !d.howToTest30Days)) return null;
+
+  const blocks = [
+    { label: "Why this could fit you", text: d.whyFits },
+    { label: "What's hard right now", text: d.whatsDifficult },
+    { label: "Test it in 30 days", text: d.howToTest30Days },
+  ].filter((b) => b.text);
+
+  return (
+    <div className="rounded-2xl bg-[#0a1628] text-white p-5">
+      <div className="flex items-center gap-2 mb-3">
+        <Sparkles size={15} className="text-[#d4a017]" />
+        <span className="text-xs font-semibold uppercase tracking-wider text-[#d4a017]">
+          Personalized for you
+        </span>
+      </div>
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        {blocks.map((b) => (
+          <div key={b.label}>
+            <p className="text-[11px] font-bold uppercase tracking-wider text-white/50 mb-1.5">
+              {b.label}
+            </p>
+            <p className="text-sm leading-snug text-white/90">{b.text}</p>
+          </div>
+        ))}
       </div>
     </div>
   );

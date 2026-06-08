@@ -21,7 +21,12 @@ export type RouteName =
   | "generate-cv"
   | "cv-assistant"
   | "improve-cv-block"
-  | "mock-interview";
+  | "mock-interview"
+  // Dashboard personalization (explanation/ranking/drafting only — never facts).
+  | "personalize-dashboard-summary"
+  | "personalize-pathway"
+  | "personalize-skill-gaps"
+  | "personalize-outreach";
 
 export type GenerateJSONOptions = {
   routeName: RouteName;
@@ -83,6 +88,11 @@ function getOpenRouterModel(routeName: RouteName): string {
       return process.env.OPENROUTER_MODEL_CV_ASSISTANT ?? DEFAULT_OPENROUTER_MODEL;
     case "mock-interview":
       return process.env.OPENROUTER_MODEL_MOCK_INTERVIEW ?? DEFAULT_OPENROUTER_MODEL;
+    case "personalize-dashboard-summary":
+    case "personalize-pathway":
+    case "personalize-skill-gaps":
+    case "personalize-outreach":
+      return process.env.OPENROUTER_MODEL_PERSONALIZE ?? DEFAULT_OPENROUTER_MODEL;
     case "parse-resume":
     default:
       return process.env.OPENROUTER_MODEL_RESUME_PARSE ?? DEFAULT_OPENROUTER_MODEL;
