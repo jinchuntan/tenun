@@ -46,7 +46,7 @@ export function WeaverTabBar({ tabs, activeId, onSelect }: Props) {
       ref={scrollRef}
       role="tablist"
       aria-label="Dashboard sections"
-      className="relative z-10 -mb-3 flex items-end gap-1 overflow-x-auto pb-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+      className="relative z-10 -mb-3 flex items-end gap-1 overflow-x-auto pl-4 sm:pl-5 pr-4 sm:pr-5 pb-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
     >
       {tabs.map((tab) => {
         const isActive = tab.id === activeId;
