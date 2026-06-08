@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getAuthenticatedUser } from "@/lib/api-auth";
 import { checkRateLimit } from "@/lib/rate-limit";
+import { LIMITS } from "@/lib/api-validation";
 
 const MAX_FILE_SIZE_BYTES = 5 * 1024 * 1024; // 5 MB
 const ALLOWED_MIME_TYPES = ["application/pdf"];
@@ -28,8 +29,15 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "File exceeds the 5 MB limit." }, { status: 413 });
     }
 
-    const pdfParse = require("pdf-parse") as (buf: Buffer) => Promise<{ text: string }>;
     const buffer = Buffer.from(await file.arrayBuffer());
+
+    // Magic-byte check: a genuine PDF starts with "%PDF". This catches files
+    // that are renamed/mislabelled as PDF regardless of the reported MIME type.
+    if (buffer.length < 4 || buffer.toString("latin1", 0, 4) !== "%PDF") {
+      return NextResponse.json({ error: "This file does not look like a valid PDF." }, { status: 415 });
+    }
+
+    const pdfParse = require("pdf-parse") as (buf: Buffer) => Promise<{ text: string }>;
     const data = await pdfParse(buffer);
 
     if (!data.text?.trim()) {
@@ -46,7 +54,8 @@ export async function POST(request: Request) {
       );
     }
 
-    return NextResponse.json({ text: data.text });
+    // Cap extracted text so an enormous PDF can't flood downstream AI calls.
+    return NextResponse.json({ text: data.text.slice(0, LIMITS.RESUME) });
   } catch (err) {
     console.error("extract-text error:", err);
     return NextResponse.json({ error: "Failed to extract text." }, { status: 500 });

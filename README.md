@@ -354,6 +354,27 @@ If you use Supabase auth, add `http://localhost:3000/auth/callback` and your pro
 | `npm run lint` | Run ESLint |
 | `npm run test:smoke` | Run the Playwright smoke tests (`tests/smoke`) |
 | `npm run test:e2e` | Run all Playwright tests |
+| `npm run security:audit` | Dependency vulnerability scan (`npm audit --audit-level=high`) |
+
+---
+
+## Security notes (MVP)
+
+Tenun is a hackathon prototype. A few baseline hardening measures are in place; the rest is intentionally deferred until a real public production deployment.
+
+**In place now**
+- **Security headers** are set in [`next.config.js`](next.config.js): `Content-Security-Policy` (practical, allows Next.js/Tailwind/Framer + Supabase + the atlas geo CDN), `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`, `Referrer-Policy: strict-origin-when-cross-origin`, and a `Permissions-Policy` that disables camera/geolocation/payment (microphone stays self-enabled for the Mock Interview voice input).
+- **AI keys stay server-side.** OpenRouter/Groq are only ever called from API routes; keys are never sent to the browser (never prefix them with `NEXT_PUBLIC_`).
+- **Input validation** ([`lib/api-validation.ts`](lib/api-validation.ts)) caps oversized strings/arrays and validates required fields on the AI and employer-intake routes, so huge payloads can't be pushed into AI providers or logs. Normal-length input is unaffected.
+- **PDF uploads** are parsed server-side, capped at **5 MB**, verified with a `%PDF` magic-byte check, and the extracted text is capped (~100k chars). Uploaded files are **not stored** by this MVP.
+- **Sensitive logs are masked** — e.g. employer-intake logs `j***@domain.com` rather than the raw email.
+- **Factual data stays seeded/structured** (opportunities, mentors, courses, atlas, universities) so AI is used only for explanation/drafting — reducing hallucination risk.
+- Run `npm run security:audit` to scan dependencies (high+). It does **not** run as part of build/lint.
+
+**Before any real public production deployment**
+- **Supabase** should be configured and verified. Without it, `authDisabled` is true and protected routes render without a login gate — fine for local/demo, **not** for production.
+- **Upstash Redis** should be configured to enable rate limiting. **Without Upstash, rate limiting is skipped** (see [`lib/rate-limit.ts`](lib/rate-limit.ts)).
+- Tighten the CSP (nonces instead of `'unsafe-inline'/'unsafe-eval'`), add Supabase Row Level Security policies, and review per-route auth. None of these are implemented yet.
 
 ---
 

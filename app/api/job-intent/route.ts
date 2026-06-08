@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { generateJSONWithFallback } from "@/lib/llm";
+import { cleanString, cleanStringArray, badRequest, LIMITS } from "@/lib/api-validation";
 
 const SYSTEM_PROMPT = `You are a brutally honest career guide helping students and fresh graduates who don't know their job title yet. Your job is to take whatever they describe — even a single vague word — and show them the full range of genuinely different careers that word could mean.
 
@@ -115,16 +116,17 @@ export async function POST(request: Request) {
 
   try {
     const body = await request.json();
-    const { query, skills = [], interests = [], experience = "", locale = "en" } = body as {
-      query: string;
-      skills: string[];
-      interests: string[];
-      experience: string;
-      locale?: "en" | "ms" | "zh-CN";
-    };
+    const locale: "en" | "ms" | "zh-CN" =
+      body?.locale === "ms" ? "ms" : body?.locale === "zh-CN" ? "zh-CN" : "en";
 
-    if (!query?.trim()) {
-      return NextResponse.json({ error: "Missing query." }, { status: 400 });
+    // Cap oversized input before it reaches the AI provider or logs.
+    const query = cleanString(body?.query, LIMITS.QUERY);
+    const skills = cleanStringArray(body?.skills);
+    const interests = cleanStringArray(body?.interests);
+    const experience = cleanString(body?.experience, LIMITS.CONTEXT);
+
+    if (!query) {
+      return badRequest("Missing query.");
     }
 
     const systemPrompt = locale === "ms" ? SYSTEM_PROMPT + MALAY_INSTRUCTION : locale === "zh-CN" ? SYSTEM_PROMPT + CHINESE_INSTRUCTION : SYSTEM_PROMPT;

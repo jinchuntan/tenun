@@ -9,7 +9,8 @@
     "start": "next start",
     "lint": "next lint",
     "test:e2e": "playwright test",
-    "test:smoke": "playwright test tests/smoke"
+    "test:smoke": "playwright test tests/smoke",
+    "security:audit": "npm audit --audit-level=high"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",

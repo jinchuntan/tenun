@@ -8,6 +8,7 @@ import {
   asString,
 } from "@/lib/ai-prompt";
 import type { Locale } from "@/lib/i18n";
+import { LIMITS } from "@/lib/api-validation";
 import type { SkillGapExplanation } from "@/lib/personalization";
 
 const SYSTEM_PROMPT = `You are Tenun's career companion. You explain WHY a set of deterministic skill gaps matter for a student's chosen career path. The skill list and the path are given and fixed — do NOT invent new skills, courses, certifications, or links. You only explain.
@@ -57,7 +58,7 @@ export async function POST(request: Request) {
       },
       null,
       0
-    );
+    ).slice(0, LIMITS.AI_PAYLOAD);
 
     const { raw } = await generateJSONWithFallback({
       routeName: "personalize-skill-gaps",

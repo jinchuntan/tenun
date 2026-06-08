@@ -8,6 +8,7 @@ import {
   asString,
 } from "@/lib/ai-prompt";
 import type { Locale } from "@/lib/i18n";
+import { LIMITS } from "@/lib/api-validation";
 import type { OutreachAIResult } from "@/lib/personalization";
 
 const SYSTEM_PROMPT = `You are Tenun's writing assistant. You draft short, authentic outreach messages for a student/fresh graduate. The message is theirs to edit and send — you only draft.
@@ -59,7 +60,7 @@ export async function POST(request: Request) {
       },
       null,
       0
-    );
+    ).slice(0, LIMITS.AI_PAYLOAD);
 
     const { raw } = await generateJSONWithFallback({
       routeName: "personalize-outreach",

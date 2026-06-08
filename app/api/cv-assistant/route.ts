@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getAuthenticatedUser } from "@/lib/api-auth";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { generateJSONWithFallback } from "@/lib/llm";
+import { optionalString, badRequest, LIMITS } from "@/lib/api-validation";
 import type { CVBlock, BlockType } from "@/lib/cv-types";
 
 type AssistantMode =
@@ -144,8 +145,13 @@ export async function POST(request: Request) {
     const body = (await request.json()) as AssistantBody;
 
     if (!body.mode) {
-      return NextResponse.json({ error: "Missing mode." }, { status: 400 });
+      return badRequest("Missing mode.");
     }
+
+    // Cap oversized free-text before it reaches the AI provider or logs.
+    body.targetJob = optionalString(body.targetJob, LIMITS.TITLE);
+    body.notes = optionalString(body.notes, LIMITS.CONTEXT);
+    body.instruction = optionalString(body.instruction, 1000);
     if (!process.env.OPENROUTER_API_KEY && !process.env.GROQ_API_KEY) {
       return NextResponse.json({ error: "No AI provider is configured." }, { status: 500 });
     }

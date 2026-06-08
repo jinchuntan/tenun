@@ -9,6 +9,7 @@ import {
   asStringArray,
 } from "@/lib/ai-prompt";
 import type { Locale } from "@/lib/i18n";
+import { LIMITS } from "@/lib/api-validation";
 import type { DashboardPersonalization, ThirtyDayAction } from "@/lib/personalization";
 
 const SYSTEM_PROMPT = `You are Tenun's career companion. You explain a student's DETERMINISTIC career analysis in a warm, personal way. You do NOT generate the analysis — it is given to you. You only interpret and personalize it.
@@ -64,7 +65,7 @@ export async function POST(request: Request) {
       },
       null,
       0
-    );
+    ).slice(0, LIMITS.AI_PAYLOAD);
 
     const { raw } = await generateJSONWithFallback({
       routeName: "personalize-dashboard-summary",

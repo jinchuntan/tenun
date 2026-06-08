@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { checkRateLimit } from "@/lib/rate-limit";
+import { cleanString, isValidEmail, maskEmail, LIMITS } from "@/lib/api-validation";
 
 /**
  * Employer role-intake endpoint (MVP).
@@ -16,20 +17,30 @@ export async function POST(request: Request) {
 
   try {
     const body = await request.json();
-    const { company, email, role } = body as { company?: string; email?: string; role?: string };
+    const company = cleanString(body?.company, LIMITS.COMPANY);
+    const role = cleanString(body?.role, LIMITS.ROLE);
+    const email = cleanString(body?.email, LIMITS.EMAIL);
 
-    if (!company?.trim() || !email?.trim() || !role?.trim()) {
+    if (!company || !email || !role) {
       return NextResponse.json(
         { ok: false, error: "Missing required fields." },
         { status: 400 }
       );
     }
 
+    if (!isValidEmail(email)) {
+      return NextResponse.json(
+        { ok: false, error: "Please enter a valid email address." },
+        { status: 400 }
+      );
+    }
+
     // MVP: record the intake server-side. Swap this for a DB/CRM/email later.
+    // Email is masked so raw addresses never land in server logs.
     console.info("[employer-intake]", {
       company,
       role,
-      email,
+      email: maskEmail(email),
       at: new Date().toISOString(),
     });
 

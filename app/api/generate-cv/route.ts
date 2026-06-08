@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getAuthenticatedUser } from "@/lib/api-auth";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { generateJSONWithFallback } from "@/lib/llm";
+import { optionalString, LIMITS } from "@/lib/api-validation";
 import type { GeneratedCV } from "@/lib/cv-generate";
 import type { PortfolioEvidence } from "@/lib/portfolio-types";
 
@@ -137,6 +138,14 @@ export async function POST(request: Request) {
 
   try {
     const body = (await request.json()) as GenerateBody;
+
+    // Cap oversized free-text before it reaches the AI provider or logs.
+    body.resumeText = optionalString(body.resumeText, LIMITS.RESUME);
+    body.targetJob = optionalString(body.targetJob, LIMITS.TITLE);
+    body.userNotes = optionalString(body.userNotes, LIMITS.CONTEXT);
+    if (Array.isArray(body.portfolioEvidence)) {
+      body.portfolioEvidence = body.portfolioEvidence.slice(0, LIMITS.ARRAY_ITEMS);
+    }
 
     const format = body.format === "cv" ? "cv" : "resume";
     const style = body.style === "creative" ? "creative" : "harvard";

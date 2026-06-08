@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getAuthenticatedUser } from "@/lib/api-auth";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { generateJSONWithFallback } from "@/lib/llm";
+import { cleanString, badRequest, LIMITS } from "@/lib/api-validation";
 import {
   skillSuggestions,
   interestSuggestions,
@@ -57,11 +58,14 @@ export async function POST(request: Request) {
   if (rateLimited.limited) return rateLimited.response;
 
   try {
-    const { text } = await request.json();
+    const { text: rawText } = await request.json();
 
-    if (!text || typeof text !== "string") {
-      return NextResponse.json({ error: "Missing or invalid resume text." }, { status: 400 });
+    if (!rawText || typeof rawText !== "string" || !rawText.trim()) {
+      return badRequest("Missing or invalid resume text.");
     }
+
+    // Cap the résumé text before it reaches the AI provider or logs.
+    const text = cleanString(rawText, LIMITS.RESUME);
 
     if (!process.env.OPENROUTER_API_KEY && !process.env.GROQ_API_KEY) {
       return NextResponse.json(

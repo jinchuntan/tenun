@@ -8,6 +8,7 @@ import {
   asString,
 } from "@/lib/ai-prompt";
 import type { Locale } from "@/lib/i18n";
+import { LIMITS } from "@/lib/api-validation";
 import type { PathwayExplanation } from "@/lib/personalization";
 
 const SYSTEM_PROMPT = `You are Tenun's career companion. You explain how a DETERMINISTIC career pathway relates to a specific student's profile. The pathway (name, timeline, description, required skills, trade-offs, risks) is given and fixed — do not change it or invent new roles/skills.
@@ -44,7 +45,7 @@ export async function POST(request: Request) {
       },
       null,
       0
-    );
+    ).slice(0, LIMITS.AI_PAYLOAD);
 
     const { raw } = await generateJSONWithFallback({
       routeName: "personalize-pathway",

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { generateJSONWithFallback } from "@/lib/llm";
+import { cleanString, badRequest, LIMITS } from "@/lib/api-validation";
 
 const SYSTEM_PROMPT = `You are a brutally honest career mentor helping a student understand what it really takes to land a specific job.
 
@@ -73,14 +74,14 @@ export async function POST(request: Request) {
   if (rateLimited.limited) return rateLimited.response;
 
   try {
-    const { title, context = "", locale = "en" } = await request.json() as {
-      title: string;
-      context: string;
-      locale?: "en" | "ms" | "zh-CN";
-    };
+    const body = await request.json();
+    const locale: "en" | "ms" | "zh-CN" =
+      body?.locale === "ms" ? "ms" : body?.locale === "zh-CN" ? "zh-CN" : "en";
+    const title = cleanString(body?.title, LIMITS.TITLE);
+    const context = cleanString(body?.context, LIMITS.CONTEXT);
 
-    if (!title?.trim()) {
-      return NextResponse.json({ error: "Missing title." }, { status: 400 });
+    if (!title) {
+      return badRequest("Missing title.");
     }
 
     if (!process.env.OPENROUTER_API_KEY && !process.env.GROQ_API_KEY) {

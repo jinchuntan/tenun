@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getAuthenticatedUser } from "@/lib/api-auth";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { generateJSONWithFallback } from "@/lib/llm";
+import { optionalString, badRequest, LIMITS } from "@/lib/api-validation";
 
 /**
  * AI Mock Interview API.
@@ -217,7 +218,16 @@ export async function POST(request: Request) {
     const body = (await request.json()) as RequestBody;
 
     if (!body.mode || !VALID_MODES.includes(body.mode)) {
-      return NextResponse.json({ error: "Invalid or missing mode." }, { status: 400 });
+      return badRequest("Invalid or missing mode.");
+    }
+
+    // Cap oversized free-text / arrays before they reach the AI provider or logs.
+    body.targetRole = optionalString(body.targetRole, LIMITS.ROLE);
+    body.cvContext = optionalString(body.cvContext, LIMITS.CONTEXT);
+    body.answer = optionalString(body.answer, LIMITS.CONTEXT);
+    body.currentQuestion = optionalString(body.currentQuestion, 2000);
+    if (Array.isArray(body.history)) {
+      body.history = body.history.slice(0, 20);
     }
 
     if (!process.env.OPENROUTER_API_KEY && !process.env.GROQ_API_KEY) {
