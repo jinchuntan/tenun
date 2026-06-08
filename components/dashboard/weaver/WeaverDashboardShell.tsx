@@ -12,6 +12,7 @@ import { setActiveSection, type DashboardSection } from "@/store/slices/dashboar
 
 import { WeaverTabBar, PANEL_BG } from "./WeaverTabBar";
 import { WeaverNavButtons, type NavTab } from "./WeaverNavButtons";
+import { WeaverBackground } from "./WeaverBackground";
 
 const UPLOAD_ROUTE = "/profile?upload=true&from=dashboard";
 
@@ -58,7 +59,10 @@ export function WeaverDashboardShell({ userName, currentRole, targetJob, tabs }:
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#f5f0e8]">
+    <div className="relative min-h-screen flex flex-col bg-[#f5f0e8]">
+      {/* Branded woven-thread background (decorative, behind all content) */}
+      <WeaverBackground />
+
       {/* Top bar */}
       <header className="sticky top-0 z-30 h-14 bg-[#0a1628] flex items-center px-3 sm:px-4 gap-2 sm:gap-3 border-b border-white/5">
         <button
@@ -103,7 +107,7 @@ export function WeaverDashboardShell({ userName, currentRole, targetJob, tabs }:
       </header>
 
       {/* Tabbed canvas */}
-      <main className="flex-1 w-full max-w-6xl mx-auto px-3 sm:px-6 py-5 sm:py-8">
+      <main className="relative z-10 flex-1 w-full max-w-6xl mx-auto px-3 sm:px-6 py-5 sm:py-8">
         <WeaverTabBar
           tabs={navTabs}
           activeId={activeTab.id}
