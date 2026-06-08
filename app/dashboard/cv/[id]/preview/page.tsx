@@ -103,10 +103,11 @@ export default function PreviewCVPage() {
           }
         />
 
-        {/* Preview */}
-        <div className="no-print py-8 px-4">
+        {/* Preview — A4 document. On narrow screens the fixed-width page
+            scrolls horizontally inside this container rather than being clipped. */}
+        <div className="no-print py-6 sm:py-8 px-2 sm:px-4 overflow-x-auto">
           {cv && (
-            <div className="w-[794px] max-w-full mx-auto shadow-2xl print-page">
+            <div className="w-[794px] mx-auto shadow-2xl print-page">
               <Template blocks={cv.blocks.byId} allIds={cv.blocks.allIds} />
             </div>
           )}

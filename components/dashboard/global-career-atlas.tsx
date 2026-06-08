@@ -1384,7 +1384,7 @@ function ComparePanel({
                   {cities.map((city) => (
                     <th
                       key={city.id}
-                      className="text-center py-2 px-3 min-w-[150px]"
+                      className="text-center py-2 px-3 min-w-[130px] sm:min-w-[150px]"
                     >
                       <div className="flex flex-col items-center gap-1">
                         <MapPin

@@ -131,7 +131,7 @@ function PersonalInfoEditor({ block }: { block: CVBlock }) {
     <div className="space-y-3">
       <Field label="Full name"><Input value={str("name")} onChange={set("name")} placeholder="Jane Smith" /></Field>
       <Field label="Email"><Input value={str("email")} onChange={set("email")} placeholder="jane@email.com" type="email" /></Field>
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <Field label="Phone"><Input value={str("phone")} onChange={set("phone")} placeholder="+60 12 345 6789" /></Field>
         <Field label="Location"><Input value={str("location")} onChange={set("location")} placeholder="Kuala Lumpur" /></Field>
       </div>
@@ -156,7 +156,7 @@ function WorkExperienceEditor({ block }: { block: CVBlock }) {
     <div className="space-y-3">
       <Field label="Company"><Input value={str("company")} onChange={set("company")} placeholder="Acme Corp" /></Field>
       <Field label="Role / Title"><Input value={str("role")} onChange={set("role")} placeholder="Software Engineer" /></Field>
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <Field label="Start date"><Input value={str("startDate")} onChange={set("startDate")} placeholder="Jan 2022" /></Field>
         <Field label="End date"><Input value={str("endDate")} onChange={set("endDate")} placeholder="Present" /></Field>
       </div>
@@ -174,7 +174,7 @@ function EducationEditor({ block }: { block: CVBlock }) {
       <Field label="Institution"><Input value={str("institution")} onChange={set("institution")} placeholder="University of Malaya" /></Field>
       <Field label="Degree"><Input value={str("degree")} onChange={set("degree")} placeholder="Bachelor of Science" /></Field>
       <Field label="Field of study"><Input value={str("field")} onChange={set("field")} placeholder="Computer Science" /></Field>
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <Field label="Start date"><Input value={str("startDate")} onChange={set("startDate")} placeholder="Sep 2018" /></Field>
         <Field label="End date"><Input value={str("endDate")} onChange={set("endDate")} placeholder="Jun 2022" /></Field>
       </div>
@@ -219,7 +219,7 @@ function ExtracurricularEditor({ block }: { block: CVBlock }) {
     <div className="space-y-3">
       <Field label="Organisation"><Input value={str("organisation")} onChange={set("organisation")} placeholder="Student Council" /></Field>
       <Field label="Role"><Input value={str("role")} onChange={set("role")} placeholder="President" /></Field>
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <Field label="Start date"><Input value={str("startDate")} onChange={set("startDate")} placeholder="Jan 2021" /></Field>
         <Field label="End date"><Input value={str("endDate")} onChange={set("endDate")} placeholder="Dec 2021" /></Field>
       </div>

@@ -185,7 +185,7 @@ function SkillChipGrid({
 // ── Step indicator ────────────────────────────────────────────────────────────
 function StepIndicator({ current }: { current: number }) {
   return (
-    <div className="flex items-center mb-10">
+    <div className="flex items-center mb-8 sm:mb-10">
       {STEPS.map((step, i) => {
         const done = i < current;
         const active = i === current;
@@ -194,7 +194,7 @@ function StepIndicator({ current }: { current: number }) {
           <React.Fragment key={step.label}>
             <div className="flex flex-col items-center">
               <div
-                className={`w-9 h-9 rounded-full flex items-center justify-center border-2 transition-all ${
+                className={`w-8 h-8 sm:w-9 sm:h-9 rounded-full flex items-center justify-center border-2 transition-all ${
                   done
                     ? "bg-navy-700 border-navy-700 text-white"
                     : active
@@ -205,7 +205,7 @@ function StepIndicator({ current }: { current: number }) {
                 {done ? <Check className="w-4 h-4" /> : <Icon className="w-4 h-4" />}
               </div>
               <span
-                className={`text-xs mt-1.5 font-medium whitespace-nowrap ${
+                className={`hidden sm:block text-xs mt-1.5 font-medium whitespace-nowrap ${
                   active ? "text-navy-700" : done ? "text-navy-500" : "text-navy-300"
                 }`}
               >
@@ -213,7 +213,7 @@ function StepIndicator({ current }: { current: number }) {
               </span>
             </div>
             {i < STEPS.length - 1 && (
-              <div className={`flex-1 h-px mx-3 mb-4 transition-colors ${done ? "bg-navy-700" : "bg-navy-200"}`} />
+              <div className={`flex-1 h-px mx-2 sm:mx-3 sm:mb-4 transition-colors ${done ? "bg-navy-700" : "bg-navy-200"}`} />
             )}
           </React.Fragment>
         );
@@ -432,7 +432,7 @@ function ProfilePageInner() {
                     {isLoggedIn ? (
                       <CVUpload onProfileExtracted={applyParsedProfile} />
                     ) : (
-                      <div className="rounded-2xl border-2 border-dashed border-navy-200 bg-white p-8 text-center">
+                      <div className="rounded-2xl border-2 border-dashed border-navy-200 bg-white p-5 sm:p-8 text-center">
                         <div className="w-12 h-12 bg-navy-50 rounded-xl flex items-center justify-center mx-auto mb-3">
                           <Upload className="w-5 h-5 text-navy-400" />
                         </div>

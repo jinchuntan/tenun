@@ -69,14 +69,14 @@ export function HeroSection({
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder={h.searchPlaceholder}
-              className="w-full pr-32 py-5 rounded-full border border-beige-300 bg-white/90 text-sm sm:text-base text-navy-900 placeholder:text-navy-400 focus:outline-none focus:ring-4 focus:ring-gold-500/15 focus:border-gold-400 transition-all shadow-lg shadow-navy-900/5"
+              className="w-full pr-28 sm:pr-32 py-4 sm:py-5 rounded-full border border-beige-300 bg-white/90 text-sm sm:text-base text-navy-900 placeholder:text-navy-400 focus:outline-none focus:ring-4 focus:ring-gold-500/15 focus:border-gold-400 transition-all shadow-lg shadow-navy-900/5"
               style={{ paddingLeft: "3.25rem" }}
               aria-label={h.searchAria}
             />
             <button
               type="submit"
               disabled={loading || !query.trim()}
-              className="absolute right-2.5 top-1/2 -translate-y-1/2 flex items-center gap-1.5 px-5 py-3 rounded-full bg-navy-900 text-white text-sm font-semibold hover:bg-gold-500 hover:text-navy-900 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-navy-900 disabled:hover:text-white transition-all"
+              className="absolute right-2 sm:right-2.5 top-1/2 -translate-y-1/2 flex items-center gap-1.5 px-4 sm:px-5 py-2.5 sm:py-3 rounded-full bg-navy-900 text-white text-sm font-semibold hover:bg-gold-500 hover:text-navy-900 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-navy-900 disabled:hover:text-white transition-all whitespace-nowrap"
             >
               {loading
                 ? <><Loader2 className="w-4 h-4 animate-spin" /> {h.weaving}</>

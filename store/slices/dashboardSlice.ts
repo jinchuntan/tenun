@@ -1,6 +1,7 @@
 import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
 
 export type DashboardSection =
+  | "summary"
   | "profile"
   | "paths"
   | "atlas"
@@ -8,7 +9,8 @@ export type DashboardSection =
   | "opportunities"
   | "mentors"
   | "outreach"
-  | "cv";
+  | "cv"
+  | "mock-interview";
 
 interface DashboardState {
   activeSection: DashboardSection;
@@ -16,7 +18,7 @@ interface DashboardState {
 }
 
 const initialState: DashboardState = {
-  activeSection: "profile",
+  activeSection: "summary",
   activePathwayId: null,
 };
 

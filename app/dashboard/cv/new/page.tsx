@@ -298,7 +298,7 @@ function NewCVFlow() {
               onNext={next}
               canNext
             >
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {([["resume", dict.cvNew.resumeLabel, dict.cvNew.resumeDesc], ["cv", dict.cvNew.cvLabel, dict.cvNew.cvDesc]] as [CVFormat, string, string][]).map(
                   ([val, label, desc]) => (
                     <button
@@ -321,7 +321,7 @@ function NewCVFlow() {
           {/* Style step */}
           {step === "style" && (
             <StepLayout title={dict.cvNew.pickAStyle} subtitle={dict.cvNew.canSwitchLater} onNext={next} onPrev={prev} canNext>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <StyleCard
                   id="harvard"
                   label={dict.cvNew.harvardLabel}
@@ -501,7 +501,7 @@ function NewCVFlow() {
                 </div>
 
                 {/* Secondary options */}
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <button
                     onClick={handleFresh}
                     disabled={busy}

@@ -38,10 +38,10 @@ export function OpportunitiesPane({ opportunities, pathways, recommendedPathwayI
     .slice(0, 4);
 
   return (
-    <div className="p-4 sm:p-6 space-y-5 max-w-4xl mx-auto">
+    <div className="space-y-5">
       <div>
-        <h2 className="text-sm font-semibold text-[#0a1628]">Opportunities</h2>
-        <p className="text-xs text-gray-400 mt-0.5">
+        <h2 className="text-lg font-bold text-[#0a1628]">Opportunities</h2>
+        <p className="text-xs text-[#0a1628]/50 mt-0.5">
           Showing matches for{" "}
           <span className="font-medium text-[#0a1628]">{activePathway?.name ?? "your selected path"}</span>.
           Change your path in Paths to update this view.

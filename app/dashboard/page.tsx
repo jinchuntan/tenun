@@ -7,7 +7,11 @@ import { motion } from "framer-motion";
 
 import { useLanguage } from "@/components/i18n/LanguageProvider";
 import { AuthGate } from "@/components/auth-gate";
-import { DashboardShell } from "@/components/dashboard/DashboardShell";
+import {
+  WeaverDashboardShell,
+  type WeaverTab,
+} from "@/components/dashboard/weaver/WeaverDashboardShell";
+import { SummaryPane } from "@/components/dashboard/panes/SummaryPane";
 import { ProfilePane } from "@/components/dashboard/panes/ProfilePane";
 import { PathsPane } from "@/components/dashboard/panes/PathsPane";
 import { SkillsPane } from "@/components/dashboard/panes/SkillsPane";
@@ -61,22 +65,10 @@ function LoadingScreen() {
   );
 }
 
-// ---------- Section wrapper ----------
-
-function Section({ id, children }: { id: string; children: React.ReactNode }) {
-  return (
-    <section
-      id={`section-${id}`}
-      className="min-h-[50vh] border-b border-gray-200/60 last:border-b-0"
-    >
-      {children}
-    </section>
-  );
-}
-
 // ---------- Dashboard content ----------
 
 function DashboardContent() {
+  const { dict } = useLanguage();
   const searchParams = useSearchParams();
   const router = useRouter();
   const dispatch = useAppDispatch();
@@ -118,71 +110,93 @@ function DashboardContent() {
   if (loading) return <LoadingScreen />;
   if (!result || !profile) return null;
 
-  return (
-    <DashboardShell
-      userName={profile.name}
-      currentRole={profile.currentRole}
-      targetJob={result.targetJob}
-    >
-      <Section id="profile">
-        <ProfilePane archetype={result.archetype} threads={result.threads} />
-      </Section>
+  const ds = dict.dashboardShell;
 
-      <Section id="paths">
+  const tabs: WeaverTab[] = [
+    {
+      id: "summary",
+      label: ds.navSummary,
+      content: <SummaryPane archetype={result.archetype} />,
+    },
+    {
+      id: "profile",
+      label: ds.navProfile,
+      content: <ProfilePane archetype={result.archetype} threads={result.threads} />,
+    },
+    {
+      id: "paths",
+      label: ds.navPaths,
+      content: (
         <PathsPane
           pathways={result.pathways}
           recommendedPathwayId={result.recommendedPathway}
         />
-      </Section>
-
-      <Section id="skills">
+      ),
+    },
+    {
+      id: "skills",
+      label: ds.navSkills,
+      content: (
         <SkillsPane
           skillGaps={result.skillGaps}
           pathways={result.pathways}
           recommendedPathwayId={result.recommendedPathway}
         />
-      </Section>
-
-      <Section id="opportunities">
+      ),
+    },
+    {
+      id: "opportunities",
+      label: ds.navOpportunities,
+      content: (
         <OpportunitiesPane
           opportunities={result.opportunities}
           pathways={result.pathways}
           recommendedPathwayId={result.recommendedPathway}
         />
-      </Section>
+      ),
+    },
+    {
+      id: "atlas",
+      label: ds.navAtlas,
+      content: <GlobalCareerAtlas hubs={atlasHubs} />,
+    },
+    {
+      id: "mentors",
+      label: ds.navMentors,
+      content: <MentorConnect profile={profile} archetype={result.archetype} />,
+    },
+    {
+      id: "outreach",
+      label: ds.navOutreach,
+      content: (
+        <OutreachStudio
+          profile={profile}
+          pathways={result.pathways}
+          mentors={mentors}
+          hubs={atlasHubs}
+          skillGaps={result.skillGaps}
+        />
+      ),
+    },
+    {
+      id: "cv",
+      label: ds.navCv,
+      content: <CVPane />,
+    },
+    {
+      id: "mock-interview",
+      label: ds.navInterview,
+      content: <MockInterviewEntryCard />,
+    },
+  ];
 
-      <Section id="atlas">
-        <div className="p-4 sm:p-6">
-          <GlobalCareerAtlas hubs={atlasHubs} />
-        </div>
-      </Section>
-
-      <Section id="mentors">
-        <div className="p-4 sm:p-6">
-          <MentorConnect profile={profile} archetype={result.archetype} />
-        </div>
-      </Section>
-
-      <Section id="outreach">
-        <div className="p-4 sm:p-6">
-          <OutreachStudio
-            profile={profile}
-            pathways={result.pathways}
-            mentors={mentors}
-            hubs={atlasHubs}
-            skillGaps={result.skillGaps}
-          />
-        </div>
-      </Section>
-
-      <Section id="cv">
-        <CVPane />
-      </Section>
-
-      <Section id="mock-interview">
-        <MockInterviewEntryCard />
-      </Section>
-    </DashboardShell>
+  return (
+    <WeaverDashboardShell
+      userName={profile.name}
+      currentRole={profile.currentRole}
+      targetJob={result.targetJob}
+      tabs={tabs}
+    />
   );
 }
 

@@ -614,6 +614,7 @@ const en = {
     ],
   },
   dashboardShell: {
+    navSummary: "Summary",
     navProfile: "Profile",
     navPaths: "Paths",
     navSkills: "Skills",
@@ -1409,6 +1410,7 @@ const ms: Translations = {
     ],
   },
   dashboardShell: {
+    navSummary: "Ringkasan",
     navProfile: "Profil",
     navPaths: "Laluan",
     navSkills: "Kemahiran",
@@ -2201,6 +2203,7 @@ const zhCN: Translations = {
     ],
   },
   dashboardShell: {
+    navSummary: "摘要",
     navProfile: "个人资料",
     navPaths: "路径",
     navSkills: "技能",

@@ -1,11 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Cpu, Briefcase, GraduationCap, Heart, TrendingUp,
-  DollarSign, Sun, Building2, Lightbulb, Share2, X, Send, Upload,
+  DollarSign, Sun, Building2, Lightbulb, Share2, X, Send,
+  ChevronLeft, ChevronRight,
 } from "lucide-react";
 import { CareerThread, CareerArchetype } from "@/lib/types";
 import { mentors } from "@/lib/mentor-data";
@@ -14,107 +14,177 @@ const ICON_MAP: Record<string, React.ElementType> = {
   Cpu, Briefcase, GraduationCap, Heart, TrendingUp, DollarSign, Sun, Building2,
 };
 
-// ---------- Radar Chart ----------
+const GOLD = "#d4a017";
+const NAVY = "#0a1628";
+
+// ---------- Radar Chart (SVG web + HTML pill labels) ----------
 
 function RadarChart({
   threads,
+  activeId,
   onSelect,
 }: {
   threads: CareerThread[];
+  activeId: string;
   onSelect: (t: CareerThread) => void;
 }) {
-  const cx = 200, cy = 200, maxR = 155;
+  const cx = 50, cy = 50, maxR = 33, labelR = 45;
   const N = threads.length;
   const angle = (i: number) => -Math.PI / 2 + (2 * Math.PI * i) / N;
   const gridLevels = [0.25, 0.5, 0.75, 1];
 
-  const profilePoints = threads.map((t, i) => {
-    const a = angle(i);
-    const r = (t.score / 100) * maxR;
-    return { x: cx + r * Math.cos(a), y: cy + r * Math.sin(a) };
+  const pt = (i: number, r: number) => ({
+    x: cx + r * Math.cos(angle(i)),
+    y: cy + r * Math.sin(angle(i)),
   });
 
   const profilePath =
-    profilePoints
-      .map((p, i) => `${i === 0 ? "M" : "L"}${p.x.toFixed(1)},${p.y.toFixed(1)}`)
+    threads
+      .map((t, i) => {
+        const p = pt(i, (t.score / 100) * maxR);
+        return `${i === 0 ? "M" : "L"}${p.x.toFixed(2)},${p.y.toFixed(2)}`;
+      })
       .join(" ") + " Z";
 
-  const labelPoint = (i: number) => {
-    const a = angle(i);
-    return { x: cx + (maxR + 28) * Math.cos(a), y: cy + (maxR + 28) * Math.sin(a) };
-  };
-
   return (
-    <div className="flex justify-center">
-      <svg viewBox="-70 0 540 400" className="w-full max-w-md h-auto">
-        {gridLevels.map((level, li) => {
-          const pts = threads.map((_, i) => {
-            const a = angle(i);
-            const r = level * maxR;
-            return `${(cx + r * Math.cos(a)).toFixed(1)},${(cy + r * Math.sin(a)).toFixed(1)}`;
-          });
-          return (
-            <polygon
-              key={li}
-              points={pts.join(" ")}
-              fill="none"
-              stroke={li === gridLevels.length - 1 ? "#d9e0f0" : "#ecf0f8"}
-              strokeWidth={li === gridLevels.length - 1 ? 1.5 : 1}
-            />
-          );
-        })}
+    <div className="relative w-full max-w-[300px] sm:max-w-[440px] mx-auto aspect-square">
+      <svg viewBox="0 0 100 100" className="absolute inset-0 w-full h-full overflow-visible">
+        {gridLevels.map((level, li) => (
+          <polygon
+            key={li}
+            points={threads
+              .map((_, i) => {
+                const p = pt(i, level * maxR);
+                return `${p.x.toFixed(2)},${p.y.toFixed(2)}`;
+              })
+              .join(" ")}
+            fill="none"
+            stroke="#b3afa4"
+            strokeWidth={0.4}
+          />
+        ))}
 
         {threads.map((_, i) => {
-          const a = angle(i);
+          const p = pt(i, maxR);
           return (
-            <line
-              key={i}
-              x1={cx} y1={cy}
-              x2={cx + maxR * Math.cos(a)} y2={cy + maxR * Math.sin(a)}
-              stroke="#d9e0f0" strokeWidth={1}
-            />
+            <line key={i} x1={cx} y1={cy} x2={p.x} y2={p.y} stroke="#b3afa4" strokeWidth={0.4} />
           );
         })}
 
         <motion.path
           d={profilePath}
-          fill="#4164b4"
-          fillOpacity={0.15}
-          stroke="#4164b4"
-          strokeWidth={2}
+          fill={NAVY}
+          fillOpacity={0.16}
+          stroke={NAVY}
+          strokeWidth={0.8}
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ duration: 0.8 }}
+          transition={{ duration: 0.7 }}
         />
 
-        {profilePoints.map((p, i) => (
-          <motion.circle
-            key={i}
-            cx={p.x} cy={p.y} r={5}
-            fill={threads[i].color}
-            stroke="white" strokeWidth={1.5}
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            transition={{ delay: 0.2 + i * 0.06, type: "spring" }}
-          />
-        ))}
-
         {threads.map((t, i) => {
-          const lp = labelPoint(i);
-          const isLeft = lp.x < cx - 10;
-          const anchor = isLeft ? "end" : lp.x > cx + 10 ? "start" : "middle";
+          const p = pt(i, (t.score / 100) * maxR);
+          const isActive = t.id === activeId;
           return (
-            <g key={t.id} onClick={() => onSelect(t)} className="cursor-pointer">
-              <text x={lp.x} y={lp.y - 6} textAnchor={anchor} fill="#273c6c" fontSize={9.5} fontWeight="600">
-                {t.name.replace(" Thread", "")}
-              </text>
-              <text x={lp.x} y={lp.y + 7} textAnchor={anchor} fill={t.color} fontSize={8} fontWeight="500">
-                {t.contextLabel}
-              </text>
-            </g>
+            <circle
+              key={t.id}
+              cx={p.x}
+              cy={p.y}
+              r={isActive ? 1.8 : 1.2}
+              fill={isActive ? GOLD : NAVY}
+            />
           );
         })}
       </svg>
+
+      {/* HTML pill labels positioned around the web */}
+      {threads.map((t, i) => {
+        const p = pt(i, labelR);
+        const isActive = t.id === activeId;
+        return (
+          <button
+            key={t.id}
+            type="button"
+            onClick={() => onSelect(t)}
+            aria-pressed={isActive}
+            className={[
+              "absolute -translate-x-1/2 -translate-y-1/2 rounded-full px-1.5 py-0.5 sm:px-2.5 sm:py-1 text-[9px] sm:text-xs font-semibold whitespace-nowrap transition-colors shadow-sm",
+              "focus:outline-none focus-visible:ring-2 focus-visible:ring-[#d4a017]",
+              isActive ? "text-[#0a1628]" : "bg-[#0a1628] text-white hover:bg-[#1a2a4a]",
+            ].join(" ")}
+            style={{
+              left: `${p.x}%`,
+              top: `${p.y}%`,
+              backgroundColor: isActive ? GOLD : undefined,
+            }}
+          >
+            {t.name.replace(" Thread", "")}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+// ---------- Thread Detail ----------
+
+function ThreadDetail({
+  thread,
+  onPrev,
+  onNext,
+}: {
+  thread: CareerThread;
+  onPrev: () => void;
+  onNext: () => void;
+}) {
+  const Icon = ICON_MAP[thread.icon] || Cpu;
+  const arrow =
+    "w-9 h-9 rounded-full bg-[#0a1628] text-white flex items-center justify-center hover:bg-[#1a2a4a] transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[#d4a017]";
+
+  return (
+    <div className="rounded-2xl bg-[#d8d4ca] p-6 sm:p-7 h-full flex flex-col">
+      <div className="flex items-start justify-between gap-3">
+        <div className="flex items-center gap-3 min-w-0">
+          <div className="w-10 h-10 rounded-xl bg-white/50 flex items-center justify-center shrink-0">
+            <Icon size={20} className="text-[#0a1628]" />
+          </div>
+          <h3 className="text-2xl font-bold text-[#0a1628] truncate">
+            {thread.name.replace(" Thread", "")}
+          </h3>
+        </div>
+        <div className="flex items-center gap-2 shrink-0">
+          <button onClick={onPrev} className={arrow} aria-label="Previous thread">
+            <ChevronLeft size={16} />
+          </button>
+          <button onClick={onNext} className={arrow} aria-label="Next thread">
+            <ChevronRight size={16} />
+          </button>
+        </div>
+      </div>
+
+      <p className="mt-3 text-sm font-medium text-[#0a1628]/60">{thread.contextLabel}</p>
+
+      <AnimatePresence mode="wait">
+        <motion.p
+          key={thread.id}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.15 }}
+          className="mt-4 text-[15px] leading-relaxed text-[#2a2a2a]"
+        >
+          {thread.explanation}
+        </motion.p>
+      </AnimatePresence>
+
+      <div className="mt-auto pt-6">
+        <div className="flex items-start gap-3 rounded-xl bg-[#c4c0b6] p-4">
+          <span className="shrink-0 w-8 h-8 rounded-full bg-[#d4a017] flex items-center justify-center">
+            <Lightbulb size={16} className="text-[#0a1628]" />
+          </span>
+          <p className="text-sm leading-snug text-[#2a2a2a]">{thread.improvement}</p>
+        </div>
+      </div>
     </div>
   );
 }
@@ -212,187 +282,49 @@ interface Props {
 }
 
 export function ProfilePane({ archetype, threads }: Props) {
-  const router = useRouter();
-  const [selectedThread, setSelectedThread] = useState<CareerThread | null>(null);
+  // Default to the strongest thread.
+  const strongestIndex = threads.reduce(
+    (best, t, i, arr) => (t.score > arr[best].score ? i : best),
+    0
+  );
+  const [index, setIndex] = useState(strongestIndex);
   const [showShare, setShowShare] = useState(false);
 
-  function handleSelectThread(t: CareerThread) {
-    setSelectedThread((prev) => (prev?.id === t.id ? null : t));
-  }
+  const selected = threads[index];
+  const move = (delta: number) =>
+    setIndex((i) => (i + delta + threads.length) % threads.length);
 
   return (
-    <div className="p-4 sm:p-6 space-y-6 max-w-4xl mx-auto">
-      {/* Archetype header */}
-      <div
-        className="rounded-xl border p-5"
-        style={{
-          background: `linear-gradient(135deg, ${archetype.color}12, ${archetype.color}06)`,
-          borderColor: `${archetype.color}30`,
-        }}
-      >
-        <div className="flex items-start justify-between gap-4 flex-wrap">
-          <div>
-            <h2 className="text-lg font-bold" style={{ color: archetype.color }}>
-              {archetype.title}
-            </h2>
-            <p className="text-xs text-gray-500 mt-0.5">{archetype.tagline}</p>
-            <div className="flex flex-wrap gap-1.5 mt-3">
-              {archetype.keywords.map((kw) => (
-                <span
-                  key={kw}
-                  className="text-[11px] px-2 py-0.5 rounded font-medium"
-                  style={{ backgroundColor: archetype.color + "18", color: archetype.color }}
-                >
-                  {kw}
-                </span>
-              ))}
-            </div>
-          </div>
-
-          <div className="shrink-0 flex items-center gap-2 flex-wrap">
-            <button
-              onClick={() => router.push("/profile?upload=true&from=dashboard")}
-              className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg bg-[#d4a017] text-[#0a1628] font-semibold hover:bg-[#e0ad1c] transition-colors"
-            >
-              <Upload size={13} />
-              Edit profile or upload CV
-            </button>
-            <button
-              onClick={() => setShowShare(true)}
-              className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg border transition-colors hover:bg-white/50"
-              style={{ borderColor: archetype.color + "40", color: archetype.color }}
-            >
-              <Share2 size={13} />
-              Share for Review
-            </button>
-          </div>
+    <div className="space-y-5">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <div>
+          <h2 className="text-lg font-bold text-[#0a1628]">Your Career Threads</h2>
+          <p className="text-xs text-[#0a1628]/50 mt-0.5">
+            Tap any label to explore that dimension
+          </p>
         </div>
-
-        {/* Strengths + Growth */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-4">
-          <div className="bg-white/60 rounded-lg p-3">
-            <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-2">
-              What you bring
-            </p>
-            <ul className="space-y-1.5">
-              {archetype.strengths.map((s) => (
-                <li key={s} className="flex items-start gap-2 text-xs text-[#0a1628]">
-                  <span
-                    className="mt-1.5 w-1.5 h-1.5 rounded-full shrink-0"
-                    style={{ backgroundColor: archetype.color }}
-                  />
-                  {s}
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          <div className="bg-white/60 rounded-lg p-3">
-            <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-2">
-              What we can work on together
-            </p>
-            <ul className="space-y-1.5">
-              {archetype.growthAreas.map((g) => (
-                <li key={g} className="flex items-start gap-2 text-xs text-[#0a1628]">
-                  <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-gray-300 shrink-0" />
-                  {g}
-                </li>
-              ))}
-            </ul>
-          </div>
-        </div>
+        <button
+          onClick={() => setShowShare(true)}
+          className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full border border-[#0a1628]/25 text-[#0a1628] hover:bg-white/50 transition-colors"
+        >
+          <Share2 size={13} />
+          Share for Review
+        </button>
       </div>
 
-      {/* Career Thread Strength */}
-      <div>
-        <div className="mb-3">
-          <h3 className="text-sm font-semibold text-[#0a1628]">Career Thread Strength</h3>
-          <p className="text-xs text-gray-400 mt-0.5">Click any label on the chart to explore that dimension</p>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-stretch">
+        <div className="rounded-2xl bg-[#cfcbc1] p-5 sm:p-8 flex items-center justify-center">
+          <RadarChart
+            threads={threads}
+            activeId={selected.id}
+            onSelect={(t) => setIndex(threads.findIndex((x) => x.id === t.id))}
+          />
         </div>
 
-        <div className="bg-white rounded-xl border border-gray-200 p-4 sm:p-6">
-          <div className="flex flex-col md:flex-row gap-6">
-            <div className="flex-1 min-w-0">
-              <RadarChart threads={threads} onSelect={handleSelectThread} />
-            </div>
-
-            <div className="md:w-72 shrink-0 min-w-0 flex items-center">
-              <AnimatePresence mode="wait">
-                {selectedThread ? (
-                  <ThreadDetail
-                    key={selectedThread.id}
-                    thread={selectedThread}
-                    onClose={() => setSelectedThread(null)}
-                  />
-                ) : (
-                  <motion.div
-                    key="empty"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    className="flex flex-col items-center justify-center min-h-[180px] text-center w-full"
-                  >
-                    <div className="w-10 h-10 rounded-xl bg-gray-50 flex items-center justify-center mb-2">
-                      <Cpu size={18} className="text-gray-300" />
-                    </div>
-                    <p className="text-xs font-medium text-gray-500">Select a thread</p>
-                    <p className="text-[11px] text-gray-400 max-w-[160px] mt-1">
-                      Click any label on the chart to explore that dimension
-                    </p>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
-          </div>
-        </div>
+        <ThreadDetail thread={selected} onPrev={() => move(-1)} onNext={() => move(1)} />
       </div>
 
       {showShare && <ShareModal archetype={archetype} onClose={() => setShowShare(false)} />}
     </div>
-  );
-}
-
-// ---------- Thread Detail ----------
-
-function ThreadDetail({ thread, onClose }: { thread: CareerThread; onClose: () => void }) {
-  const Icon = ICON_MAP[thread.icon] || Cpu;
-  return (
-    <motion.div
-      initial={{ opacity: 0, x: 10 }}
-      animate={{ opacity: 1, x: 0 }}
-      exit={{ opacity: 0, x: 10 }}
-      transition={{ duration: 0.18 }}
-      className="w-full rounded-xl border p-4"
-      style={{ borderColor: thread.color + "50" }}
-    >
-      <div className="flex items-center justify-between mb-3">
-        <div className="flex items-center gap-2">
-          <div
-            className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
-            style={{ backgroundColor: thread.color + "20" }}
-          >
-            <Icon size={16} style={{ color: thread.color }} />
-          </div>
-          <div>
-            <p className="font-semibold text-[#0a1628] text-xs leading-tight">
-              {thread.name.replace(" Thread", "")}
-            </p>
-            <p className="text-[10px] text-gray-400">{thread.contextLabel}</p>
-          </div>
-        </div>
-        <button onClick={onClose} className="text-gray-300 hover:text-gray-500 transition-colors">
-          <X size={14} />
-        </button>
-      </div>
-
-      <p className="text-xs text-gray-600 leading-relaxed mb-3">{thread.explanation}</p>
-
-      <div
-        className="flex items-start gap-1.5 bg-amber-50 rounded-lg p-2.5 border border-amber-100"
-      >
-        <Lightbulb size={13} className="text-amber-600 mt-0.5 shrink-0" />
-        <p className="text-[11px] text-gray-700 leading-snug">{thread.improvement}</p>
-      </div>
-    </motion.div>
   );
 }

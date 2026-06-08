@@ -425,7 +425,7 @@ export function MentorConnect({
 
       {/* Swipe stack */}
       <div className="flex flex-col items-center gap-6">
-        <div className="relative w-full max-w-sm mx-auto" style={{ height: 520 }}>
+        <div className="relative w-full max-w-sm mx-auto h-[440px] sm:h-[520px]">
           <AnimatePresence mode="wait">
             {stack.length === 0 ? (
               <motion.div

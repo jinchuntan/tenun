@@ -391,7 +391,7 @@ export function OutreachStudio({
                     onChange={(e) =>
                       setDraft({ ...draft, body: e.target.value })
                     }
-                    className="w-full min-h-[300px] bg-beige-50 border border-navy-200 rounded-lg px-4 py-3 text-xs text-navy-800 leading-relaxed font-mono focus:outline-none focus:ring-2 focus:ring-navy-300 resize-y"
+                    className="w-full min-h-[220px] sm:min-h-[300px] bg-beige-50 border border-navy-200 rounded-lg px-3 sm:px-4 py-3 text-xs text-navy-800 leading-relaxed font-mono focus:outline-none focus:ring-2 focus:ring-navy-300 resize-y"
                   />
 
                   <p className="text-[10px] text-navy-400 mt-2">

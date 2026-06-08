@@ -155,7 +155,7 @@ export function CVUpload({ onProfileExtracted }: CVUploadProps) {
                 onDrop={handleDrop}
                 onDragOver={handleDragOver}
                 onDragLeave={handleDragLeave}
-                className={`border-2 border-dashed rounded-lg p-8 text-center transition-all cursor-pointer ${
+                className={`border-2 border-dashed rounded-lg p-5 sm:p-8 text-center transition-all cursor-pointer ${
                   state === "dragging"
                     ? "border-gold-400 bg-gold-50/50"
                     : "border-navy-200 hover:border-navy-400 hover:bg-navy-50/30"
