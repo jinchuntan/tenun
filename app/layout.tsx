@@ -15,6 +15,9 @@ const archivoBlack = Archivo_Black({
 });
 
 export const metadata: Metadata = {
+  icons: {
+    icon: "/images/Tenun Icon.png",
+  },
   title: "Tenun: See Where Your Skills Can Take You.",
   description:
     "Upload your CV and Tenun maps your existing skills to real roles you could grow into — salary ranges, honest skill gaps, and the next concrete step to close them. Built with TalentBank.",
