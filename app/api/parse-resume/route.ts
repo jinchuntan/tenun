@@ -8,28 +8,65 @@ import {
   interestSuggestions,
   industrySuggestions,
 } from "@/lib/resume-parser";
+import {
+  educationEntriesToString,
+  experienceEntriesToString,
+  WORKING_STYLES,
+  type EducationEntry,
+  type ExperienceEntry,
+  type ParsedProfileFormData,
+} from "@/lib/profile-form";
 
-const SYSTEM_PROMPT = `You are a resume/CV parser. Extract structured information from the resume text provided. Return a JSON object with exactly this shape:
+/**
+ * CV/resume parser.
+ *
+ * DATA-HONESTY CONTRACT: the model must extract only what the CV actually
+ * contains. Anything not clearly present is returned as "" / [] — it must NOT
+ * be inferred, guessed, or invented. Demo data may be fictional; parsed user
+ * data must be evidence-based (see lib/profile-form.ts).
+ *
+ * The response keeps two views so every caller stays happy:
+ *   - `profile`     — back-compat `Partial<UserProfile>` (education/experience
+ *                     as strings) used by the CV builder + CVUpload card.
+ *   - `confidence`  — same boolean keys as before (CVUpload renders these).
+ *   - `form`        — NEW: structured fields for the profile wizard prefill.
+ */
+const SYSTEM_PROMPT = `You are a precise resume/CV parser. Extract ONLY information that is explicitly present in the resume text. Return a single JSON object with exactly this shape:
 
 {
-  "name": "string or empty string",
-  "currentRole": "string or empty string — their current or most recent job title / student status",
-  "education": "string or empty string — degrees, institutions, years. Keep to 1-2 lines max.",
-  "experience": "string or empty string — summarize in 2-3 SHORT sentences only. Do not list every role.",
+  "name": "string — the person's full name, or \\"\\"",
+  "email": "string — their email address exactly as written, or \\"\\"",
+  "contactNumber": "string — their phone/mobile number exactly as written, or \\"\\"",
+  "currentRole": "string — current or most recent job title / student status, or \\"\\"",
+  "description": "string — a 1-2 sentence professional summary, ONLY if the CV has a summary/objective/about section or it can be quoted from the text. Otherwise \\"\\"",
+  "education": [
+    { "school": "", "fieldOfStudy": "", "qualification": "", "startYear": "", "endYear": "" }
+  ],
+  "experience": [
+    { "company": "", "role": "", "description": "", "startYear": "", "endYear": "" }
+  ],
   "skills": ["array of matched skill tags"],
   "interests": ["array of matched interest tags"],
   "preferredIndustries": ["array of matched industry tags"],
-  "locationPreference": "string or empty string — city/country if mentioned"
+  "locationPreference": "string — city/country ONLY if stated, else \\"\\"",
+  "salaryExpectation": "string — ONLY if the CV states a salary expectation, else \\"\\"",
+  "availabilityYear": "string — ONLY if the CV states when they are available to start, else \\"\\"",
+  "availabilityMonth": "string — ONLY if the CV states an availability month, else \\"\\"",
+  "workingStyle": "string — exactly one of Hybrid, Remote, On-site, ONLY if the CV states a preference, else \\"\\""
 }
 
-IMPORTANT RULES:
-1. For "skills", match ONLY from this list: ${JSON.stringify(skillSuggestions)}
-2. For "interests", match ONLY from this list: ${JSON.stringify(interestSuggestions)}
-3. For "preferredIndustries", match ONLY from this list: ${JSON.stringify(industrySuggestions)}
-4. Keep "education" and "experience" very concise — no long paragraphs.
-5. Return ONLY valid JSON — no markdown, no code fences, no explanation.`;
+CRITICAL ANTI-HALLUCINATION RULES — read carefully:
+1. NEVER invent, infer, or guess missing facts. If a value is not clearly in the resume text, return "" (or [] for arrays). This applies especially to: phone numbers, emails, salary expectations, universities/schools, grades/GPA, companies, dates/years, certifications, achievements, job titles, locations, links and portfolio URLs.
+2. If the resume is vague, keep it vague — leave structured sub-fields empty rather than filling them with plausible-sounding values.
+3. For each education/experience entry, only include the sub-fields you can actually read. Leave the others "". Do not output an entry that has no real data. If there is no education (or experience) at all, return an empty array [].
+4. "startYear"/"endYear" must be copied from the text. Never estimate a year. Use "" for an ongoing/present end date.
+5. "description" / "interests" / "preferredIndustries" may only reflect things explicitly stated or directly evidenced by the listed projects/experience. Do not infer interests or industries from a name, school, or single keyword guess. When unsure, leave them empty.
+6. For "skills", match ONLY from this list: ${JSON.stringify(skillSuggestions)}
+7. For "interests", match ONLY from this list: ${JSON.stringify(interestSuggestions)}
+8. For "preferredIndustries", match ONLY from this list: ${JSON.stringify(industrySuggestions)}
+9. Return ONLY valid JSON — no markdown, no code fences, no explanation.`;
 
-function safeParseJSON(text: string): Record<string, any> {
+function safeParseJSON(text: string): Record<string, unknown> {
   let cleaned = text.trim();
   if (cleaned.startsWith("```")) {
     cleaned = cleaned.replace(/^```(?:json)?\s*/, "").replace(/```\s*$/, "");
@@ -48,6 +85,63 @@ function safeParseJSON(text: string): Record<string, any> {
     for (let i = 0; i < openBraces - closeBraces; i++) repaired += "}";
     return JSON.parse(repaired);
   }
+}
+
+// ── Sanitizers: coerce LLM output to safe, evidence-only shapes ───────────────
+const MAX_ENTRIES = 8;
+
+/** Trimmed string, or "" for anything non-string / falsy. */
+function str(v: unknown): string {
+  return typeof v === "string" ? v.trim() : "";
+}
+
+function strArray(v: unknown, allowList: string[]): string[] {
+  if (!Array.isArray(v)) return [];
+  const allowed = new Set(allowList);
+  const seen = new Set<string>();
+  const out: string[] = [];
+  for (const item of v) {
+    const s = str(item);
+    if (s && allowed.has(s) && !seen.has(s)) {
+      seen.add(s);
+      out.push(s);
+    }
+  }
+  return out;
+}
+
+function educationArray(v: unknown): EducationEntry[] {
+  if (!Array.isArray(v)) return [];
+  return v
+    .slice(0, MAX_ENTRIES)
+    .map((e) => {
+      const o = (e ?? {}) as Record<string, unknown>;
+      return {
+        school: str(o.school),
+        fieldOfStudy: str(o.fieldOfStudy),
+        qualification: str(o.qualification),
+        startYear: str(o.startYear),
+        endYear: str(o.endYear),
+      };
+    })
+    .filter((e) => e.school || e.fieldOfStudy || e.qualification);
+}
+
+function experienceArray(v: unknown): ExperienceEntry[] {
+  if (!Array.isArray(v)) return [];
+  return v
+    .slice(0, MAX_ENTRIES)
+    .map((e) => {
+      const o = (e ?? {}) as Record<string, unknown>;
+      return {
+        company: str(o.company),
+        role: str(o.role),
+        description: str(o.description),
+        startYear: str(o.startYear),
+        endYear: str(o.endYear),
+      };
+    })
+    .filter((e) => e.company || e.role || e.description);
 }
 
 export async function POST(request: Request) {
@@ -80,7 +174,7 @@ export async function POST(request: Request) {
         { role: "system", content: SYSTEM_PROMPT },
         {
           role: "user",
-          content: `Parse this resume and extract structured profile data:\n\n${text.slice(0, 12000)}`,
+          content: `Parse this resume and extract structured profile data. Remember: leave any field empty if the resume does not clearly state it — do not invent anything.\n\n${text.slice(0, 12000)}`,
         },
       ],
       temperature: 0.1,
@@ -89,35 +183,55 @@ export async function POST(request: Request) {
 
     const parsed = safeParseJSON(raw);
 
-    const confidence = {
-      name: !!parsed.name,
-      currentRole: !!parsed.currentRole,
-      education: !!parsed.education,
-      experience: !!parsed.experience,
-      skills: Array.isArray(parsed.skills) && parsed.skills.length > 0,
-      interests: Array.isArray(parsed.interests) && parsed.interests.length > 0,
-      industries: Array.isArray(parsed.preferredIndustries) && parsed.preferredIndustries.length > 0,
-      location: !!parsed.locationPreference,
+    // Structured, evidence-only view for the profile wizard.
+    const workingStyleRaw = str(parsed.workingStyle);
+    const form: ParsedProfileFormData = {
+      name: str(parsed.name),
+      email: str(parsed.email),
+      contactNumber: str(parsed.contactNumber),
+      currentRole: str(parsed.currentRole),
+      description: str(parsed.description),
+      education: educationArray(parsed.education),
+      experience: experienceArray(parsed.experience),
+      skills: strArray(parsed.skills, skillSuggestions),
+      interests: strArray(parsed.interests, interestSuggestions),
+      preferredIndustries: strArray(parsed.preferredIndustries, industrySuggestions),
+      locationPreference: str(parsed.locationPreference),
+      salaryExpectation: str(parsed.salaryExpectation),
+      availabilityYear: str(parsed.availabilityYear),
+      availabilityMonth: str(parsed.availabilityMonth),
+      workingStyle: (WORKING_STYLES as string[]).includes(workingStyleRaw) ? workingStyleRaw : "",
+      resumeText: "", // attached client-side from the raw extraction
     };
+
+    // Back-compat `Partial<UserProfile>` view (strings) for the CV builder /
+    // CVUpload card — derived from the same evidence, never invented.
+    const educationStr = educationEntriesToString(form.education);
+    const experienceStr = experienceEntriesToString(form.experience);
 
     const profile = {
-      ...(parsed.name && { name: parsed.name }),
-      ...(parsed.currentRole && { currentRole: parsed.currentRole }),
-      ...(parsed.education && { education: parsed.education }),
-      ...(parsed.experience && { experience: parsed.experience }),
-      ...((parsed.skills as string[])?.length > 0 && {
-        skills: (parsed.skills as string[]).filter((s) => skillSuggestions.includes(s)),
-      }),
-      ...((parsed.interests as string[])?.length > 0 && {
-        interests: (parsed.interests as string[]).filter((s) => interestSuggestions.includes(s)),
-      }),
-      ...((parsed.preferredIndustries as string[])?.length > 0 && {
-        preferredIndustries: (parsed.preferredIndustries as string[]).filter((s) => industrySuggestions.includes(s)),
-      }),
-      ...(parsed.locationPreference && { locationPreference: parsed.locationPreference }),
+      ...(form.name && { name: form.name }),
+      ...(form.currentRole && { currentRole: form.currentRole }),
+      ...(educationStr && { education: educationStr }),
+      ...(experienceStr && { experience: experienceStr }),
+      ...(form.skills.length > 0 && { skills: form.skills }),
+      ...(form.interests.length > 0 && { interests: form.interests }),
+      ...(form.preferredIndustries.length > 0 && { preferredIndustries: form.preferredIndustries }),
+      ...(form.locationPreference && { locationPreference: form.locationPreference }),
     };
 
-    return NextResponse.json({ profile, confidence, provider });
+    const confidence = {
+      name: !!form.name,
+      currentRole: !!form.currentRole,
+      education: !!educationStr,
+      experience: !!experienceStr,
+      skills: form.skills.length > 0,
+      interests: form.interests.length > 0,
+      industries: form.preferredIndustries.length > 0,
+      location: !!form.locationPreference,
+    };
+
+    return NextResponse.json({ profile, form, confidence, provider });
   } catch (err) {
     console.error("Resume parse error:", err);
     return NextResponse.json({ error: "Failed to parse resume." }, { status: 500 });

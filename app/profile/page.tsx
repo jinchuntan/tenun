@@ -18,32 +18,22 @@ import { UserProfile } from "@/lib/types";
 import { extractTextFromFile } from "@/lib/file-extractors";
 import { createClient } from "@/lib/supabase/client";
 import { signInWithGoogle } from "@/lib/use-auth";
-import { demoProfile } from "@/lib/demo-data";
+import {
+  ProfileFormData,
+  ParsedProfileFormData,
+  EducationEntry,
+  ExperienceEntry,
+  emptyProfileForm,
+  emptyEducationEntry,
+  emptyExperienceEntry,
+  getAishaDemoFormData,
+  applyParsedProfileToForm,
+  getMissingImportantFields,
+  profileFormToUserProfile,
+  userProfileToFormPartial,
+  WORKING_STYLES,
+} from "@/lib/profile-form";
 import { useLanguage } from "@/components/i18n/LanguageProvider";
-
-// ── Types ─────────────────────────────────────────────────────────────────────
-interface EducationEntry {
-  school: string;
-  fieldOfStudy: string;
-  qualification: string;
-  startYear: string;
-  endYear: string;
-}
-
-interface ExperienceEntry {
-  company: string;
-  role: string;
-  description: string;
-  startYear: string;
-  endYear: string;
-}
-
-const emptyEdu = (): EducationEntry => ({
-  school: "", fieldOfStudy: "", qualification: "", startYear: "", endYear: "",
-});
-const emptyExp = (): ExperienceEntry => ({
-  company: "", role: "", description: "", startYear: "", endYear: "",
-});
 
 const STEP_LABELS = [
   "Basic Information",
@@ -179,40 +169,54 @@ function ProfilePageInner() {
   >("idle");
   const [introError, setIntroError] = useState("");
 
-  // Core profile (goes to sessionStorage → dashboard)
-  const [profile, setProfile] = useState<UserProfile>({
-    name: "",
-    currentRole: "",
-    education: "",
-    experience: "",
-    skills: [],
-    interests: [],
-    preferredIndustries: [],
-    salaryExpectation: "",
-    riskAppetite: "medium",
-    lifestylePreference: "flexibility",
-    locationPreference: "",
-    resumeText: "",
-  });
-
-  // Step-local state (UI only, serialized on submit)
-  const [contactNumber, setContactNumber] = useState("");
-  const [email, setEmail] = useState("");
-  const [description, setDescription] = useState("");
-  const [educationEntries, setEducationEntries] = useState<EducationEntry[]>([emptyEdu()]);
-  const [experienceEntries, setExperienceEntries] = useState<ExperienceEntry[]>([emptyExp()]);
-  const [workingStyle, setWorkingStyle] = useState("Hybrid");
-  const [availabilityYear, setAvailabilityYear] = useState("");
-  const [availabilityMonth, setAvailabilityMonth] = useState("");
-  const [locations, setLocations] = useState<string[]>([]);
+  // Single source of truth for the whole wizard (see lib/profile-form.ts).
+  const [form, setForm] = useState<ProfileFormData>(emptyProfileForm);
   const [locationInput, setLocationInput] = useState("");
+  // Important fields a real CV did not supply — shown so the user fills them in.
+  const [missingFields, setMissingFields] = useState<string[]>([]);
+
+  // ── Form field updaters ─────────────────────────────────────────────────────
+  const setField = <K extends keyof ProfileFormData>(
+    key: K,
+    value: ProfileFormData[K]
+  ) => setForm((f) => ({ ...f, [key]: value }));
+
+  const setEdu = (i: number, patch: Partial<EducationEntry>) =>
+    setForm((f) => ({
+      ...f,
+      education: f.education.map((x, j) => (j === i ? { ...x, ...patch } : x)),
+    }));
+  const addEdu = () =>
+    setForm((f) => ({ ...f, education: [...f.education, emptyEducationEntry()] }));
+  const removeEdu = (i: number) =>
+    setForm((f) => ({ ...f, education: f.education.filter((_, j) => j !== i) }));
+
+  const setExp = (i: number, patch: Partial<ExperienceEntry>) =>
+    setForm((f) => ({
+      ...f,
+      experience: f.experience.map((x, j) => (j === i ? { ...x, ...patch } : x)),
+    }));
+  const addExp = () =>
+    setForm((f) => ({ ...f, experience: [...f.experience, emptyExperienceEntry()] }));
+  const removeExp = (i: number) =>
+    setForm((f) => ({ ...f, experience: f.experience.filter((_, j) => j !== i) }));
+
+  const addLocation = () => {
+    const t = locationInput.trim();
+    if (!t) return;
+    setForm((f) => ({ ...f, locations: [...f.locations, t] }));
+    setLocationInput("");
+  };
+  const removeLocation = (loc: string) =>
+    setForm((f) => ({ ...f, locations: f.locations.filter((l) => l !== loc) }));
 
   // Auth + stored profile
   useEffect(() => {
     const stored = sessionStorage.getItem("tenun-profile");
     if (stored) {
       try {
-        setProfile((p) => ({ ...p, ...JSON.parse(stored) }));
+        const p = JSON.parse(stored) as Partial<UserProfile>;
+        setForm((f) => ({ ...f, ...userProfileToFormPartial(p) }));
       } catch {}
     }
     const supabase = createClient();
@@ -224,34 +228,13 @@ function ProfilePageInner() {
     return () => subscription.unsubscribe();
   }, []);
 
-  const update = <K extends keyof UserProfile>(key: K, value: UserProfile[K]) =>
-    setProfile((p) => ({ ...p, [key]: value }));
-
+  // Demo data may be COMPLETE + FICTIONAL — fill every field so the wizard looks
+  // properly populated (this is intentional, see lib/profile-form.ts).
   const loadDemo = () => {
-    setProfile(demoProfile);
+    setForm(getAishaDemoFormData());
+    setMissingFields([]);
+    setStep(0);
     setShowIntro(false);
-  };
-
-  const applyParsedProfile = (parsed: Partial<UserProfile>) => {
-    setProfile((prev) => {
-      const merged = { ...prev };
-      if (parsed.name && !prev.name) merged.name = parsed.name;
-      if (parsed.currentRole && !prev.currentRole) merged.currentRole = parsed.currentRole;
-      if (parsed.education && !prev.education) merged.education = parsed.education;
-      if (parsed.experience && !prev.experience) merged.experience = parsed.experience;
-      if (parsed.locationPreference && !prev.locationPreference)
-        merged.locationPreference = parsed.locationPreference;
-      if (parsed.skills)
-        merged.skills = [...new Set([...prev.skills, ...parsed.skills])];
-      if (parsed.interests)
-        merged.interests = [...new Set([...prev.interests, ...parsed.interests])];
-      if (parsed.preferredIndustries)
-        merged.preferredIndustries = [
-          ...new Set([...prev.preferredIndustries, ...parsed.preferredIndustries]),
-        ];
-      if (parsed.resumeText) merged.resumeText = parsed.resumeText;
-      return merged;
-    });
   };
 
   async function handleSignInForUpload() {
@@ -278,8 +261,18 @@ function ProfilePageInner() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ text }),
       });
-      const data = res.ok ? await res.json() : { profile: null };
-      if (data.profile) applyParsedProfile({ ...data.profile, resumeText: text });
+      const data = res.ok ? await res.json() : { form: null };
+      // Parsed CV data is EVIDENCE-BASED: only fields the CV actually contained
+      // are filled. Whatever is missing stays empty and is surfaced below.
+      const parsed: Partial<ParsedProfileFormData> | null = data.form ?? null;
+      if (parsed) {
+        const merged = applyParsedProfileToForm({ ...parsed, resumeText: text }, form);
+        setForm(merged);
+        setMissingFields(getMissingImportantFields(merged));
+      } else {
+        // Parser unavailable/failed — keep the raw CV text so nothing is lost.
+        setForm((f) => ({ ...f, resumeText: text }));
+      }
       setIntroUploadState("success");
     } catch (e) {
       setIntroError(e instanceof Error ? e.message : "Failed to process file.");
@@ -290,42 +283,8 @@ function ProfilePageInner() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-
-    const eduText = educationEntries
-      .filter((e) => e.school)
-      .map((e) =>
-        [
-          e.school,
-          e.fieldOfStudy,
-          e.qualification,
-          e.startYear && `${e.startYear}–${e.endYear || "present"}`,
-        ]
-          .filter(Boolean)
-          .join(", ")
-      )
-      .join("\n");
-
-    const expText = experienceEntries
-      .filter((e) => e.company)
-      .map((e) =>
-        [
-          e.role && e.company ? `${e.role} at ${e.company}` : e.company,
-          e.description,
-          e.startYear && `${e.startYear}–${e.endYear || "present"}`,
-        ]
-          .filter(Boolean)
-          .join(", ")
-      )
-      .join("\n");
-
-    const finalProfile = {
-      ...profile,
-      education: eduText || profile.education,
-      experience: expText || profile.experience,
-      locationPreference:
-        locations.join(", ") || profile.locationPreference,
-    };
-
+    // Serialize the wizard form into the dashboard-facing UserProfile.
+    const finalProfile = profileFormToUserProfile(form);
     sessionStorage.setItem("tenun-profile", JSON.stringify(finalProfile));
     setTimeout(() => router.push("/dashboard"), 1500);
   };
@@ -501,6 +460,29 @@ function ProfilePageInner() {
           <div className="bg-[#f0f0f0] rounded-2xl p-6 sm:p-8">
             <StepBreadcrumb current={step} />
 
+            {/* "Still needed" note after a real CV parse — never shown for demo data. */}
+            {missingFields.length > 0 && (
+              <div className="mb-6 flex items-start gap-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3">
+                <AlertCircle className="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" />
+                <div className="text-sm">
+                  <p className="font-medium text-amber-800">
+                    We filled what we could from your CV.
+                  </p>
+                  <p className="text-amber-700">
+                    Please review and complete: {missingFields.join(", ")}.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setMissingFields([])}
+                  className="ml-auto text-amber-400 hover:text-amber-600"
+                  aria-label="Dismiss"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+            )}
+
             {/* ── Step 1: Basic Information ── */}
             {step === 0 && (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
@@ -511,8 +493,8 @@ function ProfilePageInner() {
                     <input
                       type="text"
                       required
-                      value={profile.name}
-                      onChange={(e) => update("name", e.target.value)}
+                      value={form.name}
+                      onChange={(e) => setField("name", e.target.value)}
                       placeholder="e.g. Aisha Lim"
                       className={inputCls}
                     />
@@ -525,8 +507,8 @@ function ProfilePageInner() {
                       </span>
                       <input
                         type="tel"
-                        value={contactNumber}
-                        onChange={(e) => setContactNumber(e.target.value)}
+                        value={form.contactNumber}
+                        onChange={(e) => setField("contactNumber", e.target.value)}
                         placeholder="Mobile Number"
                         className={inputCls}
                       />
@@ -536,8 +518,8 @@ function ProfilePageInner() {
                     <label className={labelCls}>Email *</label>
                     <input
                       type="email"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
+                      value={form.email}
+                      onChange={(e) => setField("email", e.target.value)}
                       placeholder="e.g. aishalim@gmail.com"
                       className={inputCls}
                     />
@@ -547,8 +529,8 @@ function ProfilePageInner() {
                     <input
                       type="text"
                       required
-                      value={profile.currentRole}
-                      onChange={(e) => update("currentRole", e.target.value)}
+                      value={form.currentRole}
+                      onChange={(e) => setField("currentRole", e.target.value)}
                       placeholder="e.g. UX Designer"
                       className={inputCls}
                     />
@@ -558,8 +540,8 @@ function ProfilePageInner() {
                 <div className="flex flex-col">
                   <label className={labelCls}>Description *</label>
                   <textarea
-                    value={description}
-                    onChange={(e) => setDescription(e.target.value)}
+                    value={form.description}
+                    onChange={(e) => setField("description", e.target.value)}
                     placeholder="Write a brief introduction to tell who you are"
                     className={inputCls + " resize-none flex-1 min-h-[220px]"}
                   />
@@ -573,18 +555,14 @@ function ProfilePageInner() {
                 {/* Education */}
                 <div className="space-y-4">
                   <h3 className="text-sm font-semibold text-gray-800">Education *</h3>
-                  {educationEntries.map((entry, i) => (
+                  {form.education.map((entry, i) => (
                     <div key={i} className="bg-white rounded-xl p-4 space-y-3">
                       <div>
                         <label className={labelCls}>School *</label>
                         <input
                           type="text"
                           value={entry.school}
-                          onChange={(e) =>
-                            setEducationEntries((prev) =>
-                              prev.map((x, j) => j === i ? { ...x, school: e.target.value } : x)
-                            )
-                          }
+                          onChange={(e) => setEdu(i, { school: e.target.value })}
                           placeholder="e.g. Universiti Malaya"
                           className={inputCls}
                         />
@@ -594,11 +572,7 @@ function ProfilePageInner() {
                         <input
                           type="text"
                           value={entry.fieldOfStudy}
-                          onChange={(e) =>
-                            setEducationEntries((prev) =>
-                              prev.map((x, j) => j === i ? { ...x, fieldOfStudy: e.target.value } : x)
-                            )
-                          }
+                          onChange={(e) => setEdu(i, { fieldOfStudy: e.target.value })}
                           placeholder="e.g. Computer Science"
                           className={inputCls}
                         />
@@ -608,11 +582,7 @@ function ProfilePageInner() {
                         <input
                           type="text"
                           value={entry.qualification}
-                          onChange={(e) =>
-                            setEducationEntries((prev) =>
-                              prev.map((x, j) => j === i ? { ...x, qualification: e.target.value } : x)
-                            )
-                          }
+                          onChange={(e) => setEdu(i, { qualification: e.target.value })}
                           placeholder="e.g. Bachelor's Degree"
                           className={inputCls}
                         />
@@ -623,33 +593,23 @@ function ProfilePageInner() {
                           <input
                             type="text"
                             value={entry.startYear}
-                            onChange={(e) =>
-                              setEducationEntries((prev) =>
-                                prev.map((x, j) => j === i ? { ...x, startYear: e.target.value } : x)
-                              )
-                            }
+                            onChange={(e) => setEdu(i, { startYear: e.target.value })}
                             placeholder="Start Year"
                             className={inputCls}
                           />
                           <input
                             type="text"
                             value={entry.endYear}
-                            onChange={(e) =>
-                              setEducationEntries((prev) =>
-                                prev.map((x, j) => j === i ? { ...x, endYear: e.target.value } : x)
-                              )
-                            }
+                            onChange={(e) => setEdu(i, { endYear: e.target.value })}
                             placeholder="End Year"
                             className={inputCls}
                           />
                         </div>
                       </div>
-                      {educationEntries.length > 1 && (
+                      {form.education.length > 1 && (
                         <button
                           type="button"
-                          onClick={() =>
-                            setEducationEntries((prev) => prev.filter((_, j) => j !== i))
-                          }
+                          onClick={() => removeEdu(i)}
                           className="text-xs text-red-400 hover:text-red-600 transition-colors"
                         >
                           Remove
@@ -660,9 +620,7 @@ function ProfilePageInner() {
                   <div className="flex justify-end">
                     <button
                       type="button"
-                      onClick={() =>
-                        setEducationEntries((prev) => [...prev, emptyEdu()])
-                      }
+                      onClick={addEdu}
                       className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full border-2 border-gray-800 text-sm font-medium text-gray-800 hover:bg-gray-800 hover:text-white transition-colors"
                     >
                       <Plus className="w-4 h-4" /> Add
@@ -673,18 +631,14 @@ function ProfilePageInner() {
                 {/* Experiences */}
                 <div className="space-y-4">
                   <h3 className="text-sm font-semibold text-gray-800">Experiences *</h3>
-                  {experienceEntries.map((entry, i) => (
+                  {form.experience.map((entry, i) => (
                     <div key={i} className="bg-white rounded-xl p-4 space-y-3">
                       <div>
                         <label className={labelCls}>Company *</label>
                         <input
                           type="text"
                           value={entry.company}
-                          onChange={(e) =>
-                            setExperienceEntries((prev) =>
-                              prev.map((x, j) => j === i ? { ...x, company: e.target.value } : x)
-                            )
-                          }
+                          onChange={(e) => setExp(i, { company: e.target.value })}
                           placeholder="e.g. Tenun"
                           className={inputCls}
                         />
@@ -694,11 +648,7 @@ function ProfilePageInner() {
                         <input
                           type="text"
                           value={entry.role}
-                          onChange={(e) =>
-                            setExperienceEntries((prev) =>
-                              prev.map((x, j) => j === i ? { ...x, role: e.target.value } : x)
-                            )
-                          }
+                          onChange={(e) => setExp(i, { role: e.target.value })}
                           placeholder="e.g. UX Designer"
                           className={inputCls}
                         />
@@ -708,11 +658,7 @@ function ProfilePageInner() {
                         <input
                           type="text"
                           value={entry.description}
-                          onChange={(e) =>
-                            setExperienceEntries((prev) =>
-                              prev.map((x, j) => j === i ? { ...x, description: e.target.value } : x)
-                            )
-                          }
+                          onChange={(e) => setExp(i, { description: e.target.value })}
                           placeholder="Share what you have learnt from this company"
                           className={inputCls}
                         />
@@ -723,33 +669,23 @@ function ProfilePageInner() {
                           <input
                             type="text"
                             value={entry.startYear}
-                            onChange={(e) =>
-                              setExperienceEntries((prev) =>
-                                prev.map((x, j) => j === i ? { ...x, startYear: e.target.value } : x)
-                              )
-                            }
+                            onChange={(e) => setExp(i, { startYear: e.target.value })}
                             placeholder="Start Year"
                             className={inputCls}
                           />
                           <input
                             type="text"
                             value={entry.endYear}
-                            onChange={(e) =>
-                              setExperienceEntries((prev) =>
-                                prev.map((x, j) => j === i ? { ...x, endYear: e.target.value } : x)
-                              )
-                            }
+                            onChange={(e) => setExp(i, { endYear: e.target.value })}
                             placeholder="End Year"
                             className={inputCls}
                           />
                         </div>
                       </div>
-                      {experienceEntries.length > 1 && (
+                      {form.experience.length > 1 && (
                         <button
                           type="button"
-                          onClick={() =>
-                            setExperienceEntries((prev) => prev.filter((_, j) => j !== i))
-                          }
+                          onClick={() => removeExp(i)}
                           className="text-xs text-red-400 hover:text-red-600 transition-colors"
                         >
                           Remove
@@ -760,9 +696,7 @@ function ProfilePageInner() {
                   <div className="flex justify-end">
                     <button
                       type="button"
-                      onClick={() =>
-                        setExperienceEntries((prev) => [...prev, emptyExp()])
-                      }
+                      onClick={addExp}
                       className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full border-2 border-gray-800 text-sm font-medium text-gray-800 hover:bg-gray-800 hover:text-white transition-colors"
                     >
                       <Plus className="w-4 h-4" /> Add
@@ -780,8 +714,8 @@ function ProfilePageInner() {
                   <div className="bg-white rounded-xl p-4">
                     <label className={labelCls}>Skill *</label>
                     <TagChipInput
-                      values={profile.skills}
-                      onChange={(v) => update("skills", v)}
+                      values={form.skills}
+                      onChange={(v) => setField("skills", v)}
                       placeholder="Type a skill and press Enter"
                     />
                   </div>
@@ -791,8 +725,8 @@ function ProfilePageInner() {
                   <div className="bg-white rounded-xl p-4">
                     <label className={labelCls}>Interest *</label>
                     <TagChipInput
-                      values={profile.interests}
-                      onChange={(v) => update("interests", v)}
+                      values={form.interests}
+                      onChange={(v) => setField("interests", v)}
                       placeholder="Type an interest and press Enter"
                     />
                   </div>
@@ -809,8 +743,8 @@ function ProfilePageInner() {
                     <label className={labelCls}>Salary Expectation *</label>
                     <input
                       type="text"
-                      value={profile.salaryExpectation}
-                      onChange={(e) => update("salaryExpectation", e.target.value)}
+                      value={form.salaryExpectation}
+                      onChange={(e) => setField("salaryExpectation", e.target.value)}
                       placeholder="e.g. RM5,000 - RM8,000"
                       className={inputCls}
                     />
@@ -818,13 +752,15 @@ function ProfilePageInner() {
                   <div>
                     <label className={labelCls}>Working Style Preference *</label>
                     <select
-                      value={workingStyle}
-                      onChange={(e) => setWorkingStyle(e.target.value)}
+                      value={form.workingStyle}
+                      onChange={(e) =>
+                        setField("workingStyle", e.target.value as ProfileFormData["workingStyle"])
+                      }
                       className={inputCls}
                     >
-                      <option>Hybrid</option>
-                      <option>Remote</option>
-                      <option>On-site</option>
+                      {WORKING_STYLES.map((ws) => (
+                        <option key={ws}>{ws}</option>
+                      ))}
                     </select>
                   </div>
                   <div>
@@ -832,15 +768,15 @@ function ProfilePageInner() {
                     <div className="grid grid-cols-2 gap-2">
                       <input
                         type="text"
-                        value={availabilityYear}
-                        onChange={(e) => setAvailabilityYear(e.target.value)}
+                        value={form.availabilityYear}
+                        onChange={(e) => setField("availabilityYear", e.target.value)}
                         placeholder="Year"
                         className={inputCls}
                       />
                       <input
                         type="text"
-                        value={availabilityMonth}
-                        onChange={(e) => setAvailabilityMonth(e.target.value)}
+                        value={form.availabilityMonth}
+                        onChange={(e) => setField("availabilityMonth", e.target.value)}
                         placeholder="Month"
                         className={inputCls}
                       />
@@ -849,9 +785,9 @@ function ProfilePageInner() {
                   <div>
                     <label className={labelCls}>Risk Appetite *</label>
                     <select
-                      value={profile.riskAppetite}
+                      value={form.riskAppetite}
                       onChange={(e) =>
-                        update("riskAppetite", e.target.value as UserProfile["riskAppetite"])
+                        setField("riskAppetite", e.target.value as ProfileFormData["riskAppetite"])
                       }
                       className={inputCls}
                     >
@@ -867,11 +803,11 @@ function ProfilePageInner() {
                   <div>
                     <label className={labelCls}>Lifestyle Preference *</label>
                     <select
-                      value={profile.lifestylePreference}
+                      value={form.lifestylePreference}
                       onChange={(e) =>
-                        update(
+                        setField(
                           "lifestylePreference",
-                          e.target.value as UserProfile["lifestylePreference"]
+                          e.target.value as ProfileFormData["lifestylePreference"]
                         )
                       }
                       className={inputCls}
@@ -896,10 +832,7 @@ function ProfilePageInner() {
                           onKeyDown={(e) => {
                             if (e.key === "Enter") {
                               e.preventDefault();
-                              if (locationInput.trim()) {
-                                setLocations((prev) => [...prev, locationInput.trim()]);
-                                setLocationInput("");
-                              }
+                              addLocation();
                             }
                           }}
                           placeholder="e.g. Kuala Lumpur"
@@ -907,7 +840,7 @@ function ProfilePageInner() {
                         />
                       </div>
                       <div className="flex flex-wrap gap-2">
-                        {locations.map((loc) => (
+                        {form.locations.map((loc) => (
                           <span
                             key={loc}
                             className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border border-gray-300 bg-gray-50 text-sm text-gray-700"
@@ -915,9 +848,7 @@ function ProfilePageInner() {
                             {loc}
                             <button
                               type="button"
-                              onClick={() =>
-                                setLocations((prev) => prev.filter((l) => l !== loc))
-                              }
+                              onClick={() => removeLocation(loc)}
                             >
                               <X className="w-3 h-3 text-gray-400 hover:text-gray-600" />
                             </button>
@@ -927,12 +858,7 @@ function ProfilePageInner() {
                       <div className="flex justify-end">
                         <button
                           type="button"
-                          onClick={() => {
-                            if (locationInput.trim()) {
-                              setLocations((prev) => [...prev, locationInput.trim()]);
-                              setLocationInput("");
-                            }
-                          }}
+                          onClick={addLocation}
                           className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full border-2 border-gray-800 text-sm font-medium text-gray-800 hover:bg-gray-800 hover:text-white transition-colors"
                         >
                           <Plus className="w-4 h-4" /> Add
@@ -957,7 +883,7 @@ function ProfilePageInner() {
               ) : (
                 <button
                   type="submit"
-                  disabled={loading || !profile.name || !profile.currentRole}
+                  disabled={loading || !form.name || !form.currentRole}
                   className="inline-flex items-center gap-2 px-6 py-2.5 rounded-full bg-[#0a1628] text-white text-sm font-semibold hover:bg-[#1a2a48] disabled:opacity-60 transition-colors"
                 >
                   {loading ? (
