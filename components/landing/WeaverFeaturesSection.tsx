@@ -15,9 +15,8 @@ const FEATURE_MEDIA = [
 const LEN = FEATURE_MEDIA.length;
 const AUTO_ROTATE_MS = 5000;
 
-// Swipe commits when the drag passes EITHER a distance OR a velocity gate.
-const SWIPE_DISTANCE = 55; // px
-const SWIPE_VELOCITY = 350; // px/s
+const SWIPE_DISTANCE = 55;
+const SWIPE_VELOCITY = 350;
 
 type Pos = -1 | 0 | 1;
 
@@ -29,8 +28,6 @@ export function WeaverFeaturesSection() {
   const FEATURES = f.cards.map((card, i) => ({ ...card, ...FEATURE_MEDIA[i] }));
 
   const [index, setIndex] = useState(0);
-
-  // Auto-rotation pauses while the user hovers / focuses / drags / touches.
   const [paused, setPaused] = useState(false);
   const pause = useCallback(() => setPaused(true), []);
   const resume = useCallback(() => setPaused(false), []);
@@ -39,17 +36,14 @@ export function WeaverFeaturesSection() {
   const goPrev = useCallback(() => setIndex((i) => (i - 1 + LEN) % LEN), []);
   const goTo = useCallback((t: number) => setIndex(((t % LEN) + LEN) % LEN), []);
 
-  // Single self-resetting timer: re-armed on every index change (auto OR manual)
-  // for an even 5s cadence, and cleared while paused / reduced-motion. Resuming
-  // schedules a fresh 5s tick, so rotation continues a short delay after the
-  // user stops interacting. No duplicate intervals.
+  // Self-resetting timer: re-armed on every index change, cleared while paused/reduced-motion.
   useEffect(() => {
     if (reduce || paused) return;
     const id = setTimeout(goNext, AUTO_ROTATE_MS);
     return () => clearTimeout(id);
   }, [index, paused, reduce, goNext]);
 
-  // Measure the fan width so the side-card offsets scale with available space.
+  // ResizeObserver so fan offsets scale with available container width.
   const fanRef = useRef<HTMLDivElement>(null);
   const [fanW, setFanW] = useState(360);
   useEffect(() => {
@@ -69,43 +63,23 @@ export function WeaverFeaturesSection() {
 
   const targetFor = (pos: Pos) => {
     if (pos === 0) return { x: 0, y: 0, rotate: 0, scale: 1.03, opacity: 1, zIndex: 30 };
-    const dir = pos; // -1 left, 1 right
-    return {
-      x: dir * sideX,
-      y: sideY,
-      rotate: dir * sideRotate,
-      scale: sideScale,
-      opacity: sideOpacity,
-      zIndex: pos === 1 ? 20 : 10,
-    };
+    const dir = pos;
+    return { x: dir * sideX, y: sideY, rotate: dir * sideRotate, scale: sideScale, opacity: sideOpacity, zIndex: pos === 1 ? 20 : 10 };
   };
 
-  const handleDragEnd = useCallback(
-    (_: unknown, info: PanInfo) => {
-      const { offset, velocity } = info;
-      if (offset.x < -SWIPE_DISTANCE || velocity.x < -SWIPE_VELOCITY) goNext();
-      else if (offset.x > SWIPE_DISTANCE || velocity.x > SWIPE_VELOCITY) goPrev();
-      resume();
-    },
-    [goNext, goPrev, resume]
-  );
+  const transition = { duration: reduce ? 0 : 0.4, ease: "easeInOut" };
 
-  const handleKeyDown = useCallback(
-    (e: React.KeyboardEvent) => {
-      if (e.key === "ArrowLeft") { e.preventDefault(); goPrev(); }
-      else if (e.key === "ArrowRight") { e.preventDefault(); goNext(); }
-    },
-    [goNext, goPrev]
-  );
-
-  const transition = reduce
-    ? { duration: 0 }
-    : { type: "spring" as const, stiffness: 210, damping: 26, mass: 0.9 };
+  function handleDragEnd(_: unknown, info: PanInfo) {
+    const dist = info.offset.x;
+    const vel = info.velocity.x;
+    if (dist < -SWIPE_DISTANCE || vel < -SWIPE_VELOCITY) goNext();
+    else if (dist > SWIPE_DISTANCE || vel > SWIPE_VELOCITY) goPrev();
+  }
 
   return (
-    <section id="features" className="py-6 md:py-10 overflow-x-clip">
+    <section id="features" className="py-6 md:py-10">
       <div className="max-w-6xl mx-auto px-4 sm:px-6">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 sm:gap-10 lg:gap-8 items-center">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-8 items-center">
           {/* Left headline */}
           <div className="lg:col-span-5">
             <p className="text-sm font-semibold text-navy-500 mb-3">{f.eyebrow}</p>
@@ -117,31 +91,20 @@ export function WeaverFeaturesSection() {
             </p>
           </div>
 
-          {/* Card fan */}
-          <div
-            className="lg:col-span-7 select-none"
-            role="group"
-            aria-roledescription="carousel"
-            aria-label={f.title}
-            onMouseEnter={pause}
-            onMouseLeave={resume}
-            onTouchStart={pause}
-            onTouchEnd={resume}
-            onFocus={pause}
-            onBlur={resume}
-          >
+          {/* Fan carousel with controls */}
+          <div className="lg:col-span-7">
             <div
               ref={fanRef}
-              tabIndex={0}
-              onKeyDown={handleKeyDown}
-              aria-label={`${FEATURES[index].title} — ${index + 1} of ${LEN}`}
-              className="relative w-full h-[440px] sm:h-[480px] lg:h-[500px] outline-none focus-visible:ring-2 focus-visible:ring-gold-400 focus-visible:ring-offset-2 focus-visible:ring-offset-beige-50 rounded-3xl"
+              className="relative h-[400px] sm:h-[430px] lg:h-[450px] mb-6"
+              onMouseEnter={pause}
+              onFocus={pause}
+              onMouseLeave={resume}
+              onBlur={resume}
             >
               {FEATURES.map((feature, i) => {
-                const rel = (i - index + LEN) % LEN; // 0 center, 1 right, 2 left
+                const rel = (i - index + LEN) % LEN;
                 const pos: Pos = rel === 0 ? 0 : rel === 1 ? 1 : -1;
                 const isCenter = pos === 0;
-
                 return (
                   <motion.article
                     key={i}
@@ -150,21 +113,13 @@ export function WeaverFeaturesSection() {
                     animate={targetFor(pos)}
                     transition={transition}
                     style={{ width: "min(80vw, 300px)" }}
-                    // Centred via inset-0 + m-auto; Framer transforms ride on top.
                     className={[
                       "absolute inset-0 m-auto h-[400px] sm:h-[430px] lg:h-[450px]",
                       "flex flex-col rounded-3xl bg-beige-100 border border-beige-300/60 p-3.5 pt-7 shadow-xl shadow-navy-900/10",
                       isCenter ? "cursor-grab active:cursor-grabbing" : "cursor-pointer",
                     ].join(" ")}
                     {...(isCenter
-                      ? {
-                          drag: "x" as const,
-                          dragConstraints: { left: 0, right: 0 },
-                          dragElastic: 0.18,
-                          dragMomentum: false,
-                          onDragStart: pause,
-                          onDragEnd: handleDragEnd,
-                        }
+                      ? { drag: "x" as const, dragConstraints: { left: 0, right: 0 }, dragElastic: 0.18, dragMomentum: false, onDragStart: pause, onDragEnd: handleDragEnd }
                       : { onClick: () => goTo(i) })}
                   >
                     <div className="px-1">
@@ -178,7 +133,6 @@ export function WeaverFeaturesSection() {
                         {feature.body}
                       </p>
                     </div>
-
                     <div className="flex-1 relative min-h-0 rounded-2xl bg-white overflow-hidden mt-3">
                       <Image
                         src={feature.image}
@@ -195,8 +149,8 @@ export function WeaverFeaturesSection() {
               })}
             </div>
 
-            {/* Controls — arrows flanking the dots, below the fan */}
-            <div className="flex items-center justify-center gap-4 mt-6">
+            {/* Controls — arrows flanking dot indicators */}
+            <div className="flex items-center justify-center gap-4">
               <button
                 type="button"
                 onClick={goPrev}
@@ -205,7 +159,6 @@ export function WeaverFeaturesSection() {
               >
                 <ChevronLeft className="w-5 h-5" />
               </button>
-
               <div className="flex items-center gap-2">
                 {FEATURES.map((feature, i) => (
                   <button
@@ -214,14 +167,10 @@ export function WeaverFeaturesSection() {
                     onClick={() => goTo(i)}
                     aria-label={`Show feature ${i + 1}: ${feature.title}`}
                     aria-current={i === index}
-                    className={[
-                      "h-2 rounded-full transition-all",
-                      i === index ? "w-6 bg-navy-700" : "w-2 bg-beige-300 hover:bg-navy-300",
-                    ].join(" ")}
+                    className={["h-2 rounded-full transition-all", i === index ? "w-6 bg-navy-700" : "w-2 bg-beige-300 hover:bg-navy-300"].join(" ")}
                   />
                 ))}
               </div>
-
               <button
                 type="button"
                 onClick={goNext}

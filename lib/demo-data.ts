@@ -40,7 +40,7 @@ export const demoProfile: UserProfile = {
 Final-year Computer Science Student | Aspiring Product Manager & Data Analyst
 
 EDUCATION
-BSc Computer Science — University of Melbourne (Expected 2025)
+BSc Computer Science, University of Melbourne (Expected 2025)
 Minor in Environmental Studies | Dean's List 2023 | GPA: 3.7/4.0
 
 EXPERIENCE
