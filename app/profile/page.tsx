@@ -871,9 +871,14 @@ function ProfilePageInner() {
             )}
 
             {/* ── Navigation ── */}
+            {/* Distinct `key`s force React to mount a *new* element per branch.
+                Without them React reuses the same <button> DOM node and mutates
+                its `type` from "button"→"submit" inside the Next click handler,
+                which makes the browser fire a phantom form submit on that click. */}
             <div className="flex justify-end mt-8">
               {step < 3 ? (
                 <button
+                  key="next"
                   type="button"
                   onClick={() => setStep((s) => s + 1)}
                   className="px-6 py-2.5 rounded-full bg-[#0a1628] text-white text-sm font-semibold hover:bg-[#1a2a48] transition-colors"
@@ -882,6 +887,7 @@ function ProfilePageInner() {
                 </button>
               ) : (
                 <button
+                  key="submit"
                   type="submit"
                   disabled={loading || !form.name || !form.currentRole}
                   className="inline-flex items-center gap-2 px-6 py-2.5 rounded-full bg-[#0a1628] text-white text-sm font-semibold hover:bg-[#1a2a48] disabled:opacity-60 transition-colors"
