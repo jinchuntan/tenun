@@ -6,7 +6,7 @@ import { Loader2 } from "lucide-react";
 import { AuthForm } from "@/components/auth-form";
 
 function LoginInner() {
-  const next = useSearchParams().get("next") ?? "/dashboard";
+  const next = useSearchParams().get("next");
   return <AuthForm mode="login" next={next} />;
 }
 

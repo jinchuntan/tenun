@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
-import { Loader2, Sparkles, Mail, CheckCircle2 } from "lucide-react";
+import { Loader2, Sparkles, Mail, CheckCircle2, Search, Briefcase } from "lucide-react";
 import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
 import {
@@ -12,17 +12,19 @@ import {
   signInWithEmail,
   signUpWithEmail,
 } from "@/lib/use-auth";
+import { destinationFor, type AccountType } from "@/lib/account";
 import { useLanguage } from "@/components/i18n/LanguageProvider";
 
 type Mode = "login" | "signup";
 
 interface AuthFormProps {
   mode: Mode;
-  /** Where to send the user after a successful sign-in. */
-  next?: string;
+  /** Where to send the user after a successful sign-in. Falls back to the
+   *  account-type home dashboard when not provided. */
+  next?: string | null;
 }
 
-export function AuthForm({ mode, next = "/dashboard" }: AuthFormProps) {
+export function AuthForm({ mode, next }: AuthFormProps) {
   const router = useRouter();
   const { dict } = useLanguage();
   const t = mode === "login" ? dict.auth.login : dict.auth.signup;
@@ -51,6 +53,7 @@ export function AuthForm({ mode, next = "/dashboard" }: AuthFormProps) {
   // Surface an error bounced back from the OAuth callback route.
   const callbackError = useSearchParams().get("auth_error");
 
+  const [accountType, setAccountType] = useState<AccountType>("candidate");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -64,7 +67,7 @@ export function AuthForm({ mode, next = "/dashboard" }: AuthFormProps) {
     setError(null);
     setGoogleLoading(true);
     try {
-      await signInWithGoogle(next);
+      await signInWithGoogle(next ?? "", mode === "signup" ? accountType : undefined);
       // On success the browser is redirected to Google; no further code runs.
     } catch (e) {
       setError(messageFor(e));
@@ -88,15 +91,16 @@ export function AuthForm({ mode, next = "/dashboard" }: AuthFormProps) {
     setSubmitting(true);
     try {
       if (mode === "login") {
-        await signInWithEmail(email, password);
-        router.push(next);
+        const user = await signInWithEmail(email, password);
+        router.push(destinationFor(user?.user_metadata?.account_type, next));
         router.refresh();
       } else {
-        const { needsConfirmation } = await signUpWithEmail(email, password, next);
+        const target = destinationFor(accountType, next);
+        const { needsConfirmation } = await signUpWithEmail(email, password, target, accountType);
         if (needsConfirmation) {
           setConfirmSent(true);
         } else {
-          router.push(next);
+          router.push(target);
           router.refresh();
         }
       }
@@ -148,6 +152,39 @@ export function AuthForm({ mode, next = "/dashboard" }: AuthFormProps) {
                     {t.subtitle}
                   </p>
                 </div>
+
+                {/* Role chooser — only when creating an account */}
+                {mode === "signup" && (
+                  <div className="mb-5">
+                    <p className="text-xs font-semibold text-navy-700 mb-2">{dict.auth.roleQuestion}</p>
+                    <div className="grid grid-cols-2 gap-2.5">
+                      {([
+                        { value: "candidate" as const, icon: Search, label: dict.auth.roleCandidate, desc: dict.auth.roleCandidateDesc },
+                        { value: "employer" as const, icon: Briefcase, label: dict.auth.roleEmployer, desc: dict.auth.roleEmployerDesc },
+                      ]).map(({ value, icon: Icon, label, desc }) => {
+                        const active = accountType === value;
+                        return (
+                          <button
+                            key={value}
+                            type="button"
+                            onClick={() => setAccountType(value)}
+                            aria-pressed={active}
+                            className={[
+                              "text-left rounded-xl border-2 p-3 transition-all",
+                              active
+                                ? "border-navy-900 bg-navy-50 ring-2 ring-navy-100"
+                                : "border-navy-200 hover:border-navy-400",
+                            ].join(" ")}
+                          >
+                            <Icon className={`w-5 h-5 mb-1.5 ${active ? "text-navy-900" : "text-navy-400"}`} />
+                            <span className="block text-sm font-semibold text-navy-900">{label}</span>
+                            <span className="block text-[11px] text-navy-500 leading-snug mt-0.5">{desc}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
 
                 {/* Google */}
                 <button

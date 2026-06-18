@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import type { AccountType } from "@/lib/account";
 import type { User } from "@supabase/supabase-js";
 
 export interface AuthState {
@@ -41,27 +42,40 @@ export function useAuth(): AuthState {
   return { user, loading, authDisabled };
 }
 
-/** Kick off Google OAuth, returning to `next` after sign-in. */
-export async function signInWithGoogle(next: string) {
+/**
+ * Kick off Google OAuth, returning to `next` after sign-in.
+ * On sign-up we pass the chosen `accountType` along so the callback can
+ * persist it (OAuth can't carry sign-up metadata the way email sign-up does).
+ */
+export async function signInWithGoogle(next: string, accountType?: AccountType) {
   const supabase = createClient();
   if (!supabase) {
     // No Supabase configured — just go straight through (local dev)
-    window.location.href = next;
+    window.location.href = next || "/dashboard";
     return;
   }
+  const params = new URLSearchParams();
+  if (next) params.set("next", next);
+  if (accountType) params.set("role", accountType);
   const { error } = await supabase.auth.signInWithOAuth({
     provider: "google",
-    options: { redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}` },
+    options: {
+      redirectTo: `${window.location.origin}/auth/callback?${params.toString()}`,
+      // Always show Google's account chooser so the user can pick which
+      // account to use instead of silently reusing the current session.
+      queryParams: { prompt: "select_account" },
+    },
   });
   if (error) throw error;
 }
 
-/** Sign in with email + password. Throws on failure. */
-export async function signInWithEmail(email: string, password: string) {
+/** Sign in with email + password. Returns the signed-in user. Throws on failure. */
+export async function signInWithEmail(email: string, password: string): Promise<User | null> {
   const supabase = createClient();
   if (!supabase) throw new Error("Authentication isn't configured.");
-  const { error } = await supabase.auth.signInWithPassword({ email, password });
+  const { data, error } = await supabase.auth.signInWithPassword({ email, password });
   if (error) throw error;
+  return data.user;
 }
 
 /**
@@ -69,14 +83,23 @@ export async function signInWithEmail(email: string, password: string) {
  * Returns `needsConfirmation: true` when Supabase requires email verification
  * before the session is active.
  */
-export async function signUpWithEmail(email: string, password: string, next: string) {
+export async function signUpWithEmail(
+  email: string,
+  password: string,
+  next: string,
+  accountType: AccountType
+) {
   const supabase = createClient();
   if (!supabase) throw new Error("Authentication isn't configured.");
+  const params = new URLSearchParams({ next, role: accountType });
   const { data, error } = await supabase.auth.signUp({
     email,
     password,
     options: {
-      emailRedirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}`,
+      // account_type lands in raw_user_meta_data so the DB trigger can persist
+      // it to profiles, and middleware can read it from the session.
+      data: { account_type: accountType },
+      emailRedirectTo: `${window.location.origin}/auth/callback?${params.toString()}`,
     },
   });
   if (error) throw error;

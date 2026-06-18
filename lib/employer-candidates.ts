@@ -2,9 +2,13 @@
 // Mock candidate pool for the employer dashboard prototype.
 //
 // This is fictional demo data — no real people, no database, no privacy logic.
-// It exists purely to demonstrate the "Tenun explains WHY a candidate fits"
-// flow on /employers/dashboard. All candidates are styled after Malaysian
-// students / fresh graduates.
+// It exists purely to demonstrate the "Tenun shows WHY a candidate fits, by
+// evidence" flow on /employers/dashboard. All candidates are styled after
+// Malaysian students / fresh graduates.
+//
+// Design rule: NO match scores anywhere. Ranking is computed under the hood
+// (skill relevance → manual curation → proof density) but only ever surfaced
+// as qualitative labels, never as a number.
 // ─────────────────────────────────────────────────────────────────────────────
 
 export interface CandidateProject {
@@ -32,6 +36,8 @@ export interface EmployerCandidate {
   name: string;
   initials: string;
   headline: string;
+  /** One-line, evidence-backed claim shown as the card hero. */
+  evidencedClaim: string;
   location: string;
   availability: string;
   preferredRoles: string[];
@@ -40,14 +46,24 @@ export interface EmployerCandidate {
   tools: string[];
   industries: string[];
   salaryExpectation: string;
-  /** Baseline fit (0–100) before query keyword overlap is added. */
-  fitScoreBase: number;
+  /** Manual curation order for the first demos. Lower = higher. */
+  curatedRank: number;
   intentSignal: string;
   readiness: string;
   cvSummary: string;
+  /** Three tight, scannable highlights. */
+  summaryBullets: string[];
+  /** How this person could grow inside the hiring company (retention angle). */
+  growthPath: string;
   cv: CandidateCV;
   projects: CandidateProject[];
   whyHire: string[];
+  /** Verifiable credentials: degrees, certs, results. */
+  credentials: string[];
+  /** Evidence of how they reason / work, not just what they built. */
+  thinkingProof: string[];
+  /** External validation: stars, rankings, community, testimonials. */
+  socialProof: string[];
   possibleGaps: string[];
   interviewFocus: string[];
   email: string;
@@ -55,10 +71,15 @@ export interface EmployerCandidate {
   meetingSlots: MeetingSlot[];
 }
 
+/** Outreach handshake state for a candidate (employer requests → accept/decline). */
+export type ConnectionStatus = "none" | "pending" | "accepted" | "declined";
+
 export interface CandidateSearchResult {
   candidate: EmployerCandidate;
-  score: number;
-  matchedTerms: string[];
+  /** Candidate skills that matched the query (for display tags). */
+  matchedSkills: string[];
+  /** True when the candidate covers every recognised skill in the query. */
+  meetsAllMustHaves: boolean;
 }
 
 const DEFAULT_SLOTS: MeetingSlot[] = [
@@ -73,6 +94,7 @@ export const CANDIDATES: EmployerCandidate[] = [
     name: "Aisha Rahman",
     initials: "AR",
     headline: "Backend Software Engineer · APIs & distributed systems",
+    evidencedClaim: "Shipped a payments API handling ~12k daily transactions during her internship.",
     location: "Kuala Lumpur",
     availability: "Available in 1 month",
     preferredRoles: ["Backend Developer", "Software Engineer Intern", "Full-Stack Engineer", "Platform Engineer"],
@@ -81,11 +103,18 @@ export const CANDIDATES: EmployerCandidate[] = [
     tools: ["AWS", "GitHub Actions", "Postman", "Redis", "Kubernetes"],
     industries: ["Fintech", "SaaS", "E-commerce"],
     salaryExpectation: "RM 3,200 – RM 4,000 / month",
-    fitScoreBase: 84,
+    curatedRank: 1,
     intentSignal: "Actively looking",
     readiness: "Portfolio-ready",
     cvSummary:
       "Final-year Computer Science student at Universiti Malaya with hands-on experience building production-style REST and GraphQL APIs. Comfortable across Node.js, Python and Go, with a focus on clean, well-tested services and cloud deployment.",
+    summaryBullets: [
+      "Built a production-style payments API (Node.js + PostgreSQL) handling ~12k daily transactions.",
+      "Owns deployment end-to-end: AWS, Docker and GitHub Actions CI.",
+      "Two public, deployed projects with measurable outcomes.",
+    ],
+    growthPath:
+      "Ready to own backend services from day one; with mentorship on event-driven systems she could grow into a platform/infra lead within 18–24 months.",
     cv: {
       education: [
         { institution: "Universiti Malaya (UM)", qualification: "BSc Computer Science", period: "2021 – 2025", result: "CGPA 3.78" },
@@ -104,14 +133,14 @@ export const CANDIDATES: EmployerCandidate[] = [
         description: "A payments reconciliation service that matches bank statements against internal ledgers and flags mismatches.",
         skills: ["Node.js", "TypeScript", "PostgreSQL", "Docker"],
         outcome: "Reduced manual reconciliation time by ~70% in a demo with a local merchant; deployed on AWS ECS.",
-        link: "github.com/aisharahman/payledger",
+        link: "https://github.com/aisharahman/payledger",
       },
       {
         name: "GoFetch",
         description: "A concurrent web-scraping CLI in Go with rate limiting and retry/backoff.",
         skills: ["Go", "Concurrency", "REST APIs"],
         outcome: "1.2k GitHub stars; used as a teaching example for goroutines at a campus workshop.",
-        link: "github.com/aisharahman/gofetch",
+        link: "https://github.com/aisharahman/gofetch",
       },
     ],
     whyHire: [
@@ -119,6 +148,18 @@ export const CANDIDATES: EmployerCandidate[] = [
       "Strong portfolio evidence: two deployed projects with measurable outcomes and public GitHub code.",
       "Demonstrated ownership of deployment and CI (AWS, Docker, GitHub Actions), reducing onboarding cost.",
       "Intent signal is high — actively looking and available within a month.",
+    ],
+    credentials: [
+      "BSc Computer Science, Universiti Malaya — CGPA 3.78",
+      "AWS Cloud Practitioner (foundational)",
+    ],
+    thinkingProof: [
+      "Documented her reconciliation edge-case handling in the PayLedger README.",
+      "Added retry/rate-limit logic to an OSS Go tool — reasoning about failure modes, not just features.",
+    ],
+    socialProof: [
+      "1.2k GitHub stars on GoFetch",
+      "9 merged PRs to a public Go project",
     ],
     possibleGaps: [
       "Limited experience with large-scale event-driven architectures (Kafka, queues).",
@@ -138,6 +179,7 @@ export const CANDIDATES: EmployerCandidate[] = [
     name: "Daniel Wong",
     initials: "DW",
     headline: "Data Analyst · SQL, Python & dashboards",
+    evidencedClaim: "Built sales dashboards that surfaced RM 40k/month of slow-moving stock for a retail client.",
     location: "Petaling Jaya",
     availability: "Available immediately",
     preferredRoles: ["Data Analyst Intern", "Business Intelligence Analyst", "Data Analyst"],
@@ -146,11 +188,18 @@ export const CANDIDATES: EmployerCandidate[] = [
     tools: ["Power BI", "Tableau", "Google Sheets", "Jupyter", "BigQuery"],
     industries: ["Retail", "FMCG", "Banking"],
     salaryExpectation: "RM 2,800 – RM 3,400 / month",
-    fitScoreBase: 81,
+    curatedRank: 3,
     intentSignal: "Actively looking",
     readiness: "Portfolio-ready",
     cvSummary:
       "Data-focused fresh graduate from Sunway University who turns messy spreadsheets into clear dashboards. Strong SQL and Python, with several end-to-end analytics projects covering sales and operations data.",
+    summaryBullets: [
+      "Owns the full pipeline: SQL extraction → Python analysis → Power BI dashboards.",
+      "Dashboards adopted by real users (3 regional managers) for weekly reviews.",
+      "Available immediately, so ramp-up is fast.",
+    ],
+    growthPath:
+      "Strong fit for a junior analyst seat now; as he picks up data-warehousing and experimentation he could anchor a small analytics function within two years.",
     cv: {
       education: [
         { institution: "Sunway University", qualification: "BSc Data Analytics", period: "2021 – 2024", result: "CGPA 3.65" },
@@ -182,6 +231,18 @@ export const CANDIDATES: EmployerCandidate[] = [
       "Owns the full analytics pipeline: extract (SQL) → analyse (Python) → present (Power BI).",
       "Available immediately, so ramp-up is fast.",
     ],
+    credentials: [
+      "BSc Data Analytics, Sunway University — CGPA 3.65",
+      "Google Data Analytics Professional Certificate",
+    ],
+    thinkingProof: [
+      "Chose an explainable churn model over a black box and justified why in his write-up.",
+      "Frames every dashboard around the decision it should drive, not the data available.",
+    ],
+    socialProof: [
+      "Top 12% in a Kaggle retail forecasting challenge",
+      "Dashboards adopted by 3 regional managers",
+    ],
     possibleGaps: [
       "Has not worked with very large datasets / data warehousing at scale.",
       "Limited experience with formal experimentation (A/B testing).",
@@ -200,6 +261,7 @@ export const CANDIDATES: EmployerCandidate[] = [
     name: "Nurul Iman",
     initials: "NI",
     headline: "Product / UX Associate · research-led design",
+    evidencedClaim: "Lifted task completion from 61% to 89% in moderated usability tests on a redesign.",
     location: "Cyberjaya",
     availability: "Available in 2 weeks",
     preferredRoles: ["Product Associate", "UX Designer", "Product/UX Associate", "Associate Product Manager"],
@@ -208,11 +270,18 @@ export const CANDIDATES: EmployerCandidate[] = [
     tools: ["Figma", "Maze", "Notion", "Miro", "FigJam"],
     industries: ["EdTech", "HealthTech", "Consumer apps"],
     salaryExpectation: "RM 2,900 – RM 3,500 / month",
-    fitScoreBase: 78,
+    curatedRank: 4,
     intentSignal: "Open to offers",
     readiness: "Portfolio-ready",
     cvSummary:
       "Multimedia University graduate who blends user research with clean, accessible interface design. Has run real usability sessions and shipped redesigns backed by evidence rather than opinion.",
+    summaryBullets: [
+      "Designs from evidence — every decision backed by research or a usability result.",
+      "Measurable UX impact: task completion 61% → 89% on a real redesign.",
+      "Comfortable collaborating with engineers; thinks in flows, not just screens.",
+    ],
+    growthPath:
+      "Slots into a product/UX associate role immediately; with ownership of metrics end-to-end she could grow toward a product manager track in 2–3 years.",
     cv: {
       education: [
         { institution: "Multimedia University (MMU)", qualification: "BA Interface Design", period: "2020 – 2024", result: "First Class" },
@@ -244,6 +313,18 @@ export const CANDIDATES: EmployerCandidate[] = [
       "Portfolio shows measurable UX impact (task completion 61% → 89%).",
       "Comfortable collaborating with engineers; thinks in flows, not just screens.",
     ],
+    credentials: [
+      "BA Interface Design, Multimedia University — First Class",
+      "Google UX Design Professional Certificate",
+    ],
+    thinkingProof: [
+      "Presents before/after journey maps to justify design decisions.",
+      "Frames work around what NOT to build, citing research evidence.",
+    ],
+    socialProof: [
+      "Lead designer on a hackathon-winning study app",
+      "Redesign case study cited by her EdTech team",
+    ],
     possibleGaps: [
       "Less exposure to design systems at scale.",
       "Has not yet owned product metrics end-to-end (acquisition → retention).",
@@ -262,6 +343,7 @@ export const CANDIDATES: EmployerCandidate[] = [
     name: "Arjun Subramaniam",
     initials: "AS",
     headline: "Cybersecurity Analyst · blue team & threat detection",
+    evidencedClaim: "Built a home SOC lab and wrote 14 tuned detection rules with documented false-positive analysis.",
     location: "Kuala Lumpur",
     availability: "Available in 1 month",
     preferredRoles: ["Cybersecurity Analyst", "SOC Analyst", "IT Security Intern", "Information Security Analyst"],
@@ -270,11 +352,18 @@ export const CANDIDATES: EmployerCandidate[] = [
     tools: ["Wireshark", "Splunk", "Nmap", "Burp Suite", "Kali Linux"],
     industries: ["Banking", "Telco", "Government"],
     salaryExpectation: "RM 3,000 – RM 3,800 / month",
-    fitScoreBase: 77,
+    curatedRank: 5,
     intentSignal: "Actively looking",
     readiness: "Interview-ready",
     cvSummary:
       "Asia Pacific University graduate focused on defensive security. Hands-on with packet analysis, SIEM dashboards and basic penetration testing, plus a CompTIA Security+ certification.",
+    summaryBullets: [
+      "Genuinely hands-on detection — built and tuned a real Splunk SIEM lab, not just theory.",
+      "Holds CompTIA Security+ and captains a top-5 national CTF team.",
+      "Documents clearly (runbooks, tuning notes) — valuable in a SOC.",
+    ],
+    growthPath:
+      "Productive in a SOC analyst seat quickly; with enterprise exposure and compliance frameworks he could move toward detection engineering in 2 years.",
     cv: {
       education: [
         { institution: "Asia Pacific University (APU)", qualification: "BSc Cyber Security", period: "2021 – 2024", result: "CGPA 3.55" },
@@ -306,6 +395,18 @@ export const CANDIDATES: EmployerCandidate[] = [
       "Holds CompTIA Security+ and competes in CTFs, showing self-driven learning.",
       "Documents clearly (runbooks, tuning notes) — valuable in a SOC.",
     ],
+    credentials: [
+      "BSc Cyber Security, Asia Pacific University — CGPA 3.55",
+      "CompTIA Security+",
+    ],
+    thinkingProof: [
+      "Documented true/false-positive tuning for his detection rules.",
+      "Wrote incident runbooks during his bank internship.",
+    ],
+    socialProof: [
+      "Captain of a top-5 national CTF team",
+      "Ran a phishing-awareness workshop for ~120 students",
+    ],
     possibleGaps: [
       "Limited enterprise-scale exposure (large estates, compliance frameworks).",
       "Offensive/pen-testing depth is basic compared to blue-team strength.",
@@ -324,6 +425,7 @@ export const CANDIDATES: EmployerCandidate[] = [
     name: "Wei Jie Tan",
     initials: "WT",
     headline: "Finance / Business Analyst · modelling & valuation",
+    evidencedClaim: "Built a 3-statement model for a real SME client and flagged a cash-flow risk in the aggressive scenario.",
     location: "Kuala Lumpur",
     availability: "Available in 3 weeks",
     preferredRoles: ["Finance Graduate Analyst", "Business Analyst", "Investment Analyst", "Financial Analyst"],
@@ -332,11 +434,18 @@ export const CANDIDATES: EmployerCandidate[] = [
     tools: ["Excel", "PowerPoint", "SQL", "Bloomberg Terminal", "Power BI"],
     industries: ["Investment Banking", "Consulting", "Corporate Finance"],
     salaryExpectation: "RM 3,000 – RM 3,600 / month",
-    fitScoreBase: 76,
+    curatedRank: 6,
     intentSignal: "Open to offers",
     readiness: "Interview-ready",
     cvSummary:
       "Finance graduate from Universiti Teknologi MARA with strong Excel modelling and a CFA Level I pass. Comfortable translating financial data into clear recommendations for non-finance stakeholders.",
+    summaryBullets: [
+      "Clean financial modelling with scenario and sensitivity analysis, not static sheets.",
+      "CFA Level I plus real client modelling work — commitment and capability.",
+      "Translates financial insight for non-finance audiences clearly.",
+    ],
+    growthPath:
+      "Ready for a graduate analyst role; broadening his data tooling beyond Excel would set him up for a senior analyst seat within a few years.",
     cv: {
       education: [
         { institution: "Universiti Teknologi MARA (UiTM)", qualification: "BBA Finance", period: "2020 – 2024", result: "CGPA 3.60" },
@@ -368,6 +477,18 @@ export const CANDIDATES: EmployerCandidate[] = [
       "CFA Level I plus real client modelling work shows commitment and capability.",
       "Communicates financial insight to non-finance audiences clearly.",
     ],
+    credentials: [
+      "BBA Finance, Universiti Teknologi MARA — CGPA 3.60",
+      "CFA Level I (passed)",
+    ],
+    thinkingProof: [
+      "Flagged a cash-flow risk in his SME model's aggressive scenario rather than just presenting upside.",
+      "Defends valuation assumptions with a clear sensitivity table.",
+    ],
+    socialProof: [
+      "Treasurer of the university investment club (RM 20k mock portfolio)",
+      "Client model used in a real SME expansion decision",
+    ],
     possibleGaps: [
       "Limited SQL/data tooling depth beyond Excel.",
       "No exposure to large-scale corporate finance transactions yet.",
@@ -386,6 +507,7 @@ export const CANDIDATES: EmployerCandidate[] = [
     name: "Sofea Aziz",
     initials: "SA",
     headline: "Frontend Developer · React, Next.js & accessible UI",
+    evidencedClaim: "Rebuilt a marketing site in Next.js and pushed its Lighthouse performance score to 98.",
     location: "Shah Alam",
     availability: "Available immediately",
     preferredRoles: ["Frontend Developer", "Software Engineer Intern", "Web Developer", "Full-Stack Engineer"],
@@ -394,11 +516,18 @@ export const CANDIDATES: EmployerCandidate[] = [
     tools: ["Git", "Figma", "Vite", "Vercel", "Storybook"],
     industries: ["SaaS", "E-commerce", "Media"],
     salaryExpectation: "RM 2,900 – RM 3,500 / month",
-    fitScoreBase: 79,
+    curatedRank: 2,
     intentSignal: "Actively looking",
     readiness: "Portfolio-ready",
     cvSummary:
       "Universiti Teknologi Malaysia graduate who builds fast, accessible web interfaces with React and Next.js. Cares about performance budgets and shipping polished, responsive UIs.",
+    summaryBullets: [
+      "Ships polished, fast UIs — measurable wins like Lighthouse 98.",
+      "Takes accessibility seriously (WCAG AA), which many juniors overlook.",
+      "Available immediately with public, reviewable code.",
+    ],
+    growthPath:
+      "Immediately productive on frontend; pairing her with backend mentorship could grow her into a well-rounded full-stack engineer within 18 months.",
     cv: {
       education: [
         { institution: "Universiti Teknologi Malaysia (UTM)", qualification: "BSc Software Engineering", period: "2021 – 2024", result: "CGPA 3.70" },
@@ -417,7 +546,7 @@ export const CANDIDATES: EmployerCandidate[] = [
         description: "A responsive ordering site for a local food stall, built with Next.js and Tailwind.",
         skills: ["Next.js", "TypeScript", "Tailwind CSS"],
         outcome: "Loads in under 1s on 3G; the stall now takes pre-orders through it.",
-        link: "github.com/sofeaaziz/warung-web",
+        link: "https://github.com/sofeaaziz/warung-web",
       },
       {
         name: "A11y Audit Kit",
@@ -430,6 +559,18 @@ export const CANDIDATES: EmployerCandidate[] = [
       "Ships polished, fast UIs — measurable performance wins (Lighthouse 98).",
       "Takes accessibility seriously, which many junior devs overlook.",
       "Available immediately with public, reviewable code.",
+    ],
+    credentials: [
+      "BSc Software Engineering, Universiti Teknologi Malaysia — CGPA 3.70",
+      "Meta Front-End Developer Certificate",
+    ],
+    thinkingProof: [
+      "Works to explicit performance budgets and proves the result (Lighthouse 98).",
+      "Built reusable accessible components rather than one-off fixes.",
+    ],
+    socialProof: [
+      "Mentored juniors at a campus web-dev bootcamp",
+      "Warung Web in real use by a local stall for pre-orders",
     ],
     possibleGaps: [
       "Backend/API experience is light — primarily a frontend specialist.",
@@ -449,6 +590,7 @@ export const CANDIDATES: EmployerCandidate[] = [
     name: "Kavin Raj",
     initials: "KR",
     headline: "Machine Learning enthusiast · Python & applied ML",
+    evidencedClaim: "Built a defect-classification prototype reaching 92% validation accuracy on real factory images.",
     location: "Penang",
     availability: "Available in 1 month",
     preferredRoles: ["Machine Learning Intern", "Data Scientist", "AI Engineer", "Data Analyst"],
@@ -457,11 +599,18 @@ export const CANDIDATES: EmployerCandidate[] = [
     tools: ["Jupyter", "TensorFlow", "Hugging Face", "Git", "Google Colab"],
     industries: ["AI / ML", "Manufacturing", "Healthcare"],
     salaryExpectation: "RM 3,000 – RM 3,800 / month",
-    fitScoreBase: 75,
+    curatedRank: 7,
     intentSignal: "Open to offers",
     readiness: "Building portfolio",
     cvSummary:
       "Universiti Sains Malaysia graduate applying machine learning to real problems. Strong Python foundations with applied projects in classification and NLP.",
+    summaryBullets: [
+      "Applies ML to concrete local problems (Malay NLP, factory defects) — not toy datasets.",
+      "Solid Python and scikit-learn/TensorFlow foundation.",
+      "Self-driven learner active in the local data community.",
+    ],
+    growthPath:
+      "A strong applied-ML hire who'd benefit from MLOps mentorship; could own model deployment pipelines as he gains production exposure.",
     cv: {
       education: [
         { institution: "Universiti Sains Malaysia (USM)", qualification: "BSc Computer Science (AI)", period: "2021 – 2024", result: "CGPA 3.62" },
@@ -493,6 +642,18 @@ export const CANDIDATES: EmployerCandidate[] = [
       "Solid Python and scikit-learn/TensorFlow foundation.",
       "Self-driven learner active in the local data community.",
     ],
+    credentials: [
+      "BSc Computer Science (AI), Universiti Sains Malaysia — CGPA 3.62",
+      "DeepLearning.AI TensorFlow Developer Certificate",
+    ],
+    thinkingProof: [
+      "Validated DefectVision carefully given a small dataset, noting the limitation.",
+      "Compared his transformer against a bag-of-words baseline to prove the gain.",
+    ],
+    socialProof: [
+      "Active in local Kaggle and PyData meetups",
+      "Defect prototype demoed to a real plant team",
+    ],
     possibleGaps: [
       "Limited MLOps / model-deployment experience (mostly notebooks).",
       "Small datasets so far — needs exposure to production data scale.",
@@ -511,6 +672,7 @@ export const CANDIDATES: EmployerCandidate[] = [
     name: "Hui Ying Lim",
     initials: "HL",
     headline: "Digital Marketing & Growth Analyst · SEO and content",
+    evidencedClaim: "Grew an e-commerce store's organic traffic 40% in 3 months with an SEO content plan.",
     location: "Johor Bahru",
     availability: "Available in 2 weeks",
     preferredRoles: ["Digital Marketing Executive", "Growth Analyst", "Marketing Associate", "Content Strategist"],
@@ -519,11 +681,18 @@ export const CANDIDATES: EmployerCandidate[] = [
     tools: ["Google Analytics", "Meta Ads", "Canva", "Mailchimp", "Google Search Console"],
     industries: ["E-commerce", "F&B", "Startups"],
     salaryExpectation: "RM 2,600 – RM 3,200 / month",
-    fitScoreBase: 73,
+    curatedRank: 8,
     intentSignal: "Open to offers",
     readiness: "Portfolio-ready",
     cvSummary:
       "Taylor's University graduate who grows audiences with data-led content and SEO. Has run real campaigns with tracked results for small local brands.",
+    summaryBullets: [
+      "Marketing with receipts — tracks real results (40% organic growth), not vanity metrics.",
+      "Comfortable across SEO, content and paid social on real budgets.",
+      "Ties content decisions back to Google Analytics data.",
+    ],
+    growthPath:
+      "Fits a growth/marketing associate role now; with bigger budgets and full-funnel attribution she could grow into a performance-marketing lead.",
     cv: {
       education: [
         { institution: "Taylor's University", qualification: "BA Marketing", period: "2021 – 2024", result: "CGPA 3.58" },
@@ -555,6 +724,18 @@ export const CANDIDATES: EmployerCandidate[] = [
       "Comfortable across SEO, content and paid social on real budgets.",
       "Analytical: ties content decisions back to Google Analytics data.",
     ],
+    credentials: [
+      "BA Marketing, Taylor's University — CGPA 3.58",
+      "Google Analytics & HubSpot Content Marketing certificates",
+    ],
+    thinkingProof: [
+      "Chose keywords from research data rather than guesswork, and tracked the outcome.",
+      "Measures whether content actually works via Google Analytics, not impressions alone.",
+    ],
+    socialProof: [
+      "Grew a niche Instagram page to 12k followers",
+      "Two articles ranked on page 1 for target keywords",
+    ],
     possibleGaps: [
       "Limited experience with large ad budgets / performance marketing at scale.",
       "Has not owned full marketing-funnel attribution.",
@@ -571,10 +752,12 @@ export const CANDIDATES: EmployerCandidate[] = [
 ];
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Deterministic search / ranking.
+// Deterministic search / ranking — NO numeric score is ever produced.
 //
-// Tokenise the query, then score each candidate by a base fit plus weighted
-// overlap against their roles, keywords, skills, tools and project evidence.
+// Order is decided under the hood by:
+//   1. skill relevance to the query (more matched skills first),
+//   2. manual curation (curatedRank, for the first demos),
+//   3. proof density (projects + credentials + proof artifacts).
 // The ranking is stable for a given query (no randomness).
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -584,6 +767,11 @@ const STOP_WORDS = new Set([
 
 export const DEFAULT_ROLE = "Software Engineer Intern";
 
+/** Every skill that exists across the pool — used to recognise "skill tokens". */
+const KNOWN_SKILLS: string[] = Array.from(
+  new Set(CANDIDATES.flatMap((c) => [...c.skills, ...c.tools]))
+).map((s) => s.toLowerCase());
+
 function tokenize(query: string): string[] {
   return query
     .toLowerCase()
@@ -592,88 +780,146 @@ function tokenize(query: string): string[] {
     .filter((t) => t.length > 1 && !STOP_WORDS.has(t));
 }
 
-// Each field category contributes a different weight when a query token hits it.
-const FIELD_WEIGHTS: { key: keyof EmployerCandidate | "projects"; points: number }[] = [
-  { key: "preferredRoles", points: 8 },
-  { key: "matchKeywords", points: 6 },
-  { key: "skills", points: 5 },
-  { key: "tools", points: 4 },
-  { key: "projects", points: 3 },
-];
-
-function labelsForField(candidate: EmployerCandidate, key: string): string[] {
-  if (key === "projects") {
-    return candidate.projects.flatMap((p) => [p.name, ...p.skills]);
-  }
-  return (candidate[key as keyof EmployerCandidate] as string[]) ?? [];
-}
-
 function tokenMatchesLabel(token: string, label: string): boolean {
   const l = label.toLowerCase();
   return l.includes(token) || token.includes(l);
+}
+
+/** Skills proven by at least one project (no self-declared-only skills). */
+export function provenSkills(candidate: EmployerCandidate): string[] {
+  const fromProjects = new Set(candidate.projects.flatMap((p) => p.skills));
+  // Keep the candidate's declared order, but only those backed by a project.
+  return candidate.skills.filter((s) => fromProjects.has(s));
+}
+
+/** The project that proves a given skill, if any (for skill→artifact links). */
+export function artifactForSkill(
+  candidate: EmployerCandidate,
+  skill: string
+): CandidateProject | null {
+  return candidate.projects.find((p) => p.skills.includes(skill)) ?? null;
+}
+
+/** Internal: a rough count of evidence artifacts. Never shown as a number. */
+function proofDensity(candidate: EmployerCandidate): number {
+  const linkedProjects = candidate.projects.filter((p) => p.link).length;
+  return (
+    candidate.projects.length * 2 +
+    linkedProjects +
+    candidate.credentials.length +
+    candidate.thinkingProof.length +
+    candidate.socialProof.length
+  );
 }
 
 export function rankCandidates(rawQuery: string): CandidateSearchResult[] {
   const query = rawQuery.trim() || DEFAULT_ROLE;
   const tokens = tokenize(query);
 
+  // Which query tokens are recognisable skills? Those are the "must-haves".
+  const skillTokens = tokens.filter((t) => KNOWN_SKILLS.some((s) => tokenMatchesLabel(t, s)));
+
   const results = CANDIDATES.map((candidate) => {
-    let score = candidate.fitScoreBase;
-    const matched = new Set<string>();
+    const allLabels = [
+      ...candidate.preferredRoles,
+      ...candidate.matchKeywords,
+      ...candidate.skills,
+      ...candidate.tools,
+      ...candidate.projects.flatMap((p) => [p.name, ...p.skills]),
+    ];
 
-    for (const token of tokens) {
-      // For each token take the highest-weighted category it hits, so a token
-      // isn't double-counted, but record the human-readable matched label.
-      let bestPoints = 0;
-      let bestLabel: string | null = null;
+    // Relevance: how many query tokens this candidate hits anywhere.
+    const relevance = tokens.filter((t) => allLabels.some((l) => tokenMatchesLabel(t, l))).length;
 
-      for (const { key, points } of FIELD_WEIGHTS) {
-        const hit = labelsForField(candidate, key).find((label) => tokenMatchesLabel(token, label));
-        if (hit && points > bestPoints) {
-          bestPoints = points;
-          bestLabel = hit;
-        }
-      }
+    // Display tags: declared skills that matched the query (fall back to top skills).
+    const matchedSkills = candidate.skills.filter((s) =>
+      tokens.some((t) => tokenMatchesLabel(t, s))
+    );
 
-      if (bestLabel) {
-        score += bestPoints;
-        matched.add(bestLabel);
-      }
-    }
+    // Must-have check: does the candidate cover every recognised skill token?
+    const meetsAllMustHaves =
+      skillTokens.length > 0 &&
+      skillTokens.every((t) => candidate.skills.some((s) => tokenMatchesLabel(t, s)));
 
     return {
       candidate,
-      score: Math.min(99, Math.round(score)),
-      matchedTerms: Array.from(matched).slice(0, 6),
+      matchedSkills: matchedSkills.length ? matchedSkills : candidate.skills.slice(0, 4),
+      meetsAllMustHaves,
+      _relevance: relevance,
     };
   });
 
-  // Sort by score desc; tie-break by base fit then name for stability.
-  return results.sort(
+  // Sort: relevance desc → curatedRank asc → proof density desc → name.
+  results.sort(
     (a, b) =>
-      b.score - a.score ||
-      b.candidate.fitScoreBase - a.candidate.fitScoreBase ||
+      b._relevance - a._relevance ||
+      a.candidate.curatedRank - b.candidate.curatedRank ||
+      proofDensity(b.candidate) - proofDensity(a.candidate) ||
       a.candidate.name.localeCompare(b.candidate.name)
   );
+
+  return results.map((r) => ({
+    candidate: r.candidate,
+    matchedSkills: r.matchedSkills,
+    meetsAllMustHaves: r.meetsAllMustHaves,
+  }));
 }
 
-/** Build a simulated WhatsApp-style intro message (no real send). */
-export function buildIntroMessage(
-  candidate: EmployerCandidate,
-  role: string,
-  slotLabel?: string | null
-): string {
+/** Curated highlight reel for "Top candidates this month" — ordered, no scores. */
+export function curatedTopCandidates(limit = 10): EmployerCandidate[] {
+  return [...CANDIDATES].sort((a, b) => a.curatedRank - b.curatedRank).slice(0, limit);
+}
+
+/** Qualitative fit label — never a number. */
+export function fitLabel(result: CandidateSearchResult): string {
+  if (result.meetsAllMustHaves) return "Meets all must-have skills";
+  if (result.matchedSkills.length >= 2) return "Strong skills overlap";
+  return result.candidate.readiness;
+}
+
+/** Build a plain-text CV for download (deterministic, no backend). */
+export function buildCandidateCvText(candidate: EmployerCandidate): string {
+  const line = "─".repeat(56);
+  const section = (title: string) => `\n${title.toUpperCase()}\n${line}`;
+
+  const parts: string[] = [
+    candidate.name,
+    candidate.headline,
+    `${candidate.location} · ${candidate.email} · ${candidate.phone}`,
+    section("Summary"),
+    candidate.cvSummary,
+    section("Education"),
+    ...candidate.cv.education.map(
+      (ed) => `${ed.qualification} — ${ed.institution} (${ed.period})${ed.result ? ` · ${ed.result}` : ""}`
+    ),
+    section("Experience"),
+    ...candidate.cv.experience.map((x) => `• ${x}`),
+    section("Projects"),
+    ...candidate.projects.flatMap((p) => [
+      `${p.name}${p.link ? ` (${p.link})` : ""}`,
+      `  ${p.description}`,
+      `  Outcome: ${p.outcome}`,
+    ]),
+    section("Credentials"),
+    ...candidate.credentials.map((c) => `• ${c}`),
+    section("Skills"),
+    candidate.cv.skills.join(", "),
+    section("Tools"),
+    candidate.cv.tools.join(", "),
+    `\n${line}\nGenerated by Tenun · prototype data, fictional candidate.`,
+  ];
+
+  return parts.join("\n");
+}
+
+/** Build a simulated request-to-connect note (no real send). */
+export function buildConnectMessage(candidate: EmployerCandidate, role: string): string {
   const firstName = candidate.name.split(" ")[0];
   const project = candidate.projects[0];
-  const topSkills = candidate.skills.slice(0, 2).join(" / ");
   const roleText = role.trim() || DEFAULT_ROLE;
-  const closing = slotLabel
-    ? `Are you open to a 20-minute chat on ${slotLabel}?`
-    : "Are you open to a quick 20-minute intro chat this week?";
-
   return [
-    `Hi ${firstName}, I'm from the hiring team at [Your Company].`,
-    `Tenun matched you to our ${roleText} role because of your ${project.name} project, your ${topSkills} experience, and your portfolio evidence.`,
-    closing,
+    `Hi ${firstName}, we're hiring for a ${roleText} role at [Your Company].`,
+    `Your ${project.name} project and your evidenced work stood out to us.`,
+    `Would you be open to connecting?`,
   ].join(" ");
 }

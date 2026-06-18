@@ -473,6 +473,11 @@ const en = {
     errEmailNotConfirmed: "Please confirm your email first — check your inbox for the link.",
     errGeneric: "Something went wrong. Please try again.",
     errSignInIncomplete: "Sign-in didn't complete. Please try again.",
+    roleQuestion: "I'm here to…",
+    roleCandidate: "Find a job",
+    roleCandidateDesc: "Build your profile and get matched to roles.",
+    roleEmployer: "Hire talent",
+    roleEmployerDesc: "Post roles and discover proven candidates.",
   },
   megaMenu: {
     groups: {
@@ -1274,6 +1279,11 @@ const ms: Translations = {
     errEmailNotConfirmed: "Sila sahkan e-mel anda terlebih dahulu — semak peti masuk untuk pautannya.",
     errGeneric: "Ada masalah. Sila cuba lagi.",
     errSignInIncomplete: "Log masuk tidak selesai. Sila cuba lagi.",
+    roleQuestion: "Saya di sini untuk…",
+    roleCandidate: "Cari kerja",
+    roleCandidateDesc: "Bina profil anda dan dipadankan dengan peranan.",
+    roleEmployer: "Ambil bakat",
+    roleEmployerDesc: "Siarkan peranan dan temui calon yang terbukti.",
   },
   megaMenu: {
     groups: {
@@ -2068,6 +2078,11 @@ const zhCN: Translations = {
     errEmailNotConfirmed: "请先确认你的邮箱——查看收件箱中的链接。",
     errGeneric: "出了点问题。请重试。",
     errSignInIncomplete: "登录未完成。请重试。",
+    roleQuestion: "我想要…",
+    roleCandidate: "找工作",
+    roleCandidateDesc: "建立个人档案，匹配合适的职位。",
+    roleEmployer: "招聘人才",
+    roleEmployerDesc: "发布职位，发现有真实作品的候选人。",
   },
   megaMenu: {
     groups: {
