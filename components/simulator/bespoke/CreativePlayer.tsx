@@ -207,7 +207,7 @@ export function CreativePlayer({ game }: { game: Game }) {
           {ended ? (
             <p className="text-center text-sm text-navy-400">Chat ended.</p>
           ) : pending ? (
-            <p className="text-center text-sm text-navy-500">✏️ Make the change on the left, then we'll continue…</p>
+            <p className="text-center text-sm text-navy-500">✏️ Make the change on the left, then we&apos;ll continue…</p>
           ) : (
             <div className="space-y-2">
               <p className="text-[11px] font-bold uppercase tracking-widest text-navy-400">How do you reply?</p>

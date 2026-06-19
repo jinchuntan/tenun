@@ -458,11 +458,11 @@ export function SwePlayer({ game }: { game: Game }) {
         <div className="absolute inset-0 z-40 flex items-center justify-center bg-black/60 p-4">
           <div className="w-full max-w-md rounded-2xl border border-[#454545] bg-[#252526] p-6 text-center shadow-2xl">
             <p className="text-3xl">🎉</p>
-            <h3 className="mt-2 text-lg font-semibold text-white">That's one full cycle!</h3>
+            <h3 className="mt-2 text-lg font-semibold text-white">That&apos;s one full cycle!</h3>
             <p className="mt-2 text-sm leading-relaxed text-[#cccccc]/80">
-              You just branched, fixed a bug, committed, and pushed. Now finish the ticket on your own — 3 more bugs, the tests, a PR, the reviewer's feedback, and the merge. The <span className="text-[#e8d9a8]">banner up top</span> tells you each step.
+              You just branched, fixed a bug, committed, and pushed. Now finish the ticket on your own — 3 more bugs, the tests, a PR, the reviewer&apos;s feedback, and the merge. The <span className="text-[#e8d9a8]">banner up top</span> tells you each step.
             </p>
-            <button onClick={() => setShowHandoff(false)} className="mt-5 rounded-lg bg-[#0e639c] px-5 py-2 text-sm font-semibold text-white hover:bg-[#1177bb]">Let's go →</button>
+            <button onClick={() => setShowHandoff(false)} className="mt-5 rounded-lg bg-[#0e639c] px-5 py-2 text-sm font-semibold text-white hover:bg-[#1177bb]">Let&apos;s go →</button>
           </div>
         </div>
       )}
