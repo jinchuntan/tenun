@@ -6,7 +6,7 @@ import { useRouter, usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Menu, X, LogOut, LayoutDashboard, ChevronDown,
-  MessagesSquare, Bell, Globe,
+  MessagesSquare, Bell, Globe, Gamepad2,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import type { User } from "@supabase/supabase-js";
@@ -207,6 +207,14 @@ export function Navbar() {
                       >
                         <LayoutDashboard className="w-4 h-4" />
                         {dict.nav.dashboard}
+                      </Link>
+                      <Link
+                        href="/simulator"
+                        onClick={() => setUserMenuOpen(false)}
+                        className="flex items-center gap-2 px-3 py-2 text-sm text-navy-700 hover:bg-beige-100 transition-colors"
+                      >
+                        <Gamepad2 className="w-4 h-4" />
+                        Job Simulators
                       </Link>
                       <button
                         onClick={handleSignOut}

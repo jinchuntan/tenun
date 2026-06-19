@@ -30,6 +30,7 @@ export function WeaverMegaMenu({ onNavigate }: { onNavigate?: () => void }) {
       links: [
         { label: dict.megaMenu.findJob, href: "/#hero-search" },
         { label: dict.megaMenu.careerMatching, href: "/#hero-search" },
+        { label: dict.megaMenu.jobSimulator, href: "/simulator" },
         { label: dict.megaMenu.interviewLab, href: "/dashboard#section-outreach" },
       ],
     },
