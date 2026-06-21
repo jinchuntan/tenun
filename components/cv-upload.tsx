@@ -6,9 +6,9 @@ import {
   Upload,
   CheckCircle2,
   AlertCircle,
-  Loader2,
   FileUp,
 } from "lucide-react";
+import { WeavingLoader } from "@/components/motion/weaving-loader";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { extractTextFromFile, getFileType } from "@/lib/file-extractors";
@@ -204,12 +204,8 @@ export function CVUpload({ onProfileExtracted }: CVUploadProps) {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.2 }}
-              className="flex items-center justify-center gap-3 py-10"
             >
-              <Loader2 className="w-5 h-5 text-navy-600 animate-spin" />
-              <span className="text-sm text-navy-600">
-                {dict.cvUpload.parsing.replace("{name}", fileName)}
-              </span>
+              <WeavingLoader steps={dict.cvUpload.parsingSteps} />
             </motion.div>
           )}
 

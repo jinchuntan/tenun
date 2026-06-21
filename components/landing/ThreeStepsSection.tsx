@@ -3,6 +3,7 @@
 import { motion } from "framer-motion";
 import { Search, ListChecks, Route } from "lucide-react";
 import { useLanguage } from "@/components/i18n/LanguageProvider";
+import { fadeUp } from "@/lib/motion";
 
 const STEP_ICONS = [Search, ListChecks, Route];
 
@@ -30,8 +31,9 @@ export function ThreeStepsSection() {
             return (
               <motion.article
                 key={step.title}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
+                variants={fadeUp}
+                initial="hidden"
+                whileInView="show"
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.1 }}
                 whileHover={{ y: -4 }}

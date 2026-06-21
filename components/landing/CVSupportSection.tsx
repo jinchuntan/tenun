@@ -4,6 +4,16 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import { Clock, FileX2, PhoneCall, UserCheck, ArrowUpRight, FileText } from "lucide-react";
 import { useLanguage } from "@/components/i18n/LanguageProvider";
+import { ease } from "@/lib/motion";
+import { Counter } from "@/components/motion/counter";
+
+// Stats read "<number><suffix>" in every locale ("7 sec", "85%", "7 秒").
+// Split off the leading integer so it can count up; keep the rest as suffix.
+function splitStat(stat: string): { value: number; suffix: string } | null {
+  const match = stat.match(/^(\d+)(.*)$/);
+  if (!match) return null;
+  return { value: Number(match[1]), suffix: match[2] };
+}
 
 const BUILD_CV_HREF = "/profile?upload=true&from=landing";
 
@@ -41,13 +51,14 @@ export function CVSupportSection() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-14">
           {STATS.map((s, i) => {
             const Icon = s.icon;
+            const parsed = splitStat(s.stat);
             return (
             <motion.article
               key={s.stat}
               initial={{ opacity: 0, y: 20, rotate: s.rotate }}
               whileInView={{ opacity: 1, y: 0, rotate: s.rotate }}
               viewport={{ once: true }}
-              transition={{ duration: 0.45, delay: i * 0.08 }}
+              transition={{ duration: 0.6, ease, delay: i * 0.08 }}
               whileHover={{
                 scale: 1.05,
                 y: -14,
@@ -60,7 +71,13 @@ export function CVSupportSection() {
               <span className="absolute -top-3 -right-3 w-11 h-11 rounded-full bg-white border border-beige-300 shadow-md flex items-center justify-center">
                 <Icon className="w-5 h-5 text-navy-700" />
               </span>
-              <div className="font-display text-3xl text-navy-900 mb-1">{s.stat}</div>
+              <div className="font-display text-3xl text-navy-900 mb-1">
+                {parsed ? (
+                  <Counter to={parsed.value} suffix={parsed.suffix} />
+                ) : (
+                  s.stat
+                )}
+              </div>
               <p className="text-xs font-semibold text-navy-500 mb-3 leading-snug">{s.label}</p>
               <p className="text-sm text-navy-700 leading-relaxed mb-4">{s.body}</p>
               <Link

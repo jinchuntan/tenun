@@ -3,6 +3,8 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { Search, Loader2 } from "lucide-react";
 import { useLanguage } from "@/components/i18n/LanguageProvider";
+import { fadeUp, stagger } from "@/lib/motion";
+import { AuroraBackground } from "@/components/landing/AuroraBackground";
 
 interface HeroSectionProps {
   query: string;
@@ -27,14 +29,19 @@ export function HeroSection({
       className="relative pt-10 pb-12 md:pt-12 md:pb-16 overflow-hidden"
       aria-labelledby="hero-heading"
     >
-      <div className="absolute inset-0 dot-pattern opacity-[0.35] pointer-events-none" />
+      {/* Animated aurora mesh — drifting gradient colour behind the hero,
+          replacing the old dot grid + thread lines. */}
+      <AuroraBackground />
 
-      <div className="relative max-w-6xl mx-auto px-4 sm:px-6 text-center">
+      <motion.div
+        className="relative max-w-6xl mx-auto px-4 sm:px-6 text-center"
+        variants={stagger}
+        initial="hidden"
+        animate="show"
+      >
         <motion.h1
           id="hero-heading"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.05 }}
+          variants={fadeUp}
           className="font-display text-[2.5rem] leading-[0.95] sm:text-5xl lg:text-[3.5rem] xl:text-6xl tracking-tight text-navy-900 mb-5 lg:whitespace-nowrap"
         >
           {h.heroTitleLine1}
@@ -45,19 +52,13 @@ export function HeroSection({
         </motion.h1>
 
         <motion.p
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.15 }}
+          variants={fadeUp}
           className="text-base sm:text-lg text-navy-600 mb-8 max-w-xl mx-auto leading-relaxed"
         >
           {h.heroSubtitle}
         </motion.p>
 
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.25 }}
-        >
+        <motion.div variants={fadeUp}>
           <form
             id="hero-search"
             onSubmit={(e) => { e.preventDefault(); onSearch(); }}
@@ -121,7 +122,7 @@ export function HeroSection({
             ))}
           </div>
         </motion.div>
-      </div>
+      </motion.div>
     </section>
   );
 }

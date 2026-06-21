@@ -2,7 +2,7 @@
 
 import React, { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { motion, AnimatePresence, MotionConfig } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { Sparkles, ChevronRight } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Navbar } from "@/components/navbar";
@@ -68,7 +68,6 @@ export default function HomePage() {
   };
 
   return (
-    <MotionConfig reducedMotion="user">
     <div className="min-h-screen bg-ivory overflow-x-clip">
       <Navbar />
 
@@ -272,6 +271,5 @@ export default function HomePage() {
 
       <Footer />
     </div>
-    </MotionConfig>
   );
 }

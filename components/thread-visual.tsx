@@ -6,11 +6,14 @@ import { motion } from "framer-motion";
 interface ThreadVisualProps {
   className?: string;
   variant?: "hero" | "background" | "small";
+  /** Keep the threads gently shimmering after the initial draw-in. */
+  loop?: boolean;
 }
 
 export function ThreadVisual({
   className = "",
   variant = "hero",
+  loop = false,
 }: ThreadVisualProps) {
   const threads = [
     { color: "#4164b4", delay: 0 },
@@ -53,6 +56,8 @@ export function ThreadVisual({
       viewBox={`0 0 ${size} ${size}`}
       className={className}
       fill="none"
+      aria-hidden
+      preserveAspectRatio="xMidYMid slice"
       xmlns="http://www.w3.org/2000/svg"
     >
       {/* Nodes */}
@@ -90,13 +95,14 @@ export function ThreadVisual({
             stroke={t.color}
             strokeWidth={variant === "hero" ? 2.5 : 1.5}
             strokeLinecap="round"
-            opacity={0.35}
-            initial={{ pathLength: 0 }}
-            animate={{ pathLength: 1 }}
+            initial={{ pathLength: 0, opacity: 0.35 }}
+            animate={loop ? { pathLength: 1, opacity: [0.25, 0.45, 0.25] } : { pathLength: 1, opacity: 0.35 }}
             transition={{
-              duration: 2,
-              delay: t.delay,
-              ease: "easeInOut",
+              pathLength: { duration: 2, delay: t.delay, ease: "easeInOut" },
+              // Gentle, perpetual shimmer so the weave stays alive in the bg.
+              opacity: loop
+                ? { duration: 5, delay: t.delay, repeat: Infinity, ease: "easeInOut" }
+                : { duration: 2, delay: t.delay },
             }}
           />
         );

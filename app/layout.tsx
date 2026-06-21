@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Inter, Archivo_Black } from "next/font/google";
+import { MotionConfig } from "framer-motion";
 import "./globals.css";
 import { ReduxProvider } from "@/components/providers/ReduxProvider";
 import { AuthProvider } from "@/components/providers/AuthProvider";
@@ -110,6 +111,9 @@ export default function RootLayout({
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }} />
       </head>
       <body className="min-h-screen antialiased font-sans">
+          {/* App-wide motion defaults. reducedMotion="user" honours the OS
+              "reduce motion" accessibility setting on every route. */}
+          <MotionConfig reducedMotion="user">
           <ReduxProvider>
             <AuthProvider>
               <LanguageProvider>
@@ -121,6 +125,7 @@ export default function RootLayout({
               </LanguageProvider>
             </AuthProvider>
           </ReduxProvider>
+          </MotionConfig>
         </body>
     </html>
   );
